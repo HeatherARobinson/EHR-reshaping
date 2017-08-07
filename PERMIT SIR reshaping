@@ -290,3 +290,22 @@ PRESCRIBING DATA
 #PREP TAB DELIMITED FILES FOR PERL
 #https://github.com/rw251/research-events-medication-htn/blob/master/resources/example-data2.txt
 head(P2[P2$ReadCode=="b311.",])
+
+
+CHECK FOR SENSITIITY OF SPECULATIVE HEART FAILURE CODES
+###################################################################
+#HEART FAILURE ALL CODES ANY HF AT ANY POINT
+data2<-sir.data[sir.data$ReadCode %in% HeartFailureAll1.csv$Code,]
+crea.rep$HeartFailureAll<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0)
+rm(data2)
+###################################################################
+#HEART FAILURE CONFIRMED CODES ANY HF AT ANY POINT
+data2<-sir.data[sir.data$ReadCode %in% HeartFailureConfirmed1.csv$ReadCode,]
+crea.rep$HeartFailureConf<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0) 
+rm(data2)
+specheartpatients<-crea.rep[crea.rep$HeartFailureConf==0&crea.rep$HeartFailureAll==1,]
+levels(as.factor(specheartpatients$PatientID))
+table(crea.rep$HeartFailureAll)
+#CODE BINARY CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
+
+########################################################
