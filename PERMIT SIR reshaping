@@ -277,3 +277,16 @@ first<-smalltab %>% group_by(PatientID) %>%
 
 
 ##########################################################
+
+##########################################################
+#FORMULA VARIABLES
+
+crea.rep$log_CREA <- log10(crea.rep$Creatinine)
+
+
+############################################
+PRESCRIBING DATA
+###########################################
+#PREP TAB DELIMITED FILES FOR PERL
+#https://github.com/rw251/research-events-medication-htn/blob/master/resources/example-data2.txt
+head(P2[P2$ReadCode=="b311.",])
