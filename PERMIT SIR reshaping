@@ -30,9 +30,8 @@ crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #A
 crea$identifier <- paste(crea$PatientID,crea$EntryDate, crea$CodeValue,sep="_")
 which(duplicated(crea$identifier)) -> duplicates
 crea[-duplicates,] -> crea 
-crea$Creatinine<-ifelse(crea$Creatinine<18,NA,crea$Creatinine)  # creatinine values less than 18 considered not valid
-
-crea<-crea[!is.na(crea$CodeValue),]
+crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
+crea$Creatinine<-crea$CodeValue
 
 #SELECT DATA POST 2008
 crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
@@ -52,7 +51,6 @@ as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 table(post2008$PatientID) < 7 -> rare  
 rownames(as.matrix(rare)) -> ids
-
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 
