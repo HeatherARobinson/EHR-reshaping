@@ -1,4 +1,3 @@
-ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
 module load apps/gcc/R/3.3.3
 module load apps/binapps/rstudio/0.98.983-any-r
 rstudio
