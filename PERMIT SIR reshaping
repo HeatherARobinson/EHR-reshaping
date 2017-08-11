@@ -36,12 +36,11 @@ crea$Creatinine<-crea$CodeValue
 #SELECT DATA POST 2008
 crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 
-#SELECT PATIENTS BORN PRE 1980 AND ASSIGN AGE
+#ASSIGN AGE
 crea$Age<-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d"))))-crea$BirthYear
-crea<-crea[crea$BirthYear<1980,]
-
 crea<-na.omit(crea)
 
+#Create a date format entry date
 substr(crea$EntryDate,1,4) -> year
 substr(crea$EntryDate,5,6) -> month
 substr(crea$EntryDate,7,8) -> day
@@ -81,6 +80,11 @@ save(crea.rep, file = "crea.rephr.Rdata")
 #####OPTIONAL BREAKPOINT
 #load("new.Rdata")
 #load("new2.Rdata")
+
+#######################################################
+#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
+
+
 ########################################################
 crea.rep$DataSource<-1
 ########################################################
