@@ -48,24 +48,27 @@ CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
 CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
 CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
 CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
-CPRD.data1<-CPRD.data1[,c(1:2,6,10:11)]
-CPRD.data2<-CPRD.data2[,c(1:6)]
-CPRD.data3<-CPRD.data3[,c(1:2,6,8:12)]
-CPRD.data4<-CPRD.data4[,c(1:8,18:19)]
+CPRD.data1<-CPRD.data1[,c(1:2,6,11)]
+CPRD.data2<-CPRD.data2[,c(1,3:6)]
+CPRD.data3<-CPRD.data3[,c(1:2,6,10:12)]
+CPRD.data4<-CPRD.data4[,c(1:8,19)]
 
 ############################################################################################
 CPRDref<-merge(CPRD.data1,CPRD.data2,by=c("patid","adid"),all=FALSE)
 CPRD.data3$adid<-NA
-CPRDref>CPRDref[ , order(names(CPRDref))]
-CPRD.data3>CPRD.data3[ , order(names(CPRD.data3))]
+CPRDref<-CPRDref[ , order(names(CPRDref))]
+CPRD.data3<-CPRD.data3[ , order(names(CPRD.data3))]
+CPRDref<-CPRDref[ , order(names(CPRDref3))]
 CPRD.data<-rbind(CPRDref,CPRD.data3)
-CPRD.data<-CPRD.data[,c(1,3:12)]
 CPRD.data$gender<-NA
+CPRD.data$nvals<-NA
 CPRD.data$dob<-NA
 CPRD.data4$data1<-NA
 CPRD.data4$data2<-NA
 CPRD.data4$data3<-NA
+CPRD.data4$adid<-NA
 CPRD.data<-CPRD.data[ , order(names(CPRD.data))]
+CPRD.data4<-CPRD.data4[,c(1:3,5:6,9:12)]
 CPRD.data4<-CPRD.data4[ , order(names(CPRD.data4))]
 CPRD.data<-rbind(CPRD.data,CPRD.data4)
 
