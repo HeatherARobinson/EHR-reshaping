@@ -1,0 +1,120 @@
+ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
+module load apps/gcc/R/3.3.3
+module load apps/binapps/rstudio/0.98.983-any-r
+rstudio
+
+#R code to prepare CPRD data
+require(haven)
+require(lubridate)
+require(gtools)
+
+#Windows specific
+#memory.size (100000)
+
+# hf_cases_clinical contains patid, adid and medcode
+# hf_cases_additional contains adid and patid
+# hf_cases_test contains patid and medcode
+
+CPRD<-read_dta("hf_cases_clinical.dta")
+CPRD2<-read_dta("hf_cases_additional.dta")
+CPRD3<-read_dta("hf_cases_test.dta") 
+CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
+CPRD4$mob<-ifelse(CPRD4$mob==0,paste("01"),CPRD4$mob) # 283006 patients- no mob, infer as Jan
+CPRD4$dob <- as.Date(paste(CPRD4$yob,CPRD4$mob,"01",sep="-")) # default dob 01/01ta
+CPRDref<-CPRD[CPRD$medcode=="5",] #Only 2312 #References some dates of creatinine measures
+CPRD3ref<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the values in
+CPRDref<-CPRDref[,c(1,2)]
+CPRD3ref<-CPRD3ref[,c(1,2)]
+CPRDref<-rbind(CPRDref,CPRD3ref)
+#Join list of patients with creatinine tests from test and clinical tables
+CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
+#1487787 records
+length(levels(as.factor(CPRDref$patid)))
+#121836 patients
+
+#LIMIT TO PATIENTS WITH POST 2008 CREATININE TEST VALUES
+data<-CPRDref[as.numeric(year(strptime(CPRDref$eventdate, format="%Y-%m-%d")))>=2008,] #x all are post 2008
+table(data$patid)<1->rare  
+rownames(rare)-> ids
+rare[ids]
+CPRDref[!CPRDref$patid %in% rare[ids==TRUE],]->crea.rep	#Contains only people with a post 2008 entry
+
+#FILTER PATIENTS WHICH HAVE A RECORDED TIME RANGE FEWER THAN OR EQUAL TO 4 YEARS
+aggregate(as.numeric(year(strptime(crea.rep$eventdate, format="%Y-%m-%d"))), list(crea.rep$patid), range) -> ranges
+ranges$x[,2] - ranges$x[,1] -> ranges$range
+ranges[(which(ranges$range <=4)),1] -> range_short_ids    # define exclusion range
+crea.rep[-which(crea.rep$patid %in% range_short_ids),]->crea.rep 
+
+CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
+CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
+CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
+CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
+CPRD.data1<-CPRD.data1[,c(1:2,6,10:11)]
+CPRD.data2<-CPRD.data2[,c(1:6)]
+CPRD.data3<-CPRD.data3[,c(1:2,6,8:12)]
+CPRD.data4<-CPRD.data4[,c(1:8,18:19)]
+
+############################################################################################
+CPRDref<-merge(CPRD.data1,CPRD.data2,by=c("patid","adid"),all=FALSE)
+CPRD.data3$adid<-NA
+CPRDref>CPRDref[ , order(names(CPRDref))]
+CPRD.data3>CPRD.data3[ , order(names(CPRD.data3))]
+CPRD.data<-rbind(CPRDref,CPRD.data3)
+CPRD.data<-CPRD.data[,c(1,3:12)]
+CPRD.data$gender<-NA
+CPRD.data$dob<-NA
+CPRD.data4$data1<-NA
+CPRD.data4$data2<-NA
+CPRD.data4$data3<-NA
+CPRD.data<-CPRD.data[ , order(names(CPRD.data))]
+CPRD.data4<-CPRD.data4[ , order(names(CPRD.data4))]
+CPRD.data<-rbind(CPRD.data,CPRD.data4)
+
+#REMOVE DUPLICATE ENTRIES
+CPRD.data<-unique(CPRD.data)
+
+#SELECT PATIENTS WITH A POST 18 HEART FAILURE DIAGNOSIS
+CPRDdob<-aggregate(CPRD.data$dob, list(CPRD.data$patid), max,na.rm=TRUE)
+CPRD.data3<-merge(CPRD.data,CPRDdob,by.x="patid",by.y="Group.1",all=FALSE)
+CPRD.data3$dob<-CPRD.data3$x
+CPRD.data3$Age<-floor((as.numeric(CPRD.data3$eventdate)-CPRD.data3$dob)/365)
+
+for i in 1:length(patid)
+CPRD.data3$HFAge<-min(Age[])
+#THIS PART OF THE CODE IS NOT READY YET
+
+CPRD.data4<-CPRD.data3[CPRD.data3$HFAge>=18,]
+length(levels(as.factor(CPRD.data4$patid)))
+
+
+#leaves data from x patients 
+
+CPRDgen<-aggregate(CPRD.data4$gender, list(CPRD.data4$patid), max,na.rm=TRUE)
+CPRD.data5<-merge(CPRD.data4,CPRDgen,by.x="patid",by.y="Group.1",all=FALSE)
+CPRD.data5$gender<-CPRD.data5$x.y
+CPRD.data5$DataSource<-3
+CPRD.data5$Source<-"CPRD"
+
+eth<-read.table("ethnicitycprd.csv",header=TRUE,sep=",")
+eth<-eth[,c(1,5)]
+CPRD.data6<-merge(CPRD.data5,eth,by.x="medcode",by.y="medcode",all=TRUE)
+#Only medcodes present are 22953 and 12351.
+#also 23955 generic code x1
+
+CPRD.data6<-CPRD.data6[order(CPRD.data6$patid),] 
+
+CPRDinput<-file(paste("CPRD_input.csv"), open="w")
+cat("Patient_ID","Date","Age","Gender","Ethnicity","Medcode","data1","data2","data3","data4","data5","data6","data7","data8","DataSource","Source","\n", sep=",",file="CPRD_input.csv",append=TRUE)
+for (n in 1:8025802){ #Change loop number to number of records in dataset
+cat((paste(CPRD.data6$patid[n])), (paste(CPRD.data6$eventdate[n])), (paste(CPRD.data6$Age[n])), (paste(CPRD.data6$gender[n])), (paste(CPRD.data6$Category[n])),(paste(CPRD.data6$medcode[n])),(paste(CPRD.data6$data1[n])), (paste(CPRD.data6$data2[n])),(paste(CPRD.data6$data3[n])), (paste(CPRD.data6$data4[n])), (paste(CPRD.data6$data5[n])), (paste(CPRD.data6$data6[n])),(paste(CPRD.data6$data7[n])),(paste(CPRD.data6$data8[n])),(paste(CPRD.data6$DataSource[n])), (paste(CPRD.data6$Source[n])), "\n", file="CPRD_input.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
+
+
+#FREEZE OF CPRD.DATA6
+load("myDF.Rdata")
+
+CPRD.data6$Creatinine<-ifelse(CPRD.data6$medcode=="5",as.numeric(CPRD.data6$data2),NA)
+#Any non-numeric values are marked NA
+CPRD.data6$LogCreatinine<-log10(CPRD.data6$Creatinine)
+CPRD.data6$Creatinine<-ifelse(CPRD.data6$Creatinine<18,NA,CPRD.data6$Creatinine)  # creatinine values less than 18 considered not valid
+
+
