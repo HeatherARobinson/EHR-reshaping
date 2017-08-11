@@ -1,0 +1,138 @@
+setwd("c:/Users/mqbpjhr4/Documents")
+lccg<-read.table("lccg.csv",header=TRUE, sep=",")
+#Attach table provided by Liverpool
+
+unique(lccg$PatientID) #Check length
+
+Over<-subset(CPRD,CPRD$Age>=18 & as.numeric(year(strptime(CPRD$EntryDate, format="%Y/%m/%d")))>=1990,) #SELECT ADULT RECORDS FROM 1990 ONWARDS
+
+#Group redundant read codes/rubrics- check these manually for each new extract
+levels(Over$ReadCode)[1]<-"dialysis"
+levels(Over$ReadCode)[2:23] <- "ckd"
+levels(Over$ReadCode)[5:7] <- "transplant"
+
+table(Over$ReadCode)
+attach(Over)
+
+#Assign more options
+options(expressions=20000)
+
+table(Over$ReadCode,Over$Units)
+Over$CodeValue<- ifelse(Over$ReadCode=="creatinine"& !Over$Units==”mLmin173m2”,NA, Over$CodeValue) #If non-standard units, remove
+
+
+#create eGFR column
+Over$Value<-as.numeric(Over$CodeValue)
+Over$mdrd<- ifelse(Over$Units=="mLmin173m2",paste(Over$Value),NA) 
+Over$mdrd<- ifelse(Over$medcode=="eGFR",paste(Over$mdrd), paste("NA"))
+Over$mdrd<-as.numeric(Over$mdrd)
+
+#Simplify ethnicity for eGFR
+levels(Over$Ethnicity)[97:142]<-"A"
+levels(Over$Ethnicity)[3:10]<-"A"
+levels(Over$Ethnicity)[22:27]<-"A"
+levels(Over$Ethnicity)[24:67]<-"A"
+levels(Over$Ethnicity)[26:36]<-"A"
+levels(Over$Ethnicity)[1:2]<-"B"
+levels(Over$Ethnicity)[3:27]<-"B"
+table(Over$Ethnicity)
+
+library(lubridate)
+Over$eventdate<-as.Date(Over$eventdate, format="%d/%m/%Y")
+MONTH<- format(Over$eventdate, "%m")
+YEAR<- format(Over$eventdate, "%Y")
+Over$EntryPeriod<-paste(MONTH,YEAR)
+gsub(" ", "", Over$EntryPeriod, fixed = TRUE)
+Over$EntryPeriod<-as.numeric(as.factor(Over$EntryPeriod))
+
+#How many patients had creatinine tests in the index year
+index<-subset(Over,as.numeric(year(strptime(Over$eventdate, format="%Y-%m-%d")))==2012,)
+levels(as.factor(index$PatientID))
+#How many individuals have a creatinine result for the index year
+length(index$stcreat)
+#523492 various measurements listed for the index year
+
+
+#Generate vector for whether test after commencement of dialysis/transplant
+Over$endpoint<-with(Over, ifelse(Over$medcode=="dialysis",paste(Over$eventdate), "NA")) 
+Over$endpoint<-with(Over, ifelse(Over$medcode=="transplant",paste(eventdate), paste(Over$endpoint)) )
+levels(as.factor(Over$endpoint))
+Over$EntryDate<-as.Date(Over$eventdate, format="%d/%m/%Y")
+Over$endpoint<-as.Date(Over$endpoint, format="%Y-%m-%d")
+smalltab<-Over[!is.na(Over$endpoint),]
+smalltab<-smalltab[,c(1,23)]
+head(smalltab)
+table(smalltab$PatientID)
+Over2<- merge(Over,smalltab,all=T, by='patid')
+names(Over2)
+
+
+Over2$rrt<-"0"
+Over2$rrt<-ifelse(is.na(Over2$endpoint.y),paste(Over2$rrt),as.numeric(strptime(Over2$endpoint.y,format="%Y-%m-%d"))-as.numeric(strptime(Over2$EntryDate,format="%Y-%m-%d")))
+
+Over2<-Over2[Over2$rrt>=0,]
+Over2<-Over2[Over2$medcode=="creatinine"|Over2$medcode=="eGFR",]
+Over2<-Over2[!Over2$stcreat==”0”,]
+
+#Reshape table so mdrd and stcreat are on the same line to avoid STATA issues
+Overb<-aggregate(x=Over2[,c("stcreat","mdrd")],by=list(patid=Over2$patid,EntryDate=Over2$EntryDate,Age=Over2$Age,Sex=Over2$Sex,Ethnicity=Over2$Ethnicity), min,na.rm=TRUE)
+head(Overb)
+
+
+#Cut down to patients with a creatinine test in the index year
+indexb<-subset(Overb,as.numeric(year(strptime(Overb$EntryDate, format="%Y-%m-%d")))==2012,)
+Over4<-Overb[Overb$PatientID %in% indexb$PatientID,]
+length(Over4$stcreat)
+indexshort<-subset(Over4,as.numeric(year(strptime(Over4$EntryDate, format="%Y-%m-%d")))==2012,)
+length(indexshort$stcreat))
+table(indexshort$stcreat)
+
+#Visually check duplicates from different calendar months to make individual judgements and drop or retain
+n<-duplicated(Over4[,c(1,6)])
+Over4dup<-Over4[n,]
+head(Over4dup[order(Over4dup$PatientID),])
+#Some patients have duplicated values in different months, yet these seem to be coincidences
+
+#Assign associated eGFR if missing
+Over4$stcreat<-as.numeric(Over4$stcreat)
+Over4$mdrd<-ifelse(Over4$mdrd=="0",paste("NA"),paste(Over4$mdrd))
+Over4$mdrd<-ifelse(Over4$mdrd=="NA"&Over4$Sex=="M"&Over4$Ethnicity=="B",175*((Over4$stcreat/88.4)^-1.154)*((Over4$Age)^-0.203)*1.212,paste(Over4$mdrd))
+Over4$mdrd<-ifelse(Over4$mdrd=="NA"&Over4$Sex=="F"&Over4$Ethnicity=="A",(175*((Over4$stcreat/88.4)^-1.154)*((Over4$Age)^-0.203)*0.742),paste(Over4$mdrd))
+Over4$mdrd<-ifelse(Over4$mdrd=="NA"&Over4$Sex=="F"&Over4$Ethnicity=="B",(175*((Over4$stcreat/88.4)^-1.154)*((Over4$Age)^-0.203)*0.742*1.212),paste(Over4$mdrd))
+Over4$mdrd<-ifelse(Over4$mdrd=="NA",(175*(Over4$stcreat/88.4)^-1.154)*((Over4$Age)^-0.203),paste(Over4$mdrd))
+
+#Drop eGFR values over 250 uml/L
+Over4<-Over4[Over4$mdrd<250,]
+
+#At this point Over4 is a subset of records for patients before CKD, transplant or dialysis, for patients over 15 #with records within the index year, including records from 01/01/2009 to 07/12/2014.
+
+
+#Write an input file for STATA with headings complementary Aberdeen algorithm 
+
+attach(Over4)
+SIRinput<-file(paste("SIR_Rinput.csv"), open="w")
+cat("PatientID","dos","stcreat","mdrd","location_code","age","sex","\n", sep=",",file="SIR_Rinput.csv",append=TRUE)
+for (n in 1:1067489){ #Change loop number to number of records in dataset
+cat((paste(Over4$PatientID [n])),(paste(Over4$EntryDate[n])), (paste(Over4$stcreat[n])),(paste(Over4$mdrd[n])), (paste(Over4$location[n])),(paste(Over4$Age[n])),(paste(Over4$Sex[n])), "\n", file="SIR_Rinput.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
+
+#optional:
+#Divide and merge data by ID if files too large for R
+TEMP1<-subset(temp,as.numeric(temp$patid)<=100000,)
+SUBS1<-subset(Over[,c(1,22)],as.numeric(Over$patid)<=100000,)
+TEMP2<-subset(temp,as.numeric(temp$PatientID)<=200000&as.numeric(temp$PatientID)>100000,)
+SUBS2<-subset(Over[,c(1,22)],as.numeric(Over$patid)<=200000&as.numeric(Over$patid)>100000,)
+TEMP3<-subset(temp,as.numeric(temp$patid)<=300000&as.numeric(temp$patid)>200000,)
+SUBS3<-subset(Over[,c(1,22)],as.numeric(Over$ patid)<=300000&as.numeric(Over$patid)>200000,)
+TEMP4<-subset(temp,as.numeric(temp$patid)>300000,)
+SUBS4<-subset(Over[,c(1,22)],as.numeric(Over$patid)>300000,)
+STATA1<- merge(TEMP1, SUBS1,all=TRUE, by='patid')
+STATA2<- merge(TEMP2, SUBS2,all=TRUE, by='patid')
+STATA3<- merge(TEMP3, SUBS3,all=TRUE, by='patid')
+STATA4<- merge(TEMP4, SUBS4,all=TRUE, by='patid')
+
+#Assign death cutoff/code
+Over4$endpoint<-ifelse(Over4$Dead=="1", paste(Over4$Month_of_Death,"/ ",Over$Year_of_Death),Over$endpoint,)
+gsub(" ", "", Over4$endpoint, fixed = TRUE)
+Over$endcause<-ifelse(Over$Dead=="1", "Dead",Over$endcause)
+attach(Over)
+
