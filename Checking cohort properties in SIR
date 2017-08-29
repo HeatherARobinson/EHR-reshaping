@@ -22,18 +22,21 @@ sir.data[sir.data$ReadCode=="44J3.",]->crea
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 crea<-crea[!crea$PatientID %in% dialysis$PatientID & crea$PatientID %in% hf$PatientID,]
 
-#DATA CLEANING
-#REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-crea$identifier <- paste(crea$PatientID,crea$EntryDate, crea$CodeValue,sep="_")
-which(duplicated(crea$identifier)) -> duplicates
-crea[-duplicates,] -> crea 
+crea$EntryDate<-as.numeric(strptime(crea$EntryDate, format="%Y%m%d"))
+MONTH<- format(crea$EntryDate, "%m")
+YEAR<- format(crea$EntryDate, "%Y")
+Over$EntryPeriod<-paste(MONTH,YEAR)
+#Delete duplicate test results
+library(lubridate)
+d<-crea[(duplicated(crea$Creatinine)&duplicated(crea$PatientID)&duplicated(crea$EntryPeriod)),]
+crea[-d,] -> crea 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 crea$Creatinine<-crea$CodeValue
 
-alls<-sir.data[sir.data$PatientID %in% crea$PatientID,]
-
+post2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
+alls<-sir.data[sir.data$PatientID %in% post2008$PatientID,]
 #Create a date format entry date
 substr(alls$EntryDate,1,4) -> year
 substr(alls$EntryDate,5,6) -> month
