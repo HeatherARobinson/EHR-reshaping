@@ -35,8 +35,8 @@ crea[-d,] -> crea
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 crea$Creatinine<-crea$CodeValue
 
-post2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
-alls<-sir.data[sir.data$PatientID %in% post2008$PatientID,]
+post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
+alls<-crea[crea$PatientID %in% post2008$PatientID,]
 #Create a date format entry date
 substr(alls$EntryDate,1,4) -> year
 substr(alls$EntryDate,5,6) -> month
