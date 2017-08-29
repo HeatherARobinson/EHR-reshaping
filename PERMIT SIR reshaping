@@ -27,9 +27,14 @@ crea<-crea[!crea$PatientID %in% dialysis,]
 #REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-crea$identifier <- paste(crea$PatientID,crea$EntryDate, crea$CodeValue,sep="_")
-which(duplicated(crea$identifier)) -> duplicates
-crea[-duplicates,] -> crea 
+crea$EntryDate<-as.numeric(strptime(crea$EntryDate, format="%Y%m%d"))
+MONTH<- format(crea$EntryDate, "%m")
+YEAR<- format(crea$EntryDate, "%Y")
+Over$EntryPeriod<-paste(MONTH,YEAR)
+#Delete duplicate test results
+library(lubridate)
+d<-crea[(duplicated(crea$Creatinine)&duplicated(crea$PatientID)&duplicated(crea$EntryPeriod)),]
+crea[-d,] -> crea 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 crea$Creatinine<-crea$CodeValue
 
