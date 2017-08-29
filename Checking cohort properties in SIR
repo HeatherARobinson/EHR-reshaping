@@ -24,7 +24,7 @@ crea<-crea[!crea$PatientID %in% dialysis$PatientID & crea$PatientID %in% hf$Pati
 
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-crea$EntryDate<-as.numeric(strptime(crea$EntryDate, format="%Y%m%d"))
+crea$EntryDate<-as.Date(as.character(strptime(crea$EntryDate, format="%Y%m%d")))
 MONTH<- format(crea$EntryDate, "%m")
 YEAR<- format(crea$EntryDate, "%Y")
 Over$EntryPeriod<-paste(MONTH,YEAR)
@@ -42,25 +42,15 @@ substr(alls$EntryDate,1,4) -> year
 substr(alls$EntryDate,5,6) -> month
 substr(alls$EntryDate,7,8) -> day
 as.Date.character(paste(year,month,day,sep="-")) -> alls$event.date
-#SELECT RANGE>4 YEARS 
-#FILTER OUT PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 4 YEARS OR FEWER
+
+#WHICH PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 1 YEAR OR FEWER
 aggregate(alls$event.date, list(alls$PatientID), range) -> ranges
 ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
 ranges[(which(ranges$range <=4)),1] -> range_short_ids  
 alls[-which(alls$PatientID %in% range_short_ids),] -> allsp 
 levels(as.factor(allsp$PatientID))
 
-#SELECT DATA POST 2008
-crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 
-#ASSIGN AGE
-crea$Age<-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d"))))-crea$BirthYear
-crea<-na.omit(crea)
-
-#LIMIT TO PATIENTS WITH A MINIMUM OF 7 POST 2008 CREATININE TEST VALUES
-post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
-table(post2008$PatientID) < 2 -> rare  
-table(rare)
 
 #FILTER PATIENTS WHICH HAVE A RECORDED TIME RANGE FEWER THAN 7 YEARS
 aggregate(post2008$event.date, list(post2008$PatientID), range) -> ranges
