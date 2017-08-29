@@ -52,7 +52,7 @@ crea<-na.omit(crea)
 as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 
 #LIMIT TO PATIENTS WITH A MINIMUM OF 7 POST 2008 CREATININE TEST VALUES
-crea$EntryDate <- as.Date(as.numeric(crea$EntryDate, "%Y%m%d"))
+crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
 post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 table(post2008$PatientID) < 7 -> rare  
 rownames(as.matrix(rare)) -> ids
