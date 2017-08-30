@@ -17,10 +17,9 @@ library(survival)
 #SELECT HEART FAILURE PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode %in% heart$Code,]->hf
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-post2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
+post2008<-sir.data[sir.data$ReadCode=="44J3." & as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
 crea<-sir.data[!sir.data$PatientID %in% dialysis$PatientID & sir.data$PatientID %in% hf$PatientID& sir.data$PatientID %in% post2008$PatientID,]
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
-crea$Creatinine<-ifelse(crea$ReadCodepost2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,],as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
 crea$EntryDate<-as.Date(as.character(strptime(crea$EntryDate, format="%Y%m%d")))
 
 #Create a date format entry date
@@ -29,29 +28,24 @@ MONTH<- format(crea$EntryDate, "%m")
 YEAR<- format(crea$EntryDate, "%Y")
 as.Date.character(paste(YEAR,MONTH,DAY,sep="-")) -> crea$event.date
 
-#WHICH PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 1 YEAR OR FEWER
+#WHICH PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 4 YEARs OR MORE
 aggregate(crea$event.date, list(crea$PatientID), range) -> ranges
 ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
 ranges[(which(ranges$range <=4)),1] -> range_short_ids  
 crea[-which(crea$PatientID %in% range_short_ids),] -> allsp 
 levels(as.factor(allsp$PatientID))
 
+#WHICH PATIENTS HAVE A POST 2008 TIME RANGE OF 4 YEARs OR MORE
+aggregate(crea$event.date, list(crea$PatientID), range) -> ranges
+ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
+ranges[(which(ranges$range <=4)),1] -> range_short_ids  
+crea[-which(crea$PatientID %in% range_short_ids),] -> allsp 
+levels(as.factor(allsp$PatientID))
 
+crea<-sir.data[!sir.data$PatientID %in% dialysis$PatientID & sir.data$PatientID %in% hf$PatientID& sir.data$PatientID %in% post2008$PatientID,]
+crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008 & crea$ReadCode=="44J3.",]
 
-
-
-
-
-
-
-
-
-
-sir.data[sir.data$ReadCode=="44J3.",]->crea 
-#REMOVE DIALYSIS PATIENTS
-dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-crea<-crea[!crea$PatientID %in% dialysis$PatientID & crea$PatientID %in% hf$PatientID,]
-
+#REMOVE DUPLICATES
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
 crea$EntryDate<-as.Date(as.character(strptime(crea$EntryDate, format="%Y%m%d")))
@@ -65,30 +59,16 @@ crea[-d,] -> crea
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 crea$Creatinine<-crea$CodeValue
 
-post2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
-alls<-crea[crea$PatientID %in% post2008$PatientID,]
-#Create a date format entry date
-substr(alls$EntryDate,1,4) -> year
-substr(alls$EntryDate,5,6) -> month
-substr(alls$EntryDate,7,8) -> day
-as.Date.character(paste(year,month,day,sep="-")) -> alls$event.date
+table(crea$PatientID) ==1 -> rare  
+rownames(as.matrix(rare)) -> ids
+table(rare)
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 
 #WHICH PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 1 YEAR OR FEWER
-aggregate(alls$event.date, list(alls$PatientID), range) -> ranges
+aggregate(alls$EntryDate, list(alls$PatientID), range) -> ranges
 ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
-ranges[(which(ranges$range <=4)),1] -> range_short_ids  
-alls[-which(alls$PatientID %in% range_short_ids),] -> allsp 
+ranges[(which(ranges$range <1)),1] -> range_short_ids  
+alls[which(alls$PatientID %in% range_short_ids),] -> allsp 
 levels(as.factor(allsp$PatientID))
 
 
-
-#FILTER PATIENTS WHICH HAVE A RECORDED TIME RANGE FEWER THAN 7 YEARS
-aggregate(post2008$event.date, list(post2008$PatientID), range) -> ranges
-ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
-ranges[(which(ranges$range >=7)),1] -> range_short_ids  
-post2008[which(post2008$PatientID %in% range_short_ids), ] -> post2008
-levels(as.factor(post2008$PatientID))
-
-
-
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
