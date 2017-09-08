@@ -1,0 +1,19 @@
+SIR<-read.csv("SIR_Rinput.csv")
+twelve<-SIR[SIR$dos>=40907 & SIR$dos<=41272,]
+nine<-SIR[SIR$dos>=39811 & SIR$dos<=40176,]
+ten<-SIR[SIR$dos>=40177 & SIR$dos<=40541,]
+eleven<-SIR[SIR$dos>=40542 & SIR$dos<=40906,]
+twelve<-SIR[SIR$dos>=41273 & SIR$dos<=41637,]
+thirteen<-SIR[SIR$dos>=41638 & SIR$dos<=41980,]
+
+b<-as.data.frame(table(twelve$studyid))#2
+median((b$Freq/x)*1000)
+b<-as.data.frame(table(thirteen$studyid))#2
+median((b$Freq/x)*1000)
+b<-as.data.frame(table(nine$studyid))#2
+median((b$Freq/x)*1000)
+b<-as.data.frame(table(ten$studyid))
+median((b$Freq/x)*1000)
+b<-as.data.frame(table(eleven$studyid))
+median((b$Freq/x)*1000)
+
