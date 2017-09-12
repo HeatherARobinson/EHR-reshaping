@@ -25,6 +25,9 @@ CPRD3ref<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the values 
 CPRDref<-CPRDref[,c(1,2)]
 CPRD3ref<-CPRD3ref[,c(1,2)]
 CPRDref<-rbind(CPRDref,CPRD3ref)
+
+  save(CPRDref, file = "CPRDref.Rdata")
+
 #Join list of patients with creatinine tests from test and clinical tables
 CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
 #1487787 records
@@ -69,11 +72,21 @@ CPRD.data4$data3<-NA
 CPRD.data4$adid<-NA
 CPRD.data<-CPRD.data[ , order(names(CPRD.data))]
 CPRD.data4<-CPRD.data4[,c(1:3,5:6,9:12)]
+CPRD.data4$adid<-NA
 CPRD.data4<-CPRD.data4[ , order(names(CPRD.data4))]
 CPRD.data<-rbind(CPRD.data,CPRD.data4)
+save(CPRD.data, file = "CPRD.data.Rdata")
 
 #REMOVE DUPLICATE ENTRIES
 CPRD.data<-unique(CPRD.data)
+
+dups<-CPRD.data[!unique(c(CPRD.data$PatID,CPRD.data$eventdate,CPRD.data$medcode)),]
+dups<-dups[order,c(dups$PatID,dups$eventdate),]
+
+#CHECK IF LOG EGFR NORMALLY DIST.
+
+GF$l<-log(GF$data2)
+qqnorm(log(GF$l));qqline(log(GF$l), col = 2)
 
 #SELECT PATIENTS WITH A POST 18 HEART FAILURE DIAGNOSIS
 CPRDdob<-aggregate(CPRD.data$dob, list(CPRD.data$patid), max,na.rm=TRUE)
