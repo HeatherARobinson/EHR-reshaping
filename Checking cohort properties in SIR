@@ -29,14 +29,11 @@ YEAR<- format(crea$EntryDate, "%Y")
 as.Date.character(paste(YEAR,MONTH,DAY,sep="-")) -> crea$event.date
 
 BNP<-read.csv("BNP.csv")
-head(sir.data[sir.data$ReadCode %in% heart$ReadCode,])
-sir.data$CodeValue<-as.numeric(sir.data$CodeValue)
-BNPs<-sir.data[(sir.data$ReadCode %in% BNP$ReadCode[BNP$Sensitive==1] & sir.data$CodeValue>=2000)|(sir.data$CodeValue %in% BNP$ReadCode[BNP$Sensitive==0] & sir.data$CodeValue>=100),] #Find patients with impaired LVEF
+heart<-sir.data[sir.data$ReadCode %in% heart$ReadCode,]
+post2008<-sir.data[as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))>=2008,]
+BNPs<-sir.data[(sir.data$ReadCode %in% BNP$ReadCode[BNP$Sensitive==1] & sir.data$CodeValue>=2000)|(sir.data$CodeValue %in% BNP$ReadCode[BNP$Sensitive==0] & sir.data$CodeValue>=100),]
 
-BN<-crea[crea$PatientID %in% BNPs$PatientID,]
-length(unique(as.factor(BN$PatientID))) #9374 patients with a post 2008 creatinine test and a high BNP
-BN2<-crea[crea$PatientID %in% BNPs$PatientID & crea$PatientID %in% HFs$PatientID,]
-length(unique(as.factor(BN2$PatientID))) #9328 patients with a post 2008 creatinine test, HF code and a BNP based on codes
+length(unique(as.factor(sir.data$PatientID[sir.data$PatientID %in% BNPs$PatientID & sir.data$PatientID %in% post2008$PatientID & sir.data$PatientID %in% heart$PatientID]))) #9328 patients with a post 2008 creatinine test, HF code and a BNP based on codes
 
 #WHICH PATIENTS WHICH HAVE A RECORDED TIME RANGE OF 4 YEARs OR MORE
 aggregate(crea$event.date, list(crea$PatientID), range) -> ranges
