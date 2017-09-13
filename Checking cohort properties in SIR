@@ -30,6 +30,7 @@ as.Date.character(paste(YEAR,MONTH,DAY,sep="-")) -> crea$event.date
 
 BNP<-read.csv("BNP.csv")
 head(sir.data[sir.data$ReadCode %in% heart$ReadCode,])
+sir.data$CodeValue<-as.numeric(sir.data$CodeValue)
 BNPs<-sir.data[(sir.data$ReadCode %in% BNP$ReadCode[BNP$Sensitive==1] & sir.data$CodeValue>=2000)|(sir.data$CodeValue %in% BNP$ReadCode[BNP$Sensitive==0] & sir.data$CodeValue>=100),] #Find patients with impaired LVEF
 
 BN<-crea[crea$PatientID %in% BNPs$PatientID,]
