@@ -129,6 +129,34 @@ CPRD.data6$Creatinine<-ifelse(CPRD.data6$medcode=="5",as.numeric(CPRD.data6$data
 CPRD.data6$LogCreatinine<-log10(CPRD.data6$Creatinine)
 CPRD.data6$Creatinine<-ifelse(CPRD.data6$Creatinine<18,NA,CPRD.data6$Creatinine)  # creatinine values less than 18 considered not valid
 
+#Check HF cohort
+HF<-read.csv("HeartFailure.csv")
+HFs<-CPRD.data[CPRD.data$medcode %in% HF$Medcode,]
+length(unique(as.factor(HFs$patid))) #121766 patients with a post 2008 creatinine test and a HF diagnosis based on codes
+
 #Add LVEF values
 
-CPRD.data6$LVEF<-30918
+LV<-CPRD.data[CPRD.data$medcode==30918 & CPRD.data$data2>=40,] #Find patients with impaired LVEF
+LVEF<-CPRD.data[CPRD.data$patid %in% LV$patid,]
+length(unique(as.factor(LVEF$patid))) #24 patients with a post 2008 creatinine test and an impaired LVEF
+LVEF2<-CPRD.data[CPRD.data$patid %in% LV$patid & CPRD.data$patid %in% HFs$patid,]
+length(unique(as.factor(LVEF2$patid))) #24 patients with a post 2008 creatinine test, HF code and a LVEF based on codes
+
+#All of the LVEF qualifying patients also had a HF code.
+
+#Add BNP values
+BNP<-read.csv("BNP.csv")
+BNPs<-CPRD.data[(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==1] & CPRD.data$data2>=2000)|(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==0] & CPRD.data$data2>=100),] #Find patients with impaired LVEF
+BN<-CPRD.data[CPRD.data$patid %in% BNPs$patid,]
+length(unique(as.factor(BN$patid))) #9374 patients with a post 2008 creatinine test and a high BNP
+BN2<-CPRD.data[CPRD.data$patid %in% BNPs$patid & CPRD.data$patid %in% HFs$patid,]
+length(unique(as.factor(BN2$patid))) #9328 patients with a post 2008 creatinine test, HF code and a BNP based on codes
+
+#46 of the BNP qualifying patients were missing a HF code.
+
+#Test speculative HF codes
+HFs2<-CPRD.data[CPRD.data$medcode %in% HF$Medcode[HF$Speculative==0],]
+length(unique(as.factor(HFs2$patid))) #109748 patients with a post 2008 creatinine test and a HF diagnosis based on codes
+
+
+
