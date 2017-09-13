@@ -79,12 +79,9 @@ save(CPRD.data, file = "CPRD.data.Rdata")
 
 #REMOVE DUPLICATE ENTRIES
 CPRD.data<-unique(CPRD.data)
-
-dups<-CPRD.data[!unique(c(CPRD.data$PatID,CPRD.data$eventdate,CPRD.data$medcode)),]
-dups<-dups[order,c(dups$PatID,dups$eventdate),]
+save(CPRD.data, file = "CPRD.data.Rdata")
 
 #CHECK IF LOG EGFR NORMALLY DIST.
-
 GF$l<-log(GF$data2)
 qqnorm(log(GF$l));qqline(log(GF$l), col = 2)
 
@@ -132,4 +129,6 @@ CPRD.data6$Creatinine<-ifelse(CPRD.data6$medcode=="5",as.numeric(CPRD.data6$data
 CPRD.data6$LogCreatinine<-log10(CPRD.data6$Creatinine)
 CPRD.data6$Creatinine<-ifelse(CPRD.data6$Creatinine<18,NA,CPRD.data6$Creatinine)  # creatinine values less than 18 considered not valid
 
+#Add LVEF values
 
+CPRD.data6$LVEF<-30918
