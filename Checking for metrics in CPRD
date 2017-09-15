@@ -66,11 +66,8 @@ CPRD.data4<-CPRD.data4[ , order(names(CPRD.data4))]
 CPRD.data<-rbind(CPRD.data,CPRD.data4)
 save(CPRD.data, file = "CPRD.data.Rdata")
 
-#REMOVE DUPLICATE ENTRIES
-CPRD.data<-unique(CPRD.data)
-save(CPRD.data, file = "CPRD.data.Rdata")
-
 #CHECK IF LOG EGFR NORMALLY DIST.
+GF<-CPRD.data[CPRD.data$Medcode=="19747",]
 GF$l<-log(GF$data2)
 qqnorm(log(GF$l));qqline(log(GF$l), col = 2)
 
@@ -80,10 +77,12 @@ CPRD.data3<-merge(CPRD.data,CPRDdob,by.x="patid",by.y="Group.1",all=FALSE)
 CPRD.data3$dob<-CPRD.data3$x
 CPRD.data3$Age<-floor((as.numeric(CPRD.data3$eventdate)-CPRD.data3$dob)/365)
 
-read.csv("HeartFailure.csv")
-for i in 1:length(patid)
-CPRD.data3$HFAge<-ifelse(CPRD.data3$MedCode %in% HeartFailure,CPRD.data3$Age,NA)
+h<-read.csv("HeartFailure.csv")
+CPRD.data3$HFAge<-ifelse(CPRD.data3$medcode %in% h$Medcode,paste(CPRD.data3$Age),"NA")
+HFAge2<-CPRD.data3[CPRD.data3$HFAge>=18,c(1,)]
 
+CPRD.data3$HFAge<-ifelse(CPRD.data3$MedCode %in% HFAge2$,medcode,CPRD.data3$Age,NA)
+HFAge2<-CPRD.data3[CPRD.data3$HFAge>=18,c(1,)]
 
 
 
