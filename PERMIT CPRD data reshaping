@@ -41,12 +41,13 @@ rownames(rare)-> ids
 rare[ids]
 CPRDref[!CPRDref$patid %in% rare[ids==TRUE],]->crea.rep	#Contains only people with a post 2008 entry
 
-#FILTER PATIENTS WHICH HAVE A RECORDED TIME RANGE FEWER THAN OR EQUAL TO 4 YEARS
+#CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND SPECIFIC NUMBER OF TESTS
 aggregate(as.numeric(year(strptime(crea.rep$eventdate, format="%Y-%m-%d"))), list(crea.rep$patid), range) -> ranges
 ranges$x[,2] - ranges$x[,1] -> ranges$range
-ranges[(which(ranges$range <=4)),1] -> range_short_ids    # define exclusion range
-crea.rep[-which(crea.rep$patid %in% range_short_ids),]->crea.rep 
-
+ranges[(which(!ranges$range>=7)),1] -> range_short_ids    # define exclusion range
+crea.rep[-which(crea.rep$patid %in% range_short_ids),]->crea.rep2 
+df1<-crea.rep2[ crea.rep2$patid %in%  names(table(crea.rep2$patid))[table(crea.rep2$patid)==2] , ]
+levels(unique(as.factor(df1$patid)))
 CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
 CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
 CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
