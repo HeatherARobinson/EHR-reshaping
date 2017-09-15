@@ -24,22 +24,15 @@ CPRDref<-rbind(CPRDref,CPRD3ref)
   save(CPRDref, file = "CPRDref.Rdata")
 
 #Join list of patients with creatinine tests from test and clinical tables
-CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
+crea.ref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
 #1487787 records
 length(levels(as.factor(CPRDref$patid)))
 #121836 patients
 
-#LIMIT TO PATIENTS WITH POST 2008 CREATININE TEST VALUES
-data<-CPRDref[as.numeric(year(strptime(CPRDref$eventdate, format="%Y-%m-%d")))>=2008,] #x all are post 2008
-table(data$patid)<1->rare  
-rownames(rare)-> ids
-rare[ids]
-CPRDref[!CPRDref$patid %in% rare[ids==TRUE],]->crea.rep	#Contains only people with a post 2008 entry
-
-CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
-CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
-CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
-CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
+CPRD.data1<-CPRD[which(CPRD$patid %in% crea.ref$patid),]
+CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.ref$patid),]
+CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.ref$patid),]
+CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.ref$patid),]
 CPRD.data1<-CPRD.data1[,c(1:2,6,11)]
 CPRD.data2<-CPRD.data2[,c(1,3:6)]
 CPRD.data3<-CPRD.data3[,c(1:2,6,10:12)]
@@ -76,19 +69,11 @@ CPRDdob<-aggregate(CPRD.data$dob, list(CPRD.data$patid), max,na.rm=TRUE)
 CPRD.data3<-merge(CPRD.data,CPRDdob,by.x="patid",by.y="Group.1",all=FALSE)
 CPRD.data3$dob<-CPRD.data3$x
 CPRD.data3$Age<-floor((as.numeric(CPRD.data3$eventdate)-CPRD.data3$dob)/365)
-
 h<-read.csv("HeartFailure.csv")
 CPRD.data3$HFAge<-ifelse(CPRD.data3$medcode %in% h$Medcode,paste(CPRD.data3$Age),"NA")
-HFAge2<-CPRD.data3[CPRD.data3$HFAge>=18,c(1,)]
-
-CPRD.data3$HFAge<-ifelse(CPRD.data3$MedCode %in% HFAge2$,medcode,CPRD.data3$Age,NA)
-HFAge2<-CPRD.data3[CPRD.data3$HFAge>=18,c(1,)]
-
-
-
-
-#THIS PART OF THE CODE IS NOT READY YET
-
+HFAge2<-CPRD.data3[,c(1,13)]
+HFAge3<-aggregate(as.numeric(HFAge2$HFAge[!is.na(HFAge2$HFAge)]), by=list(Category=patid), FUN=min)
+CPRD.data3<-merge(CPRD.data3,HRAge3,by.x="patid",by.y="Group.1",all=FALSE)
 CPRD.data4<-CPRD.data3[CPRD.data3$HFAge>=18,]
 length(levels(as.factor(CPRD.data4$patid)))
 
@@ -125,12 +110,15 @@ CPRD.data6$Creatinine<-ifelse(CPRD.data6$Creatinine<18,NA,CPRD.data6$Creatinine)
 
 #Check HF cohort
 HF<-read.csv("HeartFailure.csv")
-HFs<-CPRD.data[CPRD.data$medcode %in% HF$Medcode,]
+HFs<-CPRD.data5[CPRD.data5$medcode %in% HF$Medcode,]
+HFb<-HF[HF$Speculative==0,]
+HFs2<-CPRD.data5[CPRD.data5$medcode %in% HFb$Medcode,]
 length(unique(as.factor(HFs$patid))) #121766 patients with a post 2008 creatinine test and a HF diagnosis based on codes
+length(unique(as.factor(HFs2$patid))) #121766 patients with a post 2008 creatinine test and a HF diagnosis based on codes
 
 #Add LVEF values
 
-LV<-CPRD.data[CPRD.data$medcode==30918 & CPRD.data$data2>=40,] #Find patients with impaired LVEF
+LV<-CPRD.data5[CPRD.data5$medcode==30918 & CPRD.data5$data2>=40,] #Find patients with impaired LVEF
 LVEF<-CPRD.data[CPRD.data$patid %in% LV$patid,]
 length(unique(as.factor(LVEF$patid))) #24 patients with a post 2008 creatinine test and an impaired LVEF
 LVEF2<-CPRD.data[CPRD.data$patid %in% LV$patid & CPRD.data$patid %in% HFs$patid,]
@@ -140,7 +128,7 @@ length(unique(as.factor(LVEF2$patid))) #24 patients with a post 2008 creatinine 
 
 #Add BNP values
 BNP<-read.csv("BNP.csv")
-BNPs<-CPRD.data[(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==1] & CPRD.data$data2>=2000)|(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==0] & CPRD.data$data2>=100),] #Find patients with impaired LVEF
+BNPs<-CPRD.data[(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==1] & CPRD.data$data2>=2000)|(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==0] & CPRD.data$data2>=400),] #Find patients with impaired LVEF
 BN<-CPRD.data[CPRD.data$patid %in% BNPs$patid,]
 length(unique(as.factor(BN$patid))) #9374 patients with a post 2008 creatinine test and a high BNP
 BN2<-CPRD.data[CPRD.data$patid %in% BNPs$patid & CPRD.data$patid %in% HFs$patid,]
