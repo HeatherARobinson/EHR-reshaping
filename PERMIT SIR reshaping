@@ -163,7 +163,7 @@ crea.rep$BUNDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >
 rm(data2)
 
 ##############################################################
-#SERUM  #1 MONTH
+#SERUM POTASSIUM #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -256,6 +256,23 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 crea.rep$UrineAlbumin<-data2[indx3, "CodeValue"]
 crea.rep$UrineAlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
+rm(data2)
+save(crea.rep, file = "new2.Rdata")
+
+
+###################################################################
+#URINE ALBMUNIN CREATININE RATIO #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% UrineACR1.csv$ReadCode,]
+indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
+indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
+                   best="prior")
+indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
+       ifelse(is.na(indx2), indx1, 
+       ifelse(abs(data2$EntryDate[indx2]- crea.rep$EntryDate) <
+              abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
+
+crea.rep$UrineACR<-data2[indx3, "CodeValue"]
+crea.rep$UrineACRnDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
 rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
