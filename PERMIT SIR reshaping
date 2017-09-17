@@ -2,9 +2,6 @@ load ("sir.data.rda")
 memory.size(50000)
 #READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 
-temp = list.files(pattern="*1.csv")
-for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-
 library(zoo)
 library(plyr)
 library(tidyverse)
@@ -96,21 +93,19 @@ sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
 
 #Narrow lookup table to the full list of codes of interest to speed up processing
 
+temp = list.files(pattern="*1.csv")
+for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+allcodes<-cbind(temp,all.x=true)
 
-
-
-
+sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode in allcodes$ReadCode),]
 
 #######################################################
-save(sir.data, file = "new.Rdata")
-save(crea.rep, file = "crea.rephr.Rdata")
 #####OPTIONAL BREAKPOINT
-#load("new.Rdata")
-#load("new2.Rdata")
-
+save(sir.data, file = "new.Rdata")
 #######################################################
-#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 
+#load("new.Rdata")
+#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 
 ########################################################
 crea.rep$DataSource<-1
@@ -132,11 +127,11 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$SerumSodium<-data2[indx3, "CodeValue"]
-crea.rep$SerSodDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ###################################################################
-#BMI
+#BMI #1 YEAR
 data2<-sir.data[sir.data$ReadCode %in% BMI1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -148,11 +143,11 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$BMI<-data2[indx3, "CodeValue"]
-crea.rep$BMIDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
-rm(data2)
+crea.rep$BMIDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365), 1, NA)
+rm(data2)rea.rep$EntryDate - data2$EntryDate[indx3])
 
 ###################################################################
-#BLOOD UREA NITROGEN
+#BLOOD UREA NITROGEN 
 data2<-sir.data[sir.data$ReadCode %in% BloodUreaNitrogen1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -164,7 +159,7 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$BloodUreaNitrogen<-data2[indx3, "CodeValue"]
-crea.rep$BUNDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$BUNDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ##############################################################
@@ -180,11 +175,11 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$SerumPotassium<-data2[indx3, "CodeValue"]
-crea.rep$SerPotDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$SerPotDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ##############################################################
-#HEART RATE
+#HEART RATE #30 DAYS
 data2<-sir.data[sir.data$ReadCode %in% HeartRate1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -196,11 +191,11 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$HeartRate<-data2[indx3, "CodeValue"]
-crea.rep$HeartRateDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$HeartRateDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ##############################################################
-#SYSTOLIC BP
+#SYSTOLIC BP #30 DAYS
 data2<-sir.data[sir.data$ReadCode %in% Systolicbloodpressure1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -212,11 +207,11 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$SystolicBP<-data2[indx3, "CodeValue"]
-crea.rep$SystBPDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$SystBPDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ##############################################################
-#DIASTOLIC BP
+#DIASTOLIC BP #30 DAYS
 data2<-sir.data[sir.data$ReadCode %in% DiastolicBloodPressure1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -228,12 +223,12 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$DiastolicBP<-data2[indx3, "CodeValue"]
-crea.rep$DiastBPDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$DiastBPDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
 ##############################################################
-#SERUM ALBUMIN
+#SERUM ALBUMIN #1 YEAR
 data2<-sir.data[sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -244,7 +239,23 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
               abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
 
 crea.rep$SerumAlbumin<-data2[indx3, "CodeValue"]
-crea.rep$AlbuminDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
+crea.rep$AlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
+rm(data2)
+save(crea.rep, file = "new2.Rdata")
+
+###################################################################
+#URINE ALBUMIN #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% UrineAlbumin1.csv$ReadCode,]
+indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
+indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
+                   best="prior")
+indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
+       ifelse(is.na(indx2), indx1, 
+       ifelse(abs(data2$EntryDate[indx2]- crea.rep$EntryDate) <
+              abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
+
+crea.rep$UrineAlbumin<-data2[indx3, "CodeValue"]
+crea.rep$UrineAlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
 rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
@@ -261,7 +272,7 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$BMeanCorpVolume<-data2[indx3, "CodeValue"]
-crea.rep$MCVDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >120, 1, NA)
+crea.rep$MCVDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >120, 1, NA)
 rm(data2)
 
 ###################################################################
@@ -277,7 +288,7 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 
 crea.rep$Haemoglobin<-data2[indx3, "CodeValue"]
-crea.rep$HbDateFlag<- ifelse((crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+crea.rep$HbDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 #CODE BINARY CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
