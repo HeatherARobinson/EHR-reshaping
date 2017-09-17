@@ -386,6 +386,11 @@ PRESCRIBING DATA
 #https://github.com/rw251/research-events-medication-htn/blob/master/resources/example-data2.txt
 head(P2[P2$ReadCode=="b311.",])
 
+crea.rep$LDdose<- #LOOP DIURETIC DOSE
+crea.rep$TDdose<- #Thiazide DIURETIC DOSE
+crea.rep$AAdose<- #ALDOSTERONE ANTAGONIST DOSE
+crea.rep$ACEIdose<- #ACE INHIBITOR DOSE
+crea.rep$ARBdose<- #Angiotensin receptor blocker DOSE
 
 CHECK FOR SENSITIITY OF SPECULATIVE HEART FAILURE CODES
 ###################################################################
