@@ -215,7 +215,7 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
-data2<-sir.data[sir.data$ReadCode %in% Systolicbloodpressure1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% SBP1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -231,7 +231,7 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
-data2<-sir.data[sir.data$ReadCode %in% DiastolicBloodPressure1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% DBP1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
