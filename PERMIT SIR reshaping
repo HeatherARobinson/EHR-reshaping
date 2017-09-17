@@ -144,8 +144,23 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
 
 crea.rep$BMI<-data2[indx3, "CodeValue"]
 crea.rep$BMIDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365), 1, NA)
-rm(data2)rea.rep$EntryDate - data2$EntryDate[indx3])
+rm(data2)
 
+###################################################################
+#URIC ACID #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% UricAcid1.csv$ReadCode,]
+indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
+indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
+                   best="prior")
+indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
+       ifelse(is.na(indx2), indx1, 
+       ifelse(abs(data2$EntryDate[indx2]- crea.rep$EntryDate) <
+              abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
+
+
+crea.rep$UricAcid<-data2[indx3, "CodeValue"]
+crea.rep$UADateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365), 1, NA)
+rm(data2)
 ###################################################################
 #BLOOD UREA NITROGEN #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% BloodUreaNitrogen1.csv$ReadCode,]
