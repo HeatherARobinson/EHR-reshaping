@@ -119,7 +119,7 @@ crea.rep$DataSource<-1
 #################################################################
 #I HAVE NOT LOOPED THIS YET AS THE CONDITIONS HAVE DIFFERENT REQUIREMENTS
 
-#SERUM SODIUM #1 MONTH
+#MAX DAILY SERUM SODIUM #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -135,7 +135,7 @@ crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]
 rm(data2)
 
 ###################################################################
-#BMI #1 YEAR
+#MIN DAILY BMI #1 YEAR
 data2<-sir.data[sir.data$ReadCode %in% BMI1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -151,7 +151,7 @@ crea.rep$BMIDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >
 rm(data2)
 
 ###################################################################
-#URIC ACID #1 YEAR
+#MAX DAILY SERUM URIC ACID #1 YEAR
 data2<-sir.data[sir.data$ReadCode %in% UricAcid1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -166,7 +166,7 @@ crea.rep$UricAcid<-data2[indx3, "CodeValue"]
 crea.rep$UADateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365), 1, NA)
 rm(data2)
 ###################################################################
-#BLOOD UREA NITROGEN #1 MONTH
+#MAX DAILY BLOOD UREA NITROGEN #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% BloodUreaNitrogen1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -182,7 +182,7 @@ crea.rep$BUNDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >
 rm(data2)
 
 ##############################################################
-#SERUM POTASSIUM #1 MONTH
+#MIN DAILY MSERUM POTASSIUM #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -198,7 +198,7 @@ crea.rep$SerPotDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]
 rm(data2)
 
 ##############################################################
-#HEART RATE #1 MONTH
+#MIN DAILY HEART RATE #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% HeartRate1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
