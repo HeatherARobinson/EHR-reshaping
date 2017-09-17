@@ -182,7 +182,7 @@ crea.rep$BUNDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >
 rm(data2)
 
 ##############################################################
-#MIN DAILY MSERUM POTASSIUM #1 MONTH
+#MIN DAILY SERUM POTASSIUM #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
