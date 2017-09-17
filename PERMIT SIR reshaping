@@ -167,7 +167,7 @@ crea.rep$UADateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >3
 rm(data2)
 ###################################################################
 #MAX DAILY BLOOD UREA NITROGEN #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% BloodUreaNitrogen1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% BUN1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
