@@ -51,7 +51,7 @@ crea<-na.omit(crea)
 (as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
 as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 
-#LIMIT TO PATIENTS WITH A POST 2008 CREATININE TEST VALUES
+#LIMIT TO PATIENTS WITH AT LEAST 1 POST 2008 CREATININE TEST VALUES
 crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
 post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 table(post2008$PatientID) < 1 -> rare  
@@ -59,26 +59,20 @@ rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 
-#CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND SPECIFIC NUMBER OF TESTS
+#CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
 aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
 ranges$x[,2] - ranges$x[,1] -> ranges$range
-ranges[(which(!ranges$range>=7)),1] -> range_short_ids    # define exclusion range
-crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep2 
-df1<-crea.rep2[ crea.rep2$PatientID %in%  names(table(crea.rep2$PatientID))[table(crea.rep2$PatientID)==2] , ]
+ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
+crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+df1<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep2$PatientID))[table(crea.rep2$PatientID)==2] , ] # define min tests
 levels(unique(as.factor(df1$PatientID)))
 
-#FILTER PATIENTS WHICH HAVE A RECORDED TIME RANGE FEWER THAN 7 YEARS
-aggregate(crea.rep$event.date, list(crea.rep$PatientID), range) -> ranges
-ranges$range <- (ranges$x[,2])/365- (ranges$x[,1])/365
-ranges[(which(ranges$range <=4)),1] -> range_short_ids  
-crea.rep[-which(crea.rep$PatientID %in% range_short_ids),] -> crea.rep 
-
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
+######################################################
+#Add demographic variables from lookup tables
 
 #CODE IMD
 IMD.data<-read.table("IMD20101.csv",header=TRUE,sep=",")
 crea.rep<-merge(crea.rep,IMD.data,by="LSOA",all.x=TRUE, all.y=FALSE)
-
 
 #CODE ETHNICITY
 ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
@@ -87,6 +81,25 @@ crea.rep<-merge(crea.rep,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRU
 names(crea.rep)
 crea.rep<-subset(crea.rep, select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus))
 colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
+
+#######################################################
+#Breakpoint
+#######################################################
+#######################################################
+save(crea.rep, file = "crea.rephr.Rdata")
+#######################################################
+
+#ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
+
+#load("crea.rephr.Rdata")
+sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
+
+#Narrow lookup table to the full list of codes of interest to speed up processing
+
+
+
+
+
 
 #######################################################
 save(sir.data, file = "new.Rdata")
