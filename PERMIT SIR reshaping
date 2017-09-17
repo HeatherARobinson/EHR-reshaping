@@ -214,7 +214,7 @@ crea.rep$HeartRateDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[ind
 rm(data2)
 
 ##############################################################
-#SYSTOLIC BP #30 DAYS
+#MIN DAILY SYSTOLIC BP #30 DAYS
 data2<-sir.data[sir.data$ReadCode %in% Systolicbloodpressure1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -230,7 +230,7 @@ crea.rep$SystBPDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]
 rm(data2)
 
 ##############################################################
-#DIASTOLIC BP #30 DAYS
+#MIN DAILY DIASTOLIC BP #30 DAYS
 data2<-sir.data[sir.data$ReadCode %in% DiastolicBloodPressure1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -296,7 +296,7 @@ rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
 ###################################################################
-#MEAN CORPUSCULAR VOLUME #120 DAYS
+#MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 data2<-sir.data[sir.data$ReadCode %in% MCV1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
@@ -312,7 +312,7 @@ crea.rep$MCVDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >
 rm(data2)
 
 ###################################################################
-#HAEMOGLOBIN #120 DAYS
+#MAX DAILY HAEMOGLOBIN #120 DAYS
 data2<-sir.data[sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,]
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
