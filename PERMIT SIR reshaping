@@ -26,11 +26,11 @@ first<-smalltab %>% group_by(PatientID) %>%
 summarize(hfage = min(hfage))
 sir.data<-merge(sir.data,first,by="PatientID",all.x=TRUE,all.y=FALSE)
 sir.data<-sir.data[sir.data$hfage>=18,]
-length(unique(as.factor(sir.data$PatientID))) # hf patients who were 18 or over at first diagnosis
+length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
-length(unique(as.factor(crea$PatientID))) #hf patients over 18 with creatinine data
+length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
 
 #REMOVE DIALYSIS PATIENTS
 #dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
@@ -83,7 +83,7 @@ levels(unique(as.factor(crea$PatientID)))
 #crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
 #crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep2$PatientID))[table(crea.rep2$PatientID)>=2] , ] # define min tests
 
-levels(unique(as.factor(crea.rep$PatientID)))
+levels(unique(as.factor(crea.rep$PatientID))) #6971 remaining if no range limit
 
 ######################################################
 #Add demographic variables from lookup tables
@@ -103,7 +103,7 @@ colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
 #Breakpoint
 #######################################################
 #######################################################
-save(crea.rep, file = "crea.rephr.Rdata")
+save(crea.rep, file = "crea.repnofilters.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
@@ -115,48 +115,34 @@ sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
-                 list(AF1.csv,BMI1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
+                 list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartFailure1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
 sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
 
 #######################################################
 #####OPTIONAL BREAKPOINT
-save(sir.data, file = "new.Rdata")
+save(sir.data, file = "sir.datanofilters.Rdata")
 #######################################################
-
-#load("new.Rdata")
-
-
-
-
-hf<-hf[hf$Age>
-#crea<-crea[!crea$PatientID %in% dialysis,]
-
-
-#crea<-crea[crea$PatientID %in% hf,]
-
-########################################################
-crea.rep$DataSource<-1
-########################################################
 
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
 #################################################################
 
 #MAX DAILY SERUM SODIUM #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
-data2<-data2 %>% group_by(PatientID, EntryDate) %>%
-summarize(CodeValue = max(CodeValue))
+sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, sir.data$CodeValue,NA)
+smalltab<-sir.data[,c("PatientID","SerumSodium")]
+first<-smalltab %>% group_by(PatientID) %>%
+summarize(SerumSodium = max(as.numeric(SerumSodium)))
+sir.data<-merge(sir.data,first,by="PatientID","EntryDate",all.x=TRUE,all.y=FALSE)
 
-indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
-indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
+
+indx1 <- neardate(crea.rep$PatientID, data3$PatientID, crea.rep$EntryDate, data3$EntryDate)
+indx2 <- neardate(crea.rep$PatientID, data3$PatientID, crea.rep$EntryDate, data3$EntryDate, 
                    best="prior")
 indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
        ifelse(is.na(indx2), indx1, 
-       ifelse(abs(data2$EntryDate[indx2]- crea.rep$EntryDate) <
-              abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
-
-
-crea.rep$SerumSodium<-data2[indx3, "CodeValue"]
-crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
+       ifelse(abs(data3$EntryDate[indx2]- crea.rep$EntryDate) <
+              abs(data3$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
+crea.rep$SerumSodium<-data3[indx3, "CodeValue"]
+crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data3$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ###################################################################
@@ -406,11 +392,36 @@ crea.rep$nephrectomydate<-as.Date(crea.rep$nephrectomydate, format="%Y%m%d")
 smalltab<-crea.rep[!is.na(crea.rep$nephrectomydate),c("PatientID","nephrectomydate")]
 first<-smalltab %>% group_by(PatientID) %>%
 summarize(nephrectomydate = min(nephrectomydate))
+sir.data<-merge(crea.rep,first,by="PatientID",all.x=TRUE,all.y=FALSE)
+
+
+
 crea.rep$nephrectomydate<-ifelse(crea.rep$PatientID %in% first$PatientID,first$nephrectomydate,crea.rep$nephrectomydate)
 
 crea.rep$SerumAlbumin<-data2[indx3, "CodeValue"]
 crea.rep$AlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
 rm(data2)
+
+
+#DIALYSIS
+crea.rep$dialdate<-with(crea.rep,ifelse(crea.rep$ReadCode  %in%  Dialysis1.csv$ReadCode,paste(crea.rep$EntryDate), NA)) 
+crea.rep$dialdate<-as.Date(crea.rep$dialdate, format="%Y%m%d")
+smalltab<-crea.rep[!is.na(crea.rep$dialdate),c("PatientID","dialdate")]
+first<-smalltab %>% group_by(PatientID) %>%
+summarize(dialdate = min(dialdate))
+crea.rep$dialdate<-ifelse(crea.rep$PatientID %in% first$PatientID,first$dialdate,crea.rep$dialdate)
+
+crea.rep$SerumAlbumin<-data2[indx3, "CodeValue"]
+crea.rep$AlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
+rm(data2)
+
+
+
+
+
+
+
+
 save(crea.rep, file = "new2.Rdata")
 
 #also....
