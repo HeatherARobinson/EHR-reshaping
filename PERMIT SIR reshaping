@@ -132,31 +132,16 @@ smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","Ent
 first <-aggregate(smalltab, by=list(smalltab$SerumSodium), 
   FUN=max, na.rm=TRUE)
 sir.data<-merge(sir.data,first,by="PatientID","EntryDate",all.x=TRUE)
-load ("sir.data.rda")
-memory.size(50000)
-#READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
-
-library(zoo)
-library(plyr)
-library(tidyverse)
-library(zoo)
-library(data.table)
-library(survival)
-library(lubridate)
 
 ####################################################
 
-temp = list.files(pattern="*1.csv")
-for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-
-#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
 length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
 
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
-first<-smalltab %>% group_by(PatientID) %>%
+first<-smalltab %>% group_by(PatientID,EntryDate) %>%
 summarize(hfage = min(hfage))
 sir.data<-merge(sir.data,first,by="PatientID",all.x=TRUE,all.y=FALSE)
 sir.data<-sir.data[sir.data$hfage>=18,]
