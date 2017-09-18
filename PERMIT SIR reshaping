@@ -32,7 +32,7 @@ crea$EntryPeriod<-paste(month,year)
 #Delete duplicate test results
 library(lubridate)
 crea$Creatinine<-crea$CodeValue
-d<-crea[(duplicated(crea$Creatinine)&duplicated(crea$PatientID)&duplicated(crea$EntryPeriod)),]
+d<-crea[!(duplicated(crea[,c(1,14:15)])),]
 crea[-d,] -> crea 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
