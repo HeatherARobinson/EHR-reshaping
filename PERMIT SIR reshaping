@@ -61,7 +61,8 @@ post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008
 table(post2008$PatientID) < 1 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
-crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.re	
+levels(unique(as.factor(crea$PatientID)))
 
 #CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
 aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
