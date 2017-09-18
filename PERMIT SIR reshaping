@@ -32,8 +32,7 @@ crea$EntryPeriod<-paste(month,year)
 #Delete duplicate test results
 library(lubridate)
 crea$Creatinine<-crea$CodeValue
-d<-crea[!(duplicated(crea[,c(1,14:15)])),]
-crea[-d,] -> crea 
+crea<-crea[!(duplicated(crea[,c(1,14:15)])),]
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 
@@ -63,7 +62,7 @@ post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008
 table(post2008$PatientID) < 1 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
-crea[!(crea$PatientID %in% ids[rare]),] -> crea.re	
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.reP	
 levels(unique(as.factor(crea$PatientID)))
 
 #CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
