@@ -37,6 +37,11 @@ crea$Creatinine<-crea$CodeValue
 
 #SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 
+smalltab<-crea[,c("PatientID","Creatinine", "EntryDate")]
+mincrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
+summarize(Creatinine = min(Creatinine))
+crea$Creatinine<-ifelse(crea$PatientID %in% mincrea$PatientID & crea$EntryDate %in% mincrea$EntryDate, mincrea$Creatinine, crea$Creatinine)
+
 #SELECT DATA POST 2008
 crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
 
