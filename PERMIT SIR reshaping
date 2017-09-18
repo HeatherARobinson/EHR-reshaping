@@ -11,6 +11,8 @@ library(survival)
 
 ####################################################
 
+temp = list.files(pattern="*1.csv")
+for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
@@ -19,7 +21,6 @@ sir.data[sir.data$ReadCode=="44J3.",]->crea
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 crea<-crea[!crea$PatientID %in% dialysis,]
 
-
 #DATA CLEANING
 #REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
@@ -27,13 +28,14 @@ crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #A
 (as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
 (as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
 (as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-Over$EntryPeriod<-paste(month,year)
+crea$EntryPeriod<-paste(month,year)
 #Delete duplicate test results
 library(lubridate)
+crea$Creatinine<-crea$CodeValue
 d<-crea[(duplicated(crea$Creatinine)&duplicated(crea$PatientID)&duplicated(crea$EntryPeriod)),]
 crea[-d,] -> crea 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
-crea$Creatinine<-crea$CodeValue
+
 
 #SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 
