@@ -76,7 +76,7 @@ levels(unique(as.factor(df1$PatientID)))
 #Add demographic variables from lookup tables
 
 #CODE IMD
-IMD.data<-read.table("IMD20101.csv",header=TRUE,sep=",")
+IMD.data<-read.table("IMD2010.csv",header=TRUE,sep=",")
 crea.rep<-merge(crea.rep,IMD.data,by="LSOA",all.x=TRUE, all.y=FALSE)
 
 #CODE ETHNICITY
@@ -102,12 +102,11 @@ save(crea.rep, file = "crea.rephr.Rdata")
 sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
 
 #Narrow lookup table to the full list of codes of interest to speed up processing
-
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-allcodes<-cbind(temp,all.x=true)
-
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode in allcodes$ReadCode),]
+merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
+                 list(AF1.csv,BMI1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
+sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
 
 #######################################################
 #####OPTIONAL BREAKPOINT
@@ -123,7 +122,6 @@ crea.rep$DataSource<-1
 
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
 #################################################################
-#I HAVE NOT LOOPED THIS YET AS THE CONDITIONS HAVE DIFFERENT REQUIREMENTS
 
 #MAX DAILY SERUM SODIUM #1 MONTH
 data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
@@ -316,8 +314,11 @@ save(crea.rep, file = "new2.Rdata")
 
 
 ###################################################################
-#URINE ALBUMIN CREATININE RATIO #1 YEAR
-data2<-sir.data[sir.data$ReadCode %in% UrineACR1.csv$ReadCode,]
+#MAX DAILY URINE ALBUMIN CREATININE RATIO #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% UrineACR1.csv$ReadCode,,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -333,7 +334,10 @@ save(crea.rep, file = "new2.Rdata")
 
 ###################################################################
 #MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
-data2<-sir.data[sir.data$ReadCode %in% MCV1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% MCV1.csv$ReadCode,,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -349,7 +353,10 @@ rm(data2)
 
 ###################################################################
 #MAX DAILY HAEMOGLOBIN #120 DAYS
-data2<-sir.data[sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
