@@ -126,7 +126,10 @@ crea.rep$DataSource<-1
 #I HAVE NOT LOOPED THIS YET AS THE CONDITIONS HAVE DIFFERENT REQUIREMENTS
 
 #MAX DAILY SERUM SODIUM #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -142,7 +145,10 @@ rm(data2)
 
 ###################################################################
 #MIN DAILY BMI #1 YEAR
-data2<-sir.data[sir.data$ReadCode %in% BMI1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% BMI1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -158,7 +164,10 @@ rm(data2)
 
 ###################################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
-data2<-sir.data[sir.data$ReadCode %in% UricAcid1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% UricAcid1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -173,7 +182,10 @@ crea.rep$UADateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >3
 rm(data2)
 ###################################################################
 #MAX DAILY BLOOD UREA NITROGEN #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% BUN1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% BUN1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -189,7 +201,10 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY SERUM POTASSIUM #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -205,7 +220,10 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY HEART RATE #1 MONTH
-data2<-sir.data[sir.data$ReadCode %in% HeartRate1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% HeartRate1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -221,7 +239,10 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
-data2<-sir.data[sir.data$ReadCode %in% SBP1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% SBP1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -237,7 +258,10 @@ rm(data2)
 
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
-data2<-sir.data[sir.data$ReadCode %in% DBP1.csv$ReadCode,]
+data2<-sir.data[sir.data$ReadCode %in% DBP1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = min(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -253,8 +277,11 @@ rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
 ##############################################################
-#SERUM ALBUMIN #1 YEAR
-data2<-sir.data[sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,]
+#MAX DAILY SERUM ALBUMIN #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
@@ -269,8 +296,11 @@ rm(data2)
 save(crea.rep, file = "new2.Rdata")
 
 ###################################################################
-#URINE ALBUMIN #1 YEAR
-data2<-sir.data[sir.data$ReadCode %in% UrineAlbumin1.csv$ReadCode,]
+#MAX DAILY URINE ALBUMIN #1 YEAR
+data2<-sir.data[sir.data$ReadCode %in% UrineAlbumin1.csv$ReadCode,c("PatientID","CodeValue", "EntryDate")]
+data2<-data2 %>% group_by(PatientID, EntryDate) %>%
+summarize(CodeValue = max(CodeValue))
+
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
                    best="prior")
