@@ -17,7 +17,7 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
-length(unique(as.factor(hf$PatientID)))
+length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
 
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
@@ -25,11 +25,12 @@ smalltab<-hf[,c("PatientID","hfage")]
 first<-smalltab %>% group_by(PatientID) %>%
 summarize(hfage = min(hfage))
 sir.data<-merge(sir.data,first,by="PatientID",all.x=TRUE,all.y=FALSE)
-sir.data$hfage<-ifelse(sir.data$PatientID %in% first$PatientID,first$hfage,sir.data$hfage)
 sir.data<-sir.data[sir.data$hfage>=18,]
+length(unique(as.factor(sir.data$PatientID))) # hf patients who were 18 or over at first diagnosis
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
+length(unique(as.factor(crea$PatientID))) #hf patients over 18 with creatinine data
 
 #REMOVE DIALYSIS PATIENTS
 #dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
