@@ -128,21 +128,22 @@ save(sir.data, file = "sir.datanofilters.Rdata")
 
 #MAX DAILY SERUM SODIUM #1 MONTH
 sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, sir.data$CodeValue,NA)
-smalltab<-sir.data[,c("PatientID","SerumSodium")]
-first<-smalltab %>% group_by(PatientID) %>%
+smalltab<-sir.data[!is.na(smalltab$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
+first<-smalltab %>% group_by(PatientID,EntryDate) %>%
 summarize(SerumSodium = max(as.numeric(SerumSodium)))
-sir.data<-merge(sir.data,first,by="PatientID","EntryDate",all.x=TRUE,all.y=FALSE)
+sir.data<-merge(sir.data,first,by="PatientID","EntryDate",all.x=TRUE)
 
+data2<-sir.data[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode,]
 
-indx1 <- neardate(crea.rep$PatientID, data3$PatientID, crea.rep$EntryDate, data3$EntryDate)
-indx2 <- neardate(crea.rep$PatientID, data3$PatientID, crea.rep$EntryDate, data3$EntryDate, 
+indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data3$EntryDate)
+indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data3$EntryDate, 
                    best="prior")
 indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
        ifelse(is.na(indx2), indx1, 
-       ifelse(abs(data3$EntryDate[indx2]- crea.rep$EntryDate) <
-              abs(data3$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
-crea.rep$SerumSodium<-data3[indx3, "CodeValue"]
-crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data3$EntryDate[indx3]) >30, 1, NA)
+       ifelse(abs(data2$EntryDate[indx2]- crea.rep$EntryDate) <
+              abs(data2$EntryDate[indx1]- crea.rep$EntryDate), indx2, indx1)))
+crea.rep$SerumSodium<-data2[indx3, "SerumSodium"]
+crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >30, 1, NA)
 rm(data2)
 
 ###################################################################
