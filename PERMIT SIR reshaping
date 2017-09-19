@@ -33,8 +33,8 @@ sir.data[sir.data$ReadCode=="44J3.",]->crea
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
 
 #REMOVE DIALYSIS PATIENTS
-#dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-#crea<-crea[!crea$PatientID %in% dialysis,]
+dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
+crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #DATA CLEANING
 #REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
@@ -47,16 +47,19 @@ crea$EntryPeriod<-paste(month,year)
 #Delete duplicate test results
 library(lubridate)
 crea$Creatinine<-crea$CodeValue
-crea<-crea[!(duplicated(crea[,c(1,14:15)])),]
+crea<-crea[!(duplicated(crea[,c(1,15:16)])),]
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 
 #SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 
 smalltab<-crea[,c("PatientID","Creatinine", "EntryDate")]
-mincrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = min(Creatinine))
-crea$Creatinine<-ifelse(crea$PatientID %in% mincrea$PatientID & crea$EntryDate %in% mincrea$EntryDate, mincrea$Creatinine, crea$Creatinine)
+maxcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
+summarize(Creatinine = max(Creatinine))
+crea$Creatinine<-ifelse(crea$PatientID %in% maxcrea$PatientID & crea$EntryDate %in% maxcrea$EntryDate, maxcrea$Creatinine, crea$Creatinine)
+
+head(smalltab[with(smalltab, order(PatientID, EntryDate)),])
+head(maxcrea[with(maxcrea, order(PatientID, EntryDate)),])
 
 #ASSIGN AGE
 crea$Age<-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d"))))-crea$BirthYear
@@ -73,15 +76,17 @@ post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008
 table(post2008$PatientID) < 1 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
+
+
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 levels(unique(as.factor(crea$PatientID)))
 
 #CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
-#aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
-#ranges$x[,2] - ranges$x[,1] -> ranges$range
-#ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
-#crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
-#crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep2$PatientID))[table(crea.rep2$PatientID)>=2] , ] # define min tests
+aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
+ranges$x[,2] - ranges$x[,1] -> ranges$range
+ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
+crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep$PatientID))[table(crea.rep$PatientID)>=3] , ] # define min tests
 
 levels(unique(as.factor(crea.rep$PatientID))) #6971 remaining if no range limit
 
