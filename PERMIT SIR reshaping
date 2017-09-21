@@ -135,7 +135,7 @@ sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, s
 smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
 first <-aggregate(smalltab, by=list(smalltab$SerumSodium), 
   FUN=max, na.rm=TRUE)
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,first[,2:4],all.x=TRUE)
 
 #######################################################
 #Breakpoint
