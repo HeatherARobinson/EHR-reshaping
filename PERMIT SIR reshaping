@@ -103,19 +103,18 @@ crea.rep<-subset(crea.rep, select=-c(Ethnicity,ClinCode1,ReligionDescription,Mar
 colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
 
 #LSOA, age already present in SIR
-
+sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
 #######################################################
 #Breakpoint
 #######################################################
 #######################################################
 save(crea.rep, file = "crea.rep1yr2tests.Rdata")
+save(sir.data, file = "sir.data1yr2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
 
 #load("crea.rephr.Rdata")
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]
-
 #Narrow lookup table to the full list of codes of interest to speed up processing
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
@@ -137,91 +136,6 @@ smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","Ent
 first <-aggregate(smalltab, by=list(smalltab$SerumSodium), 
   FUN=max, na.rm=TRUE)
 sir.data<-merge(sir.data,first,by="PatientID","EntryDate",all.x=TRUE)
-
-####################################################
-
-hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
-length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
-
-hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
-hf$hfage<-hf$Age
-smalltab<-hf[,c("PatientID","hfage")]
-first<-smalltab %>% group_by(PatientID,EntryDate) %>%
-summarize(hfage = min(hfage))
-sir.data<-merge(sir.data,first,by="PatientID",all.x=TRUE,all.y=FALSE)
-sir.data<-sir.data[sir.data$hfage>=18,]
-length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
-
-#SELECT PATIENTS WITH CREATININE DATA
-sir.data[sir.data$ReadCode=="44J3.",]->crea 
-length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
-
-#REMOVE DIALYSIS PATIENTS
-#dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-#crea<-crea[!crea$PatientID %in% dialysis,]
-
-#DATA CLEANING
-#REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
-as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
-crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-crea$EntryPeriod<-paste(month,year)
-#Delete duplicate test results
-library(lubridate)
-crea$Creatinine<-crea$CodeValue
-crea<-crea[!(duplicated(crea[,c(1,14:15)])),]
-crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
-
-
-#SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
-
-smalltab<-crea[,c("PatientID","Creatinine", "EntryDate")]
-mincrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = min(Creatinine))
-crea$Creatinine<-ifelse(crea$PatientID %in% mincrea$PatientID & crea$EntryDate %in% mincrea$EntryDate, mincrea$Creatinine, crea$Creatinine)
-
-#ASSIGN AGE
-crea$Age<-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d"))))-crea$BirthYear
-
-#Create a date format entry date
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
-
-#LIMIT TO PATIENTS WITH AT LEAST 1 POST 2008 CREATININE TEST VALUES
-crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
-post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
-table(post2008$PatientID) < 1 -> rare  
-rownames(as.matrix(rare)) -> ids
-table(rare)
-crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea$PatientID)))
-
-#CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
-#aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
-#ranges$x[,2] - ranges$x[,1] -> ranges$range
-#ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
-#crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
-#crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep2$PatientID))[table(crea.rep2$PatientID)>=2] , ] # define min tests
-
-levels(unique(as.factor(crea.rep$PatientID))) #6971 remaining if no range limit
-
-######################################################
-#Add demographic variables from lookup tables
-
-
-#CODE ETHNICITY
-ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
-ethnic.data$Category<-floor(ethnic.data$Category)
-crea.rep<-merge(crea.rep,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
-names(crea.rep)
-crea.rep<-subset(crea.rep, select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus))
-colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
-
-#LSOA, age already present in SIR
 
 #######################################################
 #Breakpoint
