@@ -86,7 +86,7 @@ aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), li
 ranges$x[,2] - ranges$x[,1] -> ranges$range
 ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
 crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
-crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep$PatientID))[table(crea.rep$PatientID)>=3] , ] # define min tests
+crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep$PatientID))[table(crea.rep$PatientID)>=2] , ] # define min tests
 
 levels(unique(as.factor(crea.rep$PatientID))) #6971 remaining if no range limit
 
@@ -108,7 +108,7 @@ colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
 #Breakpoint
 #######################################################
 #######################################################
-save(crea.rep, file = "crea.repnofilters.Rdata")
+save(crea.rep, file = "crea.rep1yr2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
