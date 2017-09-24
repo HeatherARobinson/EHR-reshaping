@@ -1,5 +1,8 @@
 load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
-instructionssfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
+instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,5)]
+
+
+perl parse_drug_file.pl [path to input file]
 
