@@ -35,12 +35,12 @@ save(sir.data, file = "sir.dataconditionsonly.Rdata")
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
 #################################################################
 
-#MAX DAILY SERUM SODIUM #1 MONTH
+#MAX DAILY SERUM SODIUM #30 DAYS
 sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, sir.data$CodeValue,NA)
 smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
 first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=max, na.rm=TRUE)
-sir.data<-merge(sir.data,first[,2:4],all.x=TRUE)
+sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -50,7 +50,7 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
             ifelse(abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx2]- as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))) 
              < abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx2] - as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))), indx2, indx1)))
 crea.rep$SerumSodium<-first[indx3, "SerumSodium"]
-crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - first$EntryDate[indx3]) >30, 1, NA)
+crea.rep$SerSodDateFlag<- ifelse(abs(as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d"))) - as.numeric(day(strptime(first$EntryDate[indx3],format="%Y%m%d")))) >30, 1, NA)
 
 #######################################################
 
@@ -58,9 +58,9 @@ crea.rep$SerSodDateFlag<- ifelse(abs(crea.rep$EntryDate - first$EntryDate[indx3]
 
 sir.data$BMI<-ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, sir.data$CodeValue,NA)
 smalltab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
-first <-aggregate(smalltab, by=list(smalltab$BMI), 
+first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=min, na.rm=TRUE)
-sir.data<-merge(sir.data,first[,2:4],all.x=TRUE)
+sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -70,7 +70,7 @@ indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each i
             ifelse(abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx2]- as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))) 
              < abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx2] - as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))), indx2, indx1)))
 crea.rep$BMI<-first[indx3, "BMI"]
-crea.rep$BMIDateFlag<- ifelse(abs(crea.rep$EntryDate - first$EntryDate[indx3]) >365, 1, NA)
+crea.rep$BMIDateFlag<- ifelse(abs(as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d"))) - as.numeric(day(strptime(first$EntryDate[indx3],format="%Y%m%d")))) >365, 1, NA)
 
 save(crea.rep, file = "crea.repongoing.Rdata")
 
@@ -79,9 +79,9 @@ save(crea.rep, file = "crea.repongoing.Rdata")
 
 sir.data$UricAcid<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, sir.data$CodeValue,NA)
 smalltab<-sir.data[!is.na(sir.data$UricAcid),c("PatientID","UricAcid","EntryDate")]
-first <-aggregate(smalltab, by=list(smalltab$UricAcid), 
+first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=max, na.rm=TRUE)
-sir.data<-merge(sir.data,first[,2:4],all.x=TRUE)
+sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -97,9 +97,9 @@ crea.rep$UricAcidDateFlag<- ifelse(abs(crea.rep$EntryDate - first$EntryDate[indx
 #MAX DAILY BLOOD UREA NITROGEN #1 MONTH
 sir.data$BUN<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,sir.data$CodeValue,NA)
 smalltab<-sir.data[!is.na(sir.data$BUN),c("PatientID","BUN","EntryDate")]
-first <-aggregate(smalltab, by=list(smalltab$BUN), 
+first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=max, na.rm=TRUE)
-sir.data<-merge(sir.data,first[,2:4],all.x=TRUE)
+sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -116,8 +116,9 @@ crea.rep$BUNDateFlag<- ifelse(abs(crea.rep$EntryDate - first$EntryDate[indx3]) >
 #MIN DAILY SERUM POTASSIUM #1 MONTH
 sir.data$SerumPotassium<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,sir.data$CodeValue,NA)
 smalltab<-sir.data[!is.na(sir.data$SerumPotassium),c("PatientID","SerumPotassium","EntryDate")]
-first <-aggregate(smalltab, by=list(smalltab$SerumPotassium), 
+first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=min, na.rm=TRUE)
+sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, data2$PatientID, crea.rep$EntryDate, data2$EntryDate, 
