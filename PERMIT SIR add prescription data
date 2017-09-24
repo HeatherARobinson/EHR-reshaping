@@ -1,3 +1,5 @@
-load("sir.dataconditionsonly.Rdata")
+load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
-sir.data<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:6)]
+codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
+instructionssfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
+
