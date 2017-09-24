@@ -1,0 +1,3 @@
+load("sir.dataconditionsonly.Rdata")
+codes<-read.csv("READv2.csv")
+sir.data<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:6)]
