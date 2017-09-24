@@ -2,6 +2,8 @@ load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
 instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,5)]
+write.csv(codesfile,"codes.csv")
+write.csv(instructionsfile,"instructions.csv")
 
 $ node index.js -c <codesfile.csv>
 
