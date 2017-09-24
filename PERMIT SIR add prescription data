@@ -3,6 +3,9 @@ codes<-read.csv("READv2.csv")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
 instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,5)]
 
+$ node index.js -c <codesfile.csv>
+
+$ node index.js -i <instructionsfile.csv>
 
 perl parse_drug_file.pl [path to input file]
 
