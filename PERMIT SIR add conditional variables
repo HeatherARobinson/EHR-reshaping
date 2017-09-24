@@ -36,8 +36,8 @@ save(sir.data, file = "sir.dataconditionsonly.Rdata")
 #################################################################
 
 #MAX DAILY SERUM SODIUM #30 DAYS
-sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, sir.data$CodeValue,NA)
-smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
+sir.data$SerumSodium<-as.numeric(ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, paste(sir.data$CodeValue),NA))
+smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","CodeValue","EntryDate")]
 first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=max, na.rm=TRUE)
 sir.data<-merge(sir.data,first[,3:5],all.x=TRUE)
@@ -55,7 +55,8 @@ crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 
 #MIN DAILY BMI #1 YEAR
 
-sir.data$BMI<-ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, sir.data$CodeValue,NA)
+sir.data$BMI<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, paste(sir.data$CodeValue),NA))
+
 smalltab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
 first <-aggregate(smalltab, by=list(smalltab$PatientID,smalltab$EntryDate), 
   FUN=min, na.rm=TRUE)
