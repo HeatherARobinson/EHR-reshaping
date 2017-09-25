@@ -354,7 +354,6 @@ first<-smalltab %>%
     slice(1L) %>%
     ungroup ()
 crea.rep<-merge(crea.rep,first,all.x=TRUE)
-crea.rep$DaysSinceNephrectomy<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,crea.rep$EntryDate-crea.rep$nephrectomydate,0)
 
 #DIABETES
 sir.data$DiabDate<-with(sir.data,ifelse(sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,as.integer(paste(sir.data$EntryDate)), NA)) 
@@ -366,9 +365,14 @@ first<-smalltab %>%
     ungroup ()
 crea.rep<-merge(crea.rep,first,all.x=TRUE)
 crea.rep$DiabDate<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,1,0)
-crea.rep$DaysSinceDiabetic<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,(crea.rep$EntryDate-crea.rep$DiabDate),0)
-
 save(crea.rep, file = "crea.rep1yr2tests.Rdata")
+
+#IN PROGRESS...
+
+crea.rep$DaysSinceDiabetic<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,(crea.rep$EntryDate-crea.rep$DiabDate),0)
+crea.rep$DaysSinceNephrectomy<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,crea.rep$EntryDate-crea.rep$nephrectomydate,0)
+
+
 
 #also....
 #Diabetes
