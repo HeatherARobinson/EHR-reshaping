@@ -358,17 +358,15 @@ crea.rep$nephrectomydate<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nep
 
 
 #DIALYSIS
-crea.rep$dialdate<-with(crea.rep,ifelse(crea.rep$ReadCode  %in%  Dialysis1.csv$ReadCode,paste(crea.rep$EntryDate), NA)) 
-crea.rep$dialdate<-as.Date(crea.rep$dialdate, format="%Y%m%d")
-smalltab<-crea.rep[!is.na(crea.rep$dialdate),c("PatientID","dialdate")]
-first<-smalltab %>% group_by(PatientID) %>%
-summarize(dialdate = min(dialdate))
-crea.rep$dialdate<-ifelse(crea.rep$PatientID %in% first$PatientID,first$dialdate,crea.rep$dialdate)
-
-crea.rep$SerumAlbumin<-data2[indx3, "CodeValue"]
-crea.rep$AlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
-rm(data2)
-
+sir.data$diadate<-with(sir.data,ifelse(sir.data$ReadCode  %in%  Dialysis1.csv$ReadCode,as.integer(paste(sir.data$EntryDate)), NA)) 
+smalltab<-sir.data[!is.na(sir.data$dialdate),c("PatientID","dialdate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(nephrectomydate) %>%
+    slice(1L) %>%
+    ungroup ()
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$nephrectomydate<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,1,0)
 
 
 
