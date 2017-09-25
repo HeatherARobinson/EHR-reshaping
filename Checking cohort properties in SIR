@@ -78,4 +78,18 @@ ranges[(which(ranges$range <1)),1] -> range_short_ids
 alls[which(alls$PatientID %in% range_short_ids),] -> allsp 
 levels(as.factor(allsp$PatientID))
 
+CHECK FOR SENSITIITY OF SPECULATIVE HEART FAILURE CODES
+###################################################################
+#HEART FAILURE ALL CODES ANY HF AT ANY POINT
+data2<-sir.data[sir.data$ReadCode %in% HeartFailureAll1.csv$Code,]
+crea.rep$HeartFailureAll<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0)
+rm(data2)
+###################################################################
+#HEART FAILURE CONFIRMED CODES ANY HF AT ANY POINT
+data2<-sir.data[sir.data$ReadCode %in% HeartFailureConfirmed1.csv$ReadCode,]
+crea.rep$HeartFailureConf<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0) 
+rm(data2)
+specheartpatients<-crea.rep[crea.rep$HeartFailureConf==0&crea.rep$HeartFailureAll==1,]
+levels(as.factor(specheartpatients$PatientID))
+table(crea.rep$HeartFailureAll)
 
