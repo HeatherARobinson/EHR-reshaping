@@ -44,10 +44,9 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(SerumSodium))) %>%
 ungroup()
-
 length(as.factor(unique(first$SerumSodium)))
 length(as.factor(unique(smalltab$SerumSodium)))
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 head(sir.data)
 length(as.factor(unique(sir.data$SerumSodium)))
 
@@ -70,7 +69,7 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(BMI))) 
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 head(sir.data)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
@@ -95,7 +94,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(UricAcid))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -116,7 +115,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(BUN))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -140,7 +139,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(SerumPotassium))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -163,7 +162,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(HeartRate))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -186,7 +185,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(SBP))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -208,7 +207,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(DBP))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -231,7 +230,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(SerumAlbumin))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -253,7 +252,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(UrineAlbumin))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -276,7 +275,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(UACratio))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -298,7 +297,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(MCV))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -322,7 +321,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 slice(which.max(as.numeric(Haemoglobin))) %>%
 ungroup()
-sir.data<-merge(sir.data,first,all.x=TRUE)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
 
 indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -369,8 +368,8 @@ save(crea.rep, file = "crea.rep1yr2tests.Rdata")
 
 #IN PROGRESS...
 
-crea.rep$DaysSinceDiabetic<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,(crea.rep$EntryDate-crea.rep$DiabDate),0)
-crea.rep$DaysSinceNephrectomy<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,crea.rep$EntryDate-crea.rep$nephrectomydate,0)
+crea.rep$DaysSinceDiabetic<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,date_diff(crea.rep$EntryDate,crea.rep$DiabDate),0)
+crea.rep$DaysSinceNephrectomy<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,date_diff(crea.rep$EntryDate,crea.rep$nephrectomydate),0)
 
 
 
@@ -386,7 +385,7 @@ crea.rep$DaysSinceNephrectomy<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.re
 
 crea.rep$log_CREA <- log10(crea.rep$Creatinine)
 #crea.rep$AKI #Acute Kidney Injury
-crea.rep$PP<-sum(crea.rep$SBP-crea.rep$DBP)
+#crea.rep$PP<-sum(crea.rep$SBP-crea.rep$DBP)
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 #crea.rep$eGFR<- #Estimated glomerular filtration rate
 #crea.rep$CKD<- #Chronic Kidney Disease
@@ -419,21 +418,5 @@ crea.rep$AAdose<- #ALDOSTERONE ANTAGONIST DOSE
 crea.rep$ACEIdose<- #ACE INHIBITOR DOSE
 crea.rep$ARBdose<- #Angiotensin receptor blocker DOSE
 
-CHECK FOR SENSITIITY OF SPECULATIVE HEART FAILURE CODES
-###################################################################
-#HEART FAILURE ALL CODES ANY HF AT ANY POINT
-data2<-sir.data[sir.data$ReadCode %in% HeartFailureAll1.csv$Code,]
-crea.rep$HeartFailureAll<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0)
-rm(data2)
-###################################################################
-#HEART FAILURE CONFIRMED CODES ANY HF AT ANY POINT
-data2<-sir.data[sir.data$ReadCode %in% HeartFailureConfirmed1.csv$ReadCode,]
-crea.rep$HeartFailureConf<-ifelse(crea.rep$PatientID  %in%  data2$PatientID,1,0) 
-rm(data2)
-specheartpatients<-crea.rep[crea.rep$HeartFailureConf==0&crea.rep$HeartFailureAll==1,]
-levels(as.factor(specheartpatients$PatientID))
-table(crea.rep$HeartFailureAll)
-#CODE BINARY CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
 
-########################################################
 crea.rep$DataSource<-1
