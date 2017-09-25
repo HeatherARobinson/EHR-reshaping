@@ -1,13 +1,17 @@
+#2 files are needed. Both need patient ID and date, 
+
 load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4)]
-instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,5)]
-write.csv(codesfile,"codes.csv")
-write.csv(instructionsfile,"instructions.csv")
+instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:4,5)]
+write.table(codesfile,file="codes.txt", sep="\t")
+write.table(instructionsfile,file="instructions.txt", sep="\t")
 
-$ node index.js -c <codesfile.csv>
+node index.js -c resources/codes.txt && sort resources/codes.txt
+#This sorts the codes file by patient ID
 
-$ node index.js -i <instructionsfile.csv>
+node index.js -i resources/instructions.txt && sort resources/instructions.txt
+
 
 perl parse_drug_file.pl [path to input file]
 
