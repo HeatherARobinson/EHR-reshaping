@@ -353,15 +353,8 @@ first<-smalltab %>%
     arrange(nephrectomydate) %>%
     slice(1L) %>%
     ungroup ()
-first$nephrectomydate<-as.Date(first$nephrectomydate, format="%Y%m%d")
-first$ndate<-paste(first$nephrectomydate)
-crea.rep<-merge(crea.rep,first[,c(1,3)],all.x=TRUE)
-colnames(crea.rep)[colnames(crea.rep) == 'ndate'] <- 'nephrectomydate'
-crea.rep$nephrectomydate<-ifelse(crea.rep$PatientID %in% first$PatientID,first$nephrectomydate,crea.rep$nephrectomydate)
-
-crea.rep$SerumAlbumin<-data2[indx3, "CodeValue"]
-crea.rep$AlbuminDateFlag<- ifelse(abs(crea.rep$EntryDate - data2$EntryDate[indx3]) >365, 1, NA)
-rm(data2)
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$nephrectomydate<-ifelse(!is.na(crea.rep$nephrectomydate) & crea.rep$nephrectomydate<=crea.rep$EntryDate,1,0)
 
 
 #DIALYSIS
