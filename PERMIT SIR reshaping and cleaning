@@ -103,45 +103,32 @@ save(sir.data, file = "sir.datahfonly.Rdata")
 #######################################################
 
 
-#CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND AT LEAST 2 TESTS
-aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
-ranges$x[,2] - ranges$x[,1] -> ranges$range
-ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range
-crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+#CHECK PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
+#aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
+#ranges$x[,2] - ranges$x[,1] -> ranges$range
+#ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range if time range restriction needed
+#crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
 crea.rep<-crea.rep[ crea.rep$PatientID %in%  names(table(crea.rep$PatientID))[table(crea.rep$PatientID)>=2] , ] # define min tests
 
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]  #x remaining with 1yr 2 test limit
+sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]  #x hr patients remaining with 2 tests or more, 1 post 2008
 
 #######################################################
 #Breakpoint
 #######################################################
 #######################################################
-save(crea.rep, file = "crea.rep1yr2tests.Rdata")
-save(sir.data, file = "sir.data1yr2tests.Rdata")
+save(crea.rep, file = "crea.rep2tests.Rdata")
+save(sir.data, file = "sir.data2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING OTHER R SCRIPT IN SAME FOLDER
 #ADD PRESCRIPTION DATA USING OTHER R SCRIPT IN SAME FOLDER
 
 #Narrow lookup table to the full list of codes of interest to speed up processing
-temp = list.files(pattern="*1.csv")
-for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
-                 list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartFailure1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
-
-#######################################################
-#####OPTIONAL BREAKPOINT
-save(sir.data, file = "sir.datanofilters.Rdata")
-#######################################################
+#temp = list.files(pattern="*1.csv")
+#for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+#merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
+#list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartFailure1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
+#sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
 
 ##########################################################################
-#CODE FOR POTENTIAL LOOP (NEEDS WORK)
-#for (i in 1:length(temp)){
-#col_names<-""
-#eval(parse(text = paste0('sir.data2$colum', i, '<- with(sir.data2,
-#ifelse(sir.data2$ReadCode %in% (temp[[i]][,2]),paste(sir.data2$EntryDate), NA)
-#)')))
-#}
-############################################################################
 
