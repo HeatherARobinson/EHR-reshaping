@@ -59,14 +59,26 @@ crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
 crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
 #######################################################
 
-#CLOSEST MEAN DAILY BMI #1 YEAR
+#CLOSEST DAILY BMI MEAN #1YR DATE FLAG
 sir.data$BMI<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
-smalltab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
-columns=names(smalltab[c(1,3)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
+sir.data$height<-as.numeric(ifelse(sir.data$ReadCode %in% Height1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA
+sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
+
+BMItab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
+columns1=names(BMItab[c(1,3)])
+dots<-lapply(columns1, as.symbol)
+firstB <-smalltab %>% 
 group_by_(.dots=dots) %>%
-slice(which.min(as.numeric(BMI))) 
+summarize(BMI=mean(as.numeric(BMI))) 
+
+Heighttab<-sir.data[!is.na(sir.data$height),c("PatientID","height","EntryDate")]
+columns1=names(BMItab[c(1,3)])
+dots<-lapply(columns1, as.symbol)
+firstB <-smalltab %>% 
+group_by_(.dots=dots) %>%
+summarize(BMI=mean(as.numeric(BMI))) 
+
+
 sir.data<-merge(sir.data,first,all.x=TRUE)
 head(sir.data)
 
