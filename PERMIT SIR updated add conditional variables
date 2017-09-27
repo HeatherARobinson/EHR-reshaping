@@ -63,33 +63,32 @@ crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 sir.data$BMI<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
 sir.data$height<-as.numeric(ifelse(sir.data$ReadCode %in% Height1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA
 sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
+sir.datacalc<-sir.data[sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),])& sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),]),]
 
 BMItab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
 columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
-firstB <-smalltab %>% 
+firstA <-smalltab %>% 
 group_by_(.dots=dots) %>%
 summarize(BMI=mean(as.numeric(BMI))) 
 
-Heighttab<-sir.data[!is.na(sir.data$height),c("PatientID","height","EntryDate")]
-columns1=names(BMItab[c(1,3)])
+calctab<-sir.datacalc[!is.na(calctab$height),c("PatientID","height")]
+firstA <-calctab %>% 
+group_by_(PatientID) %>%
+summarize(height=max(as.numeric(height))) 
+
+calctab2<-[!is.na(calctab$weight),c("PatientID","weight","EntryDate")]
+calctab3<-merge(calctab2,calctab,all.x=TRUE)
+calctab3$BMI<-as.numeric(calctab3$weight)/(as.numeric(calctab3$height))^2
+#columns1=names(calctab3[c(1,3)])
 dots<-lapply(columns1, as.symbol)
-firstB <-smalltab %>% 
+firstB <-calctab3 %>% 
 group_by_(.dots=dots) %>%
 summarize(BMI=mean(as.numeric(BMI))) 
-
-
-sir.data<-merge(sir.data,first,all.x=TRUE)
-head(sir.data)
-
-indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
-indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+firstB<-as.data.frame(FirstB)
+indx1 <- neardate(crea.rep$PatientID, firstB$PatientID, crea.rep$EntryDate, firstB$EntryDate, 
                    best="prior")
-indx3<-ifelse(is.na(indx1), indx2, # find closest date match in data2 for each id and date in data1
-      ifelse(is.na(indx2), indx1, 
-            ifelse(abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx2]- as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))) 
-             < abs(as.numeric(day(strptime(first$EntryDate, format="%Y%m%d")))[indx1] - as.numeric(day(strptime(crea.rep$EntryDate, format="%Y%m%d")))), indx2, indx1)))
-crea.rep$BMI<-first[indx3, "BMI"]
+crea.rep$BMI<-firstB[indx1, "BMI"]
 crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx3])) >365, 1, NA)
 save(crea.rep, file = "crea.repongoing.Rdata")
 
