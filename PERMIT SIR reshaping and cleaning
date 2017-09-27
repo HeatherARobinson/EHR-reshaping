@@ -26,9 +26,20 @@ hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
 first<-smalltab %>% group_by(PatientID) %>%
 summarize(hfage = min(hfage))
-sir.data<-merge(sir.data,first,by="PatientID",all.x=TRUE,all.y=FALSE)
+sir.data<-merge(sir.data,as.data.frame(first),by="PatientID",all.x=TRUE)
 sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
+
+#REMOVE SAME DAY AND DELAYED ENTRIES
+names(sir.data)
+length(sir.data$PatientID)
+sir.data<-sir.data[!(duplicated(sir.data[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, RUBRIC, VALUE)
+length(sir.data$PatientID) #SAME DAY - over 30 million same day duplicate rows removed, leaves 425552 non duplicate records
+
+#REMOVE SAME DAY AND DELAYED DUPLICATE PATHOLOGY DATA ENTRIES
+d<-crea[duplicated(crea[,c(1,2,6,16)])&crea$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,16)]
+d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
@@ -51,11 +62,9 @@ crea$EntryPeriod<-paste(month,year)
 library(lubridate)
 crea$Creatinine<-crea$CodeValue
 
-#REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
-names(crea)
-crea<-crea[!(duplicated(crea[,c(1:3,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, VALUE)
-crea<-crea[(duplicated(crea[,c(1,2,15:16)])&!duplicated(crea$Source)),] #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
-
+length(crea$PatientID) #DELAYED CR. DUP
+which(crea$CodeValue>0&crea$CodeValue>0<18) # x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
+head(crea[which(crea$CodeValue>0&crea$CodeValue>0<18)]) 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 
