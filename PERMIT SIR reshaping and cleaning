@@ -1,4 +1,6 @@
 load ("sir.data.rda")
+load("datasource.rda")
+crea<-merge(sir.data,sir.datasource,all.x=TRUE)
 memory.size(50000)
 #READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 
@@ -31,13 +33,14 @@ length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
+crea$Source<-ifelse(crea$Source=="salfordt",paste("Hospital"),paste("GP"))
+crea$Source<-ifelse(is.na(crea$Source),paste("GP"),crea$Source)
 
 #REMOVE DIALYSIS PATIENTS
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #DATA CLEANING
-#REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
 as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
 (as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
@@ -47,7 +50,12 @@ crea$EntryPeriod<-paste(month,year)
 #Delete duplicate test results
 library(lubridate)
 crea$Creatinine<-crea$CodeValue
-crea<-crea[!(duplicated(crea[,c(1,15:16)])),]
+
+#REMOVE DUPLICATE AND OUT OF RANGE ENTRIES
+names(crea)
+crea<-crea[!(duplicated(crea[,c(1:3,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, VALUE)
+crea<-crea[(duplicated(crea[,c(1,2,15:16)])&!duplicated(crea$Source)),] #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 
