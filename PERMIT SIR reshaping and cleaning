@@ -11,7 +11,8 @@ library(zoo)
 library(data.table)
 library(survival)
 library(lubridate)
-
+#save(sir.data,file="sir.datawithsource.rda")
+#load("sir.datawithsource.rda")
 ####################################################
 
 temp = list.files(pattern="*1.csv")
@@ -30,25 +31,6 @@ sir.data<-merge(sir.data,as.data.frame(first),by="PatientID",all.x=TRUE)
 sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
-#REMOVE SAME DAY AND DELAYED ENTRIES
-names(sir.data)
-length(sir.data$PatientID)
-
-as.numeric(as.character(sir.data$CodeValue)) -> sir.data$CodeValue
-(as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> day
-sir.data$EntryPeriod<-paste(month,year)
-names(sir.data)
-
-#REMOVE SAME DAY AND DELAYED DUPLICATE PATHOLOGY DATA ENTRIES
-sir.data<-sir.data[!(duplicated(sir.data[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, RUBRIC, VALUE)
-length(sir.data$PatientID) #SAME DAY - leaves 21814175 non duplicate records OF 55309368 (39%).
-
-d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
-d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
-#THE EARLIEST DATED OF THE DUPLICATES IS KEPT.
-
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
@@ -66,6 +48,23 @@ length(crea$PatientID) #DELAYED CR. DUP
 which(crea$CodeValue>0&crea$CodeValue>0<18) # x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 head(crea[which(crea$CodeValue>0&crea$CodeValue>0<18)]) 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
+
+#REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
+names(crea)
+length(crea$PatientID)
+crea<-crea[!(duplicated(crea[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+length(crea$PatientID) #SAME DAY - leaves 21814175 non duplicate records OF 55309368 (39%).
+
+as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
+(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
+(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
+(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
+crea$EntryPeriod<-paste(month,year)
+names(crea)
+
+d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
+d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+#THE EARLIEST OF THE DUPLICATES IS KEPT.
 
 
 #SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
@@ -89,13 +88,12 @@ as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 
 #LIMIT TO PATIENTS WITH AT LEAST 1 POST 2008 CREATININE TEST VALUES
 crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
-post2008<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
-table(post2008$PatientID) < 1 -> rare  
+crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
+table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
-
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea$PatientID)))
+levels(unique(as.factor(crea$PatientID))) # non dialysis adult hf patients have 2 or more post 2008 creatinine tests
 
 ######################################################
 #Add demographic variables from lookup tables
