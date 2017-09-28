@@ -33,13 +33,20 @@ length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or 
 #REMOVE SAME DAY AND DELAYED ENTRIES
 names(sir.data)
 length(sir.data$PatientID)
-sir.data<-sir.data[!(duplicated(sir.data[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, RUBRIC, VALUE)
-length(sir.data$PatientID) #SAME DAY - over 30 million same day duplicate rows removed, leaves 425552 non duplicate records
+
+as.numeric(as.character(sir.data$CodeValue)) -> sir.data$CodeValue
+(as.numeric(year(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> year
+(as.numeric(month(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> month
+(as.numeric(day(strptime(sir.data$EntryDate, format="%Y%m%d")))) -> day
+sir.data$EntryPeriod<-paste(month,year)
+names(sir.data)
 
 #REMOVE SAME DAY AND DELAYED DUPLICATE PATHOLOGY DATA ENTRIES
+sir.data<-sir.data[!(duplicated(sir.data[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, RUBRIC, VALUE)
+length(sir.data$PatientID) #SAME DAY - 33298405 same day duplicate rows removed (39.7%), leaves 22010963 non duplicate records
+
 d<-crea[duplicated(crea[,c(1,2,6,16)])&crea$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,16)]
 d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
-
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
@@ -52,16 +59,8 @@ dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #DATA CLEANING
-as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
-crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-crea$EntryPeriod<-paste(month,year)
-#Delete duplicate test results
-library(lubridate)
-crea$Creatinine<-crea$CodeValue
 
+crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
 length(crea$PatientID) #DELAYED CR. DUP
 which(crea$CodeValue>0&crea$CodeValue>0<18) # x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 head(crea[which(crea$CodeValue>0&crea$CodeValue>0<18)]) 
