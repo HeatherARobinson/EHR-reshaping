@@ -45,8 +45,9 @@ names(sir.data)
 sir.data<-sir.data[!(duplicated(sir.data[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES ACROSS ALL FIELDS (SAME PATIENT, DATE, CODE, RUBRIC, VALUE)
 length(sir.data$PatientID) #SAME DAY - 33298405 same day duplicate rows removed (39.7%), leaves 22010963 non duplicate records
 
-d<-crea[duplicated(crea[,c(1,2,6,16)])&crea$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,16)]
-d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
+d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+#THE EARLIEST DATED OF THE DUPLICATES IS KEPT.
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
