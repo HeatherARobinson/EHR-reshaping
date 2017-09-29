@@ -150,3 +150,13 @@ save(sir.data, file = "sir.datahf2tests.Rdata")
 #d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
 #THE EARLIEST OF THE DUPLICATES IS KEPT.
 
+#Then use strptime (strip time) to convert dates into POSIX format
+#date_vec <-strptime(paste(crea.rep$entry.date), "%Y/%m/%d")
+#compare observation 1 and 2, 2 and 3, 3 and 4...
+#first_date <- date_vec[1:(length(date_vec)-1)]
+#second_date <- date_vec[2:length(date_vec)]
+#second_gap <- difftime(second_date, first_date, units="days")
+#Determine the gaps that are less than 30 days apart.Leave TRUE in to keep 1st instance
+#dup_index <- second_gap>10
+#dup_index <- c(TRUE, dup_index)
+#dat[dup_index, ]
