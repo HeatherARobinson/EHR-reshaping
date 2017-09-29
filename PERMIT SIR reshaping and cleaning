@@ -51,15 +51,19 @@ crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep
 levels(unique(as.factor(crea.rep$PatientID))) # non dialysis adult hf patients have 2 or more post 2008 creatinine tests
 
 ###########################################################################
-#DATA CLEANING
-crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-length(crea$PatientID) 
+#DATA CLEANING AND SENSITIVITY TESTS
+crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(crea.rep$CodeValue),NA) #Any non numeric values marked NA
+length(crea.rep$PatientID) 
+
+#SENSITIVITY TEST- HOW MANY ZERO CR VALUES 
+zerocr<-crea.rep[crea.rep$CodeValue<=0,]
+length(zerocr$PatientID) # zero values
+crea.rep<-crea.rep[-which(crea.rep$CodeValue<=0),]
 
 #SENSITIVITY TEST- HOW MANY CR VALUES UNDER 20, are they from the old assay?
 lowcr<-crea[crea$CodeValue>0&crea$CodeValue>0<18,] 
 length(lowcr$PatientID)# x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 head(lowcr) 
-
 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
