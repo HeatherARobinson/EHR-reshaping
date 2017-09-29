@@ -42,8 +42,12 @@ levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
-crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
-crea2<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
+(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
+(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
+(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
+as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
+
+crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
 table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
@@ -151,10 +155,7 @@ save(sir.data, file = "sir.data2tests.Rdata")
 #CODE MODULES NOT CURRENTLY IN USE:
 #CHECK PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
 
-#(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-#(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-#(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-#as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
+
 #aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
 #ranges$x[,2] - ranges$x[,1] -> ranges$range
 #ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range if time range restriction needed
