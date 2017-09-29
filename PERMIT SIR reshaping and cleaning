@@ -56,11 +56,11 @@ save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult
 #SENSITIVITY TESTS
 
 #HOW MANY ZERO CR VALUES 
+summary(crea.rep$CodeValue)
+min(as.numeric(crea.rep$CodeValue),na.rm=TRUE)
 crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(crea.rep$CodeValue),NA) #Any non numeric values marked NA
+crea.rep<-crea.rep[!is.na(crea.rep$Creatinine),]
 length(crea.rep$PatientID) 
-zerocr<-crea.rep[as.numeric(crea.rep$CodeValue)<=0,]
-length(zerocr$PatientID) # zero values
-crea.rep<-crea.rep[-which(crea.rep$CodeValue<=0),]
 
 #HOW MANY CR VALUES UNDER 20, are they from the old assay?
 lowcr<-crea[crea$CodeValue>0&crea$CodeValue>0<18,] 
