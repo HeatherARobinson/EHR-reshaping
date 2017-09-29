@@ -1,7 +1,6 @@
 memory.size(50000)
 load ("sir.data.rda")
 load("datasource.rda")
-#READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 
 library(zoo)
 library(plyr)
@@ -11,11 +10,10 @@ library(data.table)
 library(survival)
 library(lubridate)
 
-####################################################
-
+#READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-
+#######################################################################################
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
 length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
@@ -32,7 +30,8 @@ sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
 save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
-
+####################################################################################
+#COHORT SELECTION
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
@@ -42,12 +41,32 @@ dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 levels(as.factor(dialysis$PatientID)) #71 dialysis patients will be removed
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
-#DATA CLEANING
+#LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
+#Create a date format entry date
+(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
+(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
+(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
+as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 
+crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
+crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
+table(crea$PatientID) < 2 -> rare  
+rownames(as.matrix(rare)) -> ids
+table(rare)
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
+levels(unique(as.factor(crea$PatientID))) # non dialysis adult hf patients have 2 or more post 2008 creatinine tests
+
+###########################################################################
+#DATA CLEANING
 crea$Creatinine<-ifelse(crea$ReadCode=="44J3.",as.numeric(crea$CodeValue),NA) #Any non numeric values are marked NA
-length(crea$PatientID) #DELAYED CR. DUP
-which(crea$CodeValue>0&crea$CodeValue>0<18) # x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-head(crea[which(crea$CodeValue>0&crea$CodeValue>0<18)]) 
+length(crea$PatientID) 
+
+#SENSITIVITY TEST- HOW MANY CR VALUES UNDER 20, are they from the old assay?
+lowcr<-crea[crea$CodeValue>0&crea$CodeValue>0<18,] 
+length(lowcr$PatientID)# x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
+head(lowcr) 
+
+
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 crea<-merge(crea,sir.datasource,all.x=TRUE)
@@ -87,20 +106,8 @@ head(maxcrea[with(maxcrea, order(PatientID, EntryDate)),])
 #ASSIGN AGE
 crea$Age<-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d"))))-crea$BirthYear
 
-#Create a date format entry date
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 
-#LIMIT TO PATIENTS WITH AT LEAST 1 POST 2008 CREATININE TEST VALUES
-crea$EntryDate <- as.Date(as.character(crea$EntryDate, "%Y%m%d"))
-crea<-crea[as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))>=2008,]
-table(crea$PatientID) < 2 -> rare  
-rownames(as.matrix(rare)) -> ids
-table(rare)
-crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea$PatientID))) # non dialysis adult hf patients have 2 or more post 2008 creatinine tests
+
 
 ######################################################
 #Add demographic variables from lookup tables
