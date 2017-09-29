@@ -70,32 +70,23 @@ table(lowcr$Creatinine)#16 are zero values, there are 5 that are between 0 and 2
 crea.rep<-crea.rep[crea.rep$Creatinine>=20,] 
 length(crea.rep$Creatinine) #297112 records left
 ###############################################################################
+
 #DATA CLEANING 
-crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
-crea<-merge(crea,sir.datasource,all.x=TRUE)
-crea$Source<-ifelse(crea$Source=="salfordt",paste("Hospital"),paste("GP"))
-crea$Source<-ifelse(is.na(crea$Source),paste("GP"),crea$Source)
-
-
+crea.rep<-merge(crea.rep,sir.datasource,all.x=TRUE)
+crea.rep$Source<-ifelse(crea.rep$Source=="salfordt",paste("Hospital"),paste("GP"))
+crea.rep$Source<-ifelse(is.na(crea.rep$Source),paste("GP"),crea.rep$Source)
 
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
-names(crea)
-length(crea$PatientID)
-crea<-crea[!(duplicated(crea[,c(1,2,4,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(crea$PatientID) #SAME DAY - leaves 21814175 non duplicate records OF 55309368 (39%).
+names(crea.rep)
+length(crea.rep$PatientID) #482405
+crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
 
-as.numeric(as.character(crea$CodeValue)) -> crea$CodeValue
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-crea$EntryPeriod<-paste(month,year)
-names(crea)
-
-d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
-d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
-#THE EARLIEST OF THE DUPLICATES IS KEPT.
-
+(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> year
+(as.numeric(month(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> month
+crea.rep$EntryPeriod<-paste(month,year)
+head(crea.rep)
 
 #SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 
@@ -164,4 +155,10 @@ save(sir.data, file = "sir.data2tests.Rdata")
 #ranges$x[,2] - ranges$x[,1] -> ranges$range
 #ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range if time range restriction needed
 #crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+
+#IF DELETING DELAYED PATHOLOGY DUPLICATES
+#names(sir.data)
+#d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
+#d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+#THE EARLIEST OF THE DUPLICATES IS KEPT.
 
