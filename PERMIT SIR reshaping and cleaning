@@ -23,18 +23,18 @@ length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients ident
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
+
 first<-smalltab %>% group_by(PatientID) %>%
 summarize(hfage = min(as.numeric(hfage)))
-sir.data<-merge(sir.data,as.data.frame(first),by="PatientID",all.x=TRUE)
+head(first)
+sir.data<-merge(sir.data,as.data.frame(first),all.x=TRUE)
+
 sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
-crea<-merge(crea,sir.datasource,all.x=TRUE)
-crea$Source<-ifelse(crea$Source=="salfordt",paste("Hospital"),paste("GP"))
-crea$Source<-ifelse(is.na(crea$Source),paste("GP"),crea$Source)
 
 #REMOVE DIALYSIS PATIENTS
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
@@ -48,6 +48,12 @@ length(crea$PatientID) #DELAYED CR. DUP
 which(crea$CodeValue>0&crea$CodeValue>0<18) # x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 head(crea[which(crea$CodeValue>0&crea$CodeValue>0<18)]) 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
+
+crea<-merge(crea,sir.datasource,all.x=TRUE)
+crea$Source<-ifelse(crea$Source=="salfordt",paste("Hospital"),paste("GP"))
+crea$Source<-ifelse(is.na(crea$Source),paste("GP"),crea$Source)
+
+
 
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
 names(crea)
