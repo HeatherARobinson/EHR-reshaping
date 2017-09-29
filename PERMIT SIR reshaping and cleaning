@@ -88,15 +88,14 @@ length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 48
 crea.rep$EntryPeriod<-paste(month,year)
 head(crea.rep)
 
-#SELECT HIGHEST DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
-
-smalltab<-crea[,c("PatientID","Creatinine", "EntryDate")]
-maxcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = max(Creatinine))
-crea$Creatinine<-ifelse(crea$PatientID %in% maxcrea$PatientID & crea$EntryDate %in% maxcrea$EntryDate, maxcrea$Creatinine, crea$Creatinine)
+#SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
+smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
+xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
+summarize(Creatinine = mean(Creatinine))
+crea.rep$Creatinine<-ifelse(crea.rep$PatientID %in% xcrea$PatientID & crea.rep$EntryDate %in% xcrea$EntryDate, xcrea$Creatinine, crea.rep$Creatinine)
 
 head(smalltab[with(smalltab, order(PatientID, EntryDate)),])
-head(maxcrea[with(maxcrea, order(PatientID, EntryDate)),])
+head(xcrea[with(xcrea, order(PatientID, EntryDate)),])
 
 
 ######################################################
