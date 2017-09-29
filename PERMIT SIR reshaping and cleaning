@@ -58,14 +58,17 @@ save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult
 #HOW MANY ZERO CR VALUES 
 summary(crea.rep$CodeValue)
 min(as.numeric(crea.rep$CodeValue),na.rm=TRUE)
-crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(crea.rep$CodeValue),NA) #Any non numeric values marked NA
+crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(paste(crea.rep$CodeValue)),NA) #Any non numeric values marked NA
 crea.rep<-crea.rep[!is.na(crea.rep$Creatinine),]
-length(crea.rep$PatientID) 
+length(crea.rep$PatientID) #297181 remaining
 
 #HOW MANY CR VALUES UNDER 20, are they from the old assay?
-lowcr<-crea[crea$CodeValue>0&crea$CodeValue>0<18,] 
+lowcr<-crea.rep[crea.rep$Creatinine<18,] 
 length(lowcr$PatientID)# x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-head(lowcr) 
+levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
+table(lowcr$Creatinine)#16 are zero values, there are 5 that are between 0 and 20.
+crea.rep<-crea.rep[crea.rep$Creatinine>=20,] 
+length(crea.rep$Creatinine) #297112 records left
 ###############################################################################
 #DATA CLEANING 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
