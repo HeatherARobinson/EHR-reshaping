@@ -94,17 +94,13 @@ xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
 summarize(Creatinine = mean(Creatinine))
 crea.rep$Creatinine<-ifelse(crea.rep$PatientID %in% xcrea$PatientID & crea.rep$EntryDate %in% xcrea$EntryDate, xcrea$Creatinine, crea.rep$Creatinine)
 
-head(smalltab[with(smalltab, order(PatientID, EntryDate)),])
-head(xcrea[with(xcrea, order(PatientID, EntryDate)),])
-
-
 ######################################################
 #Add demographic variables from lookup tables
 
 #LSOA and age already added in SIR
 
 #ASSIGN AGE
-crea.rep$Age<-(as.numeric(year(strptime(crea.rep$EntryDate, format="%Y%m%d"))))-crea.rep$BirthYear
+crea.rep$Age<-(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))))-crea.rep$BirthYear
 
 #CODE ETHNICITY
 ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
@@ -114,23 +110,16 @@ names(crea.rep)
 crea.rep<-subset(crea.rep, select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus))
 colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
 
-levels(unique(as.factor(crea.rep$PatientID))) #6923 remaining if no range limit
+levels(unique(as.factor(crea.rep$PatientID))) #6596 remaining with hf as an adult and 2 read codes post 2008, all same day duplicate and delayed duplicates within same calendar month removed for creatinine. 
+#No other duplicate pathology data removed, no data time range applied.
+
+sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
 
 #Breakpoint
 #######################################################
 #######################################################
-save(crea.rep, file = "crea.rephfonly.Rdata")
-save(sir.data, file = "sir.datahfonly.Rdata")
-#######################################################
-
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID),]  #x hr patients remaining with 2 tests or more, 1 post 2008
-
-#######################################################
-#Breakpoint
-#######################################################
-#######################################################
-save(crea.rep, file = "crea.rep2tests.Rdata")
-save(sir.data, file = "sir.data2tests.Rdata")
+save(crea.rep, file = "crea.rephf2tests.Rdata")
+save(sir.data, file = "sir.datahf2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING OTHER R SCRIPT IN SAME FOLDER
