@@ -30,6 +30,7 @@ sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
 save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+
 ####################################################################################
 #COHORT SELECTION
 #SELECT PATIENTS WITH CREATININE DATA
@@ -42,33 +43,31 @@ levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
-(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
-
+crea$event.date<-lubridate::ydm(crea$EntryDate)
 crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
 table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea.rep$PatientID))) # non dialysis adult hf patients have 2 or more post 2008 creatinine tests
+levels(unique(as.factor(crea.rep$PatientID))) # 6596 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
 
+save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult hf patients from all years with 2 post 2008 tests
 ###########################################################################
-#DATA CLEANING AND SENSITIVITY TESTS
+#SENSITIVITY TESTS
+
+#HOW MANY ZERO CR VALUES 
 crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(crea.rep$CodeValue),NA) #Any non numeric values marked NA
 length(crea.rep$PatientID) 
-
-#SENSITIVITY TEST- HOW MANY ZERO CR VALUES 
-zerocr<-crea.rep[crea.rep$CodeValue<=0,]
+zerocr<-crea.rep[as.numeric(crea.rep$CodeValue)<=0,]
 length(zerocr$PatientID) # zero values
 crea.rep<-crea.rep[-which(crea.rep$CodeValue<=0),]
 
-#SENSITIVITY TEST- HOW MANY CR VALUES UNDER 20, are they from the old assay?
+#HOW MANY CR VALUES UNDER 20, are they from the old assay?
 lowcr<-crea[crea$CodeValue>0&crea$CodeValue>0<18,] 
 length(lowcr$PatientID)# x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 head(lowcr) 
-
+###############################################################################
+#DATA CLEANING 
 crea[-which(crea$CodeValue<18),] -> crea # creatinine values less than 18 considered not valid
 
 crea<-merge(crea,sir.datasource,all.x=TRUE)
@@ -154,8 +153,10 @@ save(sir.data, file = "sir.data2tests.Rdata")
 ##########################################################################
 #CODE MODULES NOT CURRENTLY IN USE:
 #CHECK PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
-
-
+#(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
+#(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
+#(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
+#as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
 #aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
 #ranges$x[,2] - ranges$x[,1] -> ranges$range
 #ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range if time range restriction needed
