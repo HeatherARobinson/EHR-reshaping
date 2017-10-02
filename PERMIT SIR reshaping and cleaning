@@ -44,31 +44,36 @@ crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
 crea$event.date<-lubridate::ydm(crea$EntryDate)
+#A parse error message here relates to empty rows pulled across from prior subsetting steps, these are dropped when subsetting crea.rep
 crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
 table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 levels(unique(as.factor(crea.rep$PatientID))) # 6596 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
-
-save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult hf patients from all years with 2 post 2008 tests
+crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(paste(crea.rep$CodeValue)),NA) #Any non numeric values marked NA
+crea.rep<-crea.rep[!is.na(crea.rep$Creatinine),]
+length(crea.rep$PatientID) #297181 remaining
 ###########################################################################
 #SENSITIVITY TESTS
 
 #HOW MANY ZERO CR VALUES 
-summary(crea.rep$CodeValue)
-min(as.numeric(crea.rep$CodeValue),na.rm=TRUE)
-crea.rep$Creatinine<-ifelse(crea.rep$ReadCode=="44J3.",as.numeric(paste(crea.rep$CodeValue)),NA) #Any non numeric values marked NA
-crea.rep<-crea.rep[!is.na(crea.rep$Creatinine),]
-length(crea.rep$PatientID) #297181 remaining
+#summary(crea.rep$CodeValue)
+#min(as.numeric(crea.rep$CodeValue),na.rm=TRUE)
+#No zero values present
 
 #HOW MANY CR VALUES UNDER 20, are they from the old assay?
-lowcr<-crea.rep[crea.rep$Creatinine<18,] 
-length(lowcr$PatientID)# x creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
-table(lowcr$Creatinine)#16 are zero values, there are 5 that are between 0 and 20.
+#lowcr<-crea.rep[crea.rep$Creatinine<18,] 
+#length(lowcr$PatientID)
+# 21 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
+#levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
+#table(lowcr$Creatinine)
+#only 16 are zero values, there are 5 that are between 0 and 20.
 crea.rep<-crea.rep[crea.rep$Creatinine>=20,] 
 length(crea.rep$Creatinine) #297112 records left
+
+save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult hf patients from all years with 2 post 2008 tests
+
 ###############################################################################
 
 #DATA CLEANING 
