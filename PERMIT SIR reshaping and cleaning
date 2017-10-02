@@ -1,6 +1,6 @@
 memory.size(100000)
-load ("sir.data.rda")
-load("datasource.rda")
+#load ("sir.data.rda")
+#load("datasource.rda")
 
 library(zoo)
 library(plyr)
@@ -31,8 +31,8 @@ sir.data<-sir.data[sir.data$hfage>=18,]
 
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
-save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
-
+#save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+load("sirdatahfonly.rda")
 ####################################################################################
 #COHORT SELECTION
 #SELECT PATIENTS WITH CREATININE DATA
