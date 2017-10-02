@@ -93,9 +93,21 @@ length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 48
 (as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> year
 (as.numeric(month(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> month
 crea.rep$EntryPeriod<-paste(month,year)
+
 head(crea.rep)
 crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,6,14)])),] #REMOVES DELAYED DUPLICATES FROM SAME MONTH
-length(crea.rep$PatientID) #SAME DAY - leaves X non duplicate records 
+length(crea.rep$PatientID) #SAME DAY - leaves 208598 non duplicate records 
+
+date_vec <-strptime(paste(crea.rep$event.date), "%Y-%m-%d")
+head(date_vec)
+
+first_date <- date_vec[1:(length(date_vec)-1)]
+second_date <- date_vec[2:length(date_vec)]
+gap <- difftime(second_date, first_date, units="days")
+dup_index <- gap>30
+dup_index <- c(TRUE, dup_index)
+dat[dup_index, ]
+
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
