@@ -78,7 +78,6 @@ length(crea.rep$Creatinine) #297112 records left
 ###############################################################################
 
 #DATA CLEANING 
-
 crea.rep<-merge(crea.rep,sir.datasource,all.x=TRUE)
 crea.rep$Source<-ifelse(crea.rep$Source=="salfordt",paste("Hospital"),paste("GP"))
 crea.rep$Source<-ifelse(is.na(crea.rep$Source),paste("GP"),crea.rep$Source)
@@ -87,7 +86,6 @@ crea.rep$Source<-ifelse(is.na(crea.rep$Source),paste("GP"),crea.rep$Source)
 names(crea.rep)
 length(crea.rep$PatientID) #482405
 
-load("crea.rephf2tests.Rdata")
 crea.rep<-crea.repd[order(crea.rep$PatientID,crea.rep$CodeValue, rev(crea.rep$Source)),]
 crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
 length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
@@ -96,37 +94,29 @@ length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 48
 (as.numeric(month(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> month
 crea.rep$EntryPeriod<-paste(month,year)
 
-head(crea.rep)
-crea.repd<-crea.rep[duplicated(crea.rep[,c(1,2,6)])&!duplicated(crea.rep[,7]),] #POTENTIAL DELAYED DUPLICATES
-length(crea.repd$PatientID) #SAME DAY - x 
+load("crea.rephf2tests.Rdata")
 
-crea.repd<-crea.rep[duplicated(crea.rep[,c(1,2,6),])|duplicated(crea.rep[,c(1,2,6),], fromLast=TRUE),] #66339 POTENTIAL DELAYED DUPLICATES
-date_vec <-strptime(paste(crea.repd$event.date), "%Y-%m-%d")
-head(date_vec)
+hosp<-crea.rep[crea.rep$Source=="Hospital",]
+gp<-crea.rep[crea.rep$Source=="GP",]
 
+hosp$hdate<-hosp$event.date
+hmatch <-hosp[c(1,6,17)]
+hmatch<-unique(hmatch)
 
+dd<-merge(gp,hmatch,all.x=TRUE)
+dd<-dd[!is.na(dd$hdate),]
+head(dd)
+length(dd$hdate) #30857 records also have a gp entry with the same cr value, check which are within 30days
+dd<- dd[as.numeric(abs(dd$event.date - dd$hdate)) >30,] #keep those with more than 30 days separating the matches
 
-
-first_date <- date_vec[1:(length(date_vec)-1)]
-second_date <- date_vec[2:length(date_vec)]
-gap <- difftime(second_date, first_date, units="days")
-dup_index <- gap>30
-crea.repd$dup_index <- c(TRUE, dup_index) 
-
-first_source <- crea.repd$Source[1:(length(crea.repd$Source)-1)]
-second_source <- crea.repd$Source[2:length(crea.repd$Source)]
-sc_index <- first_source==second_source
-crea.repd$sc_index <- c(TRUE, sc_index)
-
-crea.repd<-crea.repd[crea.repd$dup_index=="TRUE" & crea.repd$sc_index=="FALSE",] #LIMITS TO DUPLICATES FROM DIFFERENT SOURCES WITHIN 30 DAYS
-length(crea.repd$PatientID) #30193 records affected
-crea.repd<-crea.repd[order(crea.repd$PatientID,crea.repd$CodeValue, rev(crea.repd$Source)),]
+crea.rep<-rbind(dd[,c(1:16)],hosp)
+length(crea.rep$PatientID) # 196420 records retained (dropped 21192- 9.7%)
+save(crea.rep, file = "crea.repongoing.Rdata")
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
 xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = mean(Creatinine))
-crea.rep$Creatinine<-ifelse(crea.rep$PatientID %in% xcrea$PatientID & crea.rep$EntryDate %in% xcrea$EntryDate, xcrea$Creatinine, crea.rep$Creatinine)
+summarize(meanCr = mean(Creatinine))
 
 ######################################################
 #Add demographic variables from lookup tables
