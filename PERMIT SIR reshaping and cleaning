@@ -1,4 +1,4 @@
-memory.size(50000)
+#memory.size(70000)
 load ("sir.data.rda")
 load("datasource.rda")
 
