@@ -16,8 +16,8 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 #######################################################
 #######################################################
-load("crea.rep1yr2tests.Rdata")
-load("sir.data1yr2tests.Rdata")
+load("crea.rep2tests.Rdata")
+load("sir.data2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
