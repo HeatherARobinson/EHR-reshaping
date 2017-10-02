@@ -17,7 +17,7 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
 length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
-datasource<-datasource[datasource$PatientID %in% hf$PatientID
+datasource<-sir.datasource[sir.datasource$PatientID %in% hf$PatientID
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
@@ -94,6 +94,8 @@ length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 48
 (as.numeric(month(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> month
 crea.rep$EntryPeriod<-paste(month,year)
 head(crea.rep)
+crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,6,14)])),] #REMOVES DELAYED DUPLICATES FROM SAME MONTH
+length(crea.rep$PatientID) #SAME DAY - leaves X non duplicate records 
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
