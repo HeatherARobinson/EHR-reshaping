@@ -86,6 +86,9 @@ crea.rep$Source<-ifelse(is.na(crea.rep$Source),paste("GP"),crea.rep$Source)
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
 names(crea.rep)
 length(crea.rep$PatientID) #482405
+
+load("crea.rephf2tests.Rdata")
+crea.rep<-crea.repd[order(crea.rep$PatientID,crea.rep$CodeValue, rev(crea.rep$Source)),]
 crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
 length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
 
@@ -94,14 +97,16 @@ length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 48
 crea.rep$EntryPeriod<-paste(month,year)
 
 head(crea.rep)
-crea.rep<-crea.rep[duplicated(crea.rep[,c(1,2,6,14)])&!duplicated(crea.rep[,7]),] #REMOVES DELAYED DUPLICATES FROM SAME MONTH
-length(crea.rep$PatientID) #SAME DAY - leaves 208598 non duplicate records 
+crea.repd<-crea.rep[duplicated(crea.rep[,c(1,2,6)])&!duplicated(crea.rep[,7]),] #POTENTIAL DELAYED DUPLICATES
+length(crea.repd$PatientID) #SAME DAY - x 
 
-
-load(crea.rep,file="crea.rep.hf2tests.rda")
 crea.repd<-crea.rep[duplicated(crea.rep[,c(1,2,6),])|duplicated(crea.rep[,c(1,2,6),], fromLast=TRUE),] #66339 POTENTIAL DELAYED DUPLICATES
 date_vec <-strptime(paste(crea.repd$event.date), "%Y-%m-%d")
 head(date_vec)
+
+
+
+
 first_date <- date_vec[1:(length(date_vec)-1)]
 second_date <- date_vec[2:length(date_vec)]
 gap <- difftime(second_date, first_date, units="days")
@@ -115,7 +120,7 @@ crea.repd$sc_index <- c(TRUE, sc_index)
 
 crea.repd<-crea.repd[crea.repd$dup_index=="TRUE" & crea.repd$sc_index=="FALSE",] #LIMITS TO DUPLICATES FROM DIFFERENT SOURCES WITHIN 30 DAYS
 length(crea.repd$PatientID) #30193 records affected
-crea.repd<-crea.repd[order(as.Date(crea.repd$event.date, format="%Y-%m-%d)),]
+crea.repd<-crea.repd[order(crea.repd$PatientID,crea.repd$CodeValue, rev(crea.repd$Source)),]
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
@@ -176,7 +181,7 @@ save(sir.data, file = "sir.datahf2tests.Rdata")
 #IF DELETING DELAYED PATHOLOGY DUPLICATES
 #names(sir.data)
 #d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
-#d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMOVES DELAYED CREATININE DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+#d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMAINING DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
 #THE EARLIEST OF THE DUPLICATES IS KEPT.
 
 #Then use strptime (strip time) to convert dates into POSIX format
