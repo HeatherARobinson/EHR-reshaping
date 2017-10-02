@@ -114,9 +114,11 @@ length(crea.rep$PatientID) # 196420 records retained (dropped 21192- 9.7%)
 save(crea.rep, file = "crea.repongoing.Rdata")
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
-smalltab<-crea.rep[,c("PatientID","Creatinine", "EntryDate")]
+smalltab<-crea.rep[,c("PatientID","CodeValue", "EntryDate")]
 xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(meanCr = mean(Creatinine))
+summarize(meanCr = mean(CodeValue))
+smalltab<-unique(smalltab)
+crea.rep<-merge(crea.rep,smalltab,all.x=TRUE)
 
 ######################################################
 #Add demographic variables from lookup tables
