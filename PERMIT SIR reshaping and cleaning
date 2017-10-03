@@ -13,6 +13,9 @@ library(lubridate)
 #READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+#To solve source code problem I took the dob, age and genders from the processed file (>small.rda) 
+#I went back to the long file to make a new crea.rep that would have source code attached to it:
+load("revisedcrea.rda")
 #######################################################################################
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
