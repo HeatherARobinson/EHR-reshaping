@@ -45,70 +45,56 @@ dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
-#LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
-crea$event.date<-lubridate::ydm(crea$EntryDate)
-#A parse error message here relates to empty rows pulled across from prior subsetting steps, these are dropped when subsetting crea.rep
-crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
-table(crea$PatientID) < 2 -> rare  
-rownames(as.matrix(rare)) -> ids
-table(rare)
-crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea.rep$PatientID))) # 6596 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
-crea.rep$CodeValue<-ifelse(crea.rep$ReadCode=="44J3.",crea.rep$CodeValue,NA) #Any non numeric values marked NA
-crea.rep<-crea.rep[!is.na(crea.rep$CodeValue),]
-length(crea.rep$PatientID) #297181 remaining
 ###########################################################################
 #SENSITIVITY TESTS
 
 #HOW MANY ZERO CR VALUES 
-#summary(crea.rep$CodeValue)
-#min(as.numeric(crea.rep$CodeValue),na.rm=TRUE)
+#summary(crea$CodeValue)
+#min(as.numeric(crea$CodeValue),na.rm=TRUE)
 #No zero values present
 
 #HOW MANY CR VALUES UNDER 20, are they from the old assay?
-#lowcr<-crea.rep[crea.rep$CodeValue<18,] 
+#lowcr<-crea[crea$CodeValue<18,] 
 #length(lowcr$PatientID)
 # 21 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
 #levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
 #table(lowcr$CodeValue)
 #only 16 are zero values, there are 5 that are between 0 and 20.
-#save(crea.rep,file="crea.rep.hf2tests.rda") #full patient records from all adult hf patients from all years with 2 post 2008 tests
 ###############################################################################
 
 #DATA CLEANING 
-crea.rep<-crea.rep[crea.rep$CodeValue>=20,] 
-length(crea.rep$CodeValue) #297112 records left
-crea.rep<-merge(crea.rep,sir.datasource,all.x=TRUE)
-crea.rep$Source<-ifelse(crea.rep$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
-crea.rep$Source<-ifelse(is.na(crea.rep$Source),paste("2"),crea.rep$Source)
+crea<-crea[crea$CodeValue>=20,] 
+length(crea$CodeValue) #297112 records left
+crea<-merge(crea,sir.datasource,all.x=TRUE)
+crea$Source<-ifelse(crea$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
+crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
 
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
-names(crea.rep)
-length(crea.rep$PatientID) #482405
+names(crea)
+length(crea$PatientID) #482405
 
-crea.rep<-crea.repd[order(crea.rep$PatientID,crea.rep$CodeValue, rev(crea.rep$Source)),]
-crea.rep<-crea.rep[!(duplicated(crea.rep[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(crea.rep$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
+crea<-crea.repd[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
+crea<-crea[!(duplicated(crea[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+length(crea$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
 
-(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> year
-(as.numeric(month(strptime(crea.rep$event.date, format="%Y-%m-%d")))) -> month
-crea.rep$EntryPeriod<-paste(month,year)
+(as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))) -> year
+(as.numeric(month(strptime(crea$event.date, format="%Y-%m-%d")))) -> month
+crea$EntryPeriod<-paste(month,year)
 
-load("crea.rephf2tests.Rdata")
-crea.rep<-crea.rep[order(crea.rep[,1], -(crea.rep[,3]),(crea.rep[,7])),]
-crea.repd<-crea.rep[duplicated(crea.rep[,c(1,2,6,14)])&!duplicated(crea.rep[,7]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(crea.repd$PatientID) #- x potential duplicate records
-crea.rep<-crea.rep[!row.names(crea.rep) %in% row.names(crea.repd),])
-length(crea.rep$PatientID) # x records retained (dropped x- x% est. delayed duplicates)
-save(crea.rep, file = "crea.repongoing.Rdata")
+crea<-crea[order(crea[,1], -(crea[,3]),(crea[,7])),]
+cread<-crea[duplicated(crea[,c(1,2,6,14)])&!duplicated(crea[,7]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+length(cread$PatientID) #- x potential duplicate records
+crea<-crea[!row.names(crea) %in% row.names(cread),])
+length(crea$PatientID) # x records retained (dropped x- x% est. delayed duplicates)
+save(crea, file = "crea.ongoing.Rdata")
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
-smalltab<-crea.rep[,c("PatientID","CodeValue", "EntryDate")]
+smalltab<-crea[,c("PatientID","CodeValue", "EntryDate")]
 xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
 summarize(Creatinine = mean(CodeValue))
 ungroup()
 smalltab<-unique(smalltab)
-crea.rep<-merge(crea.rep,as.data.frame(smalltab),all.x=TRUE)
+crea<-merge(crea,as.data.frame(smalltab),all.x=TRUE)
 
 ######################################################
 #Add demographic variables from lookup tables
@@ -116,17 +102,17 @@ crea.rep<-merge(crea.rep,as.data.frame(smalltab),all.x=TRUE)
 #LSOA and age already added in SIR
 
 #ASSIGN AGE
-crea.rep$Age<-(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))))-crea.rep$BirthYear
+crea$Age<-(as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d"))))-crea$BirthYear
 
 #CODE ETHNICITY
 ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
 ethnic.data$Category<-floor(ethnic.data$Category)
-crea.rep<-merge(crea.rep,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
-names(crea.rep)
-crea.rep<-subset(crea.rep, select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus))
-colnames(crea.rep)[which(names(crea.rep) == "Category")] <- "Ethnicity"
+crea<-merge(crea,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
+names(crea)
+crea<-subset(crea select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus))
+colnames(crea)[which(names(crea) == "Category")] <- "Ethnicity"
 
-levels(unique(as.factor(crea.rep$PatientID))) #6596 remaining with hf as an adult and 2 read codes post 2008, all same day duplicate and delayed duplicates within same calendar month removed for creatinine. 
+levels(unique(as.factor(crea$PatientID))) #6596 remaining with hf as an adult and 2 read codes post 2008, all same day duplicate and delayed duplicates within same calendar month removed for creatinine. 
 #No other duplicate pathology data removed, no data time range applied.
 
 sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
@@ -145,15 +131,14 @@ crea.rep$CodeValue<-ifelse(crea.rep$ReadCode=="44J3.",crea.rep$CodeValue,NA) #An
 crea.rep<-crea.rep[!is.na(crea.rep$CodeValue),]
 length(crea.rep$PatientID) #297181 remaining
 
-
 #Breakpoint
 #######################################################
 save(crea.rep, file = "crea.rephf2tests.Rdata")
 save(sir.data, file = "sir.datahf2tests.Rdata")
 #######################################################
 
-#ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING OTHER R SCRIPT IN SAME FOLDER
-#ADD PRESCRIPTION DATA USING OTHER R SCRIPT IN SAME FOLDER
+#ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING R SCRIPT IN SAME FOLDER
+#ADD PRESCRIPTION DATA USING R SCRIPT IN SAME FOLDER
 
 #Narrow lookup table to the full list of codes of interest to speed up processing
 #temp = list.files(pattern="*1.csv")
