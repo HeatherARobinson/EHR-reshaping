@@ -1,4 +1,5 @@
-#2 files are needed. Both need patient ID and date, 
+#2 files can be used but only 1 is needed. 
+#Required: patient ID, code, date, instruction text field
 
 load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
