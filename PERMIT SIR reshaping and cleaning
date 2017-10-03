@@ -1,6 +1,6 @@
 memory.size(100000)
-#load ("sir.data.rda")
-#load("datasource.rda")
+load ("sir.data.rda")
+load("datasource.rda")
 
 library(zoo)
 library(plyr)
@@ -17,7 +17,7 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
 length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
-datasource<-sir.datasource[sir.datasource$PatientID %in% hf$PatientID
+datasource<-sir.datasource[sir.datasource$PatientID %in% hf$PatientID,]
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
@@ -31,8 +31,8 @@ sir.data<-sir.data[sir.data$hfage>=18,]
 
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
-#save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
-load("sirdatahfonly.rda")
+save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+#load("sirdatahfonly.rda")
 ####################################################################################
 #COHORT SELECTION
 #SELECT PATIENTS WITH CREATININE DATA
