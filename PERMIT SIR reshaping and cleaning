@@ -44,6 +44,7 @@ length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosi
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
+crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 
 ###########################################################################
 #SENSITIVITY TESTS
@@ -63,37 +64,38 @@ crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 ###############################################################################
 
 #DATA CLEANING 
-crea<-crea[crea$CodeValue>=20,] 
-length(crea$CodeValue) #297112 records left
 crea<-merge(crea,sir.datasource,all.x=TRUE)
+crea<-crea[as.numeric(crea$CodeValue)>=20,] 
+length(crea$CodeValue) #450059 records left
 crea$Source<-ifelse(crea$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
 crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
 
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
 names(crea)
-length(crea$PatientID) #482405
+length(crea$PatientID) #709864
 
-crea<-crea.repd[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
+crea<-crea[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
 crea<-crea[!(duplicated(crea[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(crea$PatientID) #SAME DAY - leaves 217612 non duplicate records of 482405 (%).
-
+length(crea$PatientID) #SAME DAY - leaves 322142 non duplicate records (55% dropped).
+crea$event.date<-as.Date(as.character(crea$EntryDate),format="%Y%m%d")
 (as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))) -> year
 (as.numeric(month(strptime(crea$event.date, format="%Y-%m-%d")))) -> month
 crea$EntryPeriod<-paste(month,year)
 
 crea<-crea[order(crea[,1], -(crea[,3]),(crea[,7])),]
-cread<-crea[duplicated(crea[,c(1,2,6,14)])&!duplicated(crea[,7]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(cread$PatientID) #- x potential duplicate records
-crea<-crea[!row.names(crea) %in% row.names(cread),])
-length(crea$PatientID) # x records retained (dropped x- x% est. delayed duplicates)
+cread<-crea[duplicated(crea[,c(1,6,16)])&!duplicated(crea[,7]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+length(cread$PatientID) #- None of the remaining potential duplicate records outside of the same day window come from different locations
+cread<-crea[duplicated(crea[,c(1,6,16)]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+table(cread$Source) #The vast majority (12796 of out of range duplicates are multiple tests from within hospital. Only 722 have a GP code and are repeats within GP practises)
+
+length(crea$PatientID) # 322148 records retained 
 save(crea, file = "crea.ongoing.Rdata")
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea[,c("PatientID","CodeValue", "EntryDate")]
 xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = mean(CodeValue))
-ungroup()
-smalltab<-unique(smalltab)
+summarize(Creatinine = mean(as.numeric(CodeValue)))
+he
 crea<-merge(crea,as.data.frame(smalltab),all.x=TRUE)
 
 ######################################################
@@ -119,8 +121,7 @@ sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
 
 #COHORT SELECTION
 #LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
-crea$event.date<-lubridate::ydm(crea$EntryDate)
-#A parse error message here relates to empty rows pulled across from prior subsetting steps, these are dropped when subsetting crea.rep
+
 crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
 table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
