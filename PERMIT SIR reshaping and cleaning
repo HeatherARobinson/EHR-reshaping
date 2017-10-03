@@ -33,10 +33,12 @@ sir.data<-sir.data[sir.data$hfage>=18,]
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
 
 save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
-#load("sirdatahfonly.rda")
+
 ####################################################################################
 #COHORT SELECTION
 #SELECT PATIENTS WITH CREATININE DATA
+
+#load("sirdatahfonly.rda")
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
 
@@ -50,16 +52,16 @@ crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 #SENSITIVITY TESTS
 
 #HOW MANY ZERO CR VALUES 
-#summary(crea$CodeValue)
-#min(as.numeric(crea$CodeValue),na.rm=TRUE)
-#No zero values present
+summary(crea$CodeValue)
+min(as.numeric(crea$CodeValue),na.rm=TRUE)
+No zero values present
 
 #HOW MANY CR VALUES UNDER 20, are they from the old assay?
-#lowcr<-crea[crea$CodeValue<18,] 
-#length(lowcr$PatientID)
-# 21 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-#levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
-#table(lowcr$CodeValue)
+lowcr<-crea[crea$CodeValue<18,] 
+length(lowcr$PatientID)
+#21 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
+levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
+table(lowcr$CodeValue)
 #only 16 are zero values, there are 5 that are between 0 and 20.
 ###############################################################################
 
@@ -70,10 +72,15 @@ length(crea$CodeValue) #692357 records left
 crea$Source<-ifelse(crea$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
 crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
 
-#REMOVE SAME DAY AND DELAYED CREATININE ENTRIES
+#REMOVE SAME DAY AND DELAYED CREATININE ENTRIES?
 names(crea)
 crea<-crea[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
-crea<-crea[!(duplicated(crea[,c(1,2,3,6)])),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+crea2<-crea[(duplicated(crea[,c(1,2,3,6)])&!duplicated(crea[,7])),]
+crea2<-crea[(duplicated(crea[,c(1,2,3,6)])),]
+
+#SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE) DO NOT HAVE DIFFERENT SOURCES
+crea4<-crea[(duplicated(crea[,c(1,2,3,6)]),] #SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+crea5<-crea[!rownames(crea) %in% rownames(crea2)&!duplicated(crea[,7]),]
 length(crea$PatientID) #SAME DAY - leaves 321234 non duplicate records (54% dropped).
 crea$event.date<-as.Date(as.character(crea$EntryDate),format="%Y%m%d")
 (as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))) -> year
@@ -81,7 +88,7 @@ crea$event.date<-as.Date(as.character(crea$EntryDate),format="%Y%m%d")
 crea$EntryPeriod<-paste(month,year)
 
 crea<-crea[order(crea[,1], -(crea[,3]),(crea[,7])),]
-cread<-crea[duplicated(crea[,c(1,6,16)])&!duplicated(crea[,7]),] #REMOVES SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
+cread<-crea[(duplicated(crea[,c(1,6,16)])&!duplicated(crea[,7])),] #REMOVES DELAYED DUPLICATES (SAME PATIENT, DATE, VALUE)
 length(cread$PatientID) #- None of the remaining potential duplicate records outside of the same day window come from different locations
 cread<-crea[duplicated(crea[,c(1,6,16)]),] 
 table(cread$Source) #The vast majority (12802 of out of range duplicates are multiple tests from within hospital. Only 730 have a GP code and are repeats within GP practises)
