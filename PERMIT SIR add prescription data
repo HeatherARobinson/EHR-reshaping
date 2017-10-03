@@ -4,14 +4,11 @@ load("sir.data1yr2tests.Rdata")
 codes<-read.csv("READv2.csv")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4,5)]
 instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:4,5)]
-write.table(codesfile,file="codes.txt", sep="\t")
+write.table(codesfile,file="codesh.txt", sep="\t")
 write.table(instructionsfile,file="instructions.txt", sep="\t")
 
-node index.js -c resources/codes.txt && sort resources/codes.txt.done && perl parse_drug_file.pl resources/codes.txt.done
-#This sorts the codes file by patient ID
+cd research-events-medication-htn
+npm install
+node index.js -c resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
 
-node index.js -i resources/instructions.txt && sort resources/instructions.txt
-
-
-perl parse_drug_file.pl 
-
+nodes index.js -a resources\instructionsh.txt 
