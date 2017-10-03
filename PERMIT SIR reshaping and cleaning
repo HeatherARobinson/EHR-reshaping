@@ -24,6 +24,7 @@ smalltab<-hf[,c("PatientID","hfage")]
 
 first<-smalltab %>% group_by(PatientID) %>%
 summarize(hfage = min(as.numeric(hfage)))
+ungroup(first)
 head(first)
 
 sir.data<-merge(sir.data[sir.data$PatientID %in% hf$PatientID,],as.data.frame(first),all.x=TRUE)
@@ -130,8 +131,22 @@ levels(unique(as.factor(crea.rep$PatientID))) #6596 remaining with hf as an adul
 
 sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
 
+#COHORT SELECTION
+#LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
+crea$event.date<-lubridate::ydm(crea$EntryDate)
+#A parse error message here relates to empty rows pulled across from prior subsetting steps, these are dropped when subsetting crea.rep
+crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
+table(crea$PatientID) < 2 -> rare  
+rownames(as.matrix(rare)) -> ids
+table(rare)
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
+levels(unique(as.factor(crea.rep$PatientID))) # 6596 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
+crea.rep$CodeValue<-ifelse(crea.rep$ReadCode=="44J3.",crea.rep$CodeValue,NA) #Any non numeric values marked NA
+crea.rep<-crea.rep[!is.na(crea.rep$CodeValue),]
+length(crea.rep$PatientID) #297181 remaining
+
+
 #Breakpoint
-#######################################################
 #######################################################
 save(crea.rep, file = "crea.rephf2tests.Rdata")
 save(sir.data, file = "sir.datahf2tests.Rdata")
