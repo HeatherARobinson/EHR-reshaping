@@ -1,2 +1,11 @@
-#HAVING ALREADY DELETED SAME DAY DUPLICATE VALUES:
+load("sirdatahfonly.rda")
 
+sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+sir.data<-sir.data[as.numeric(year(strptime(sir.data$event.date, format="%Y-%m-%d")))>=2008,]
+
+sir.data$SerumSodium<-as.numeric(ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
+length(sir.data$SerumSodium[!is.na(sir.data$SerumSodium)])
+length(sir.data$SerumSodium[!is.na(sir.data$SerumSodium)&duplicated(sir.data[,c(1,4)])])
+length(sir.data$SerumSodium[!is.na(sir.data$SerumSodium)&duplicated(sir.data[,c(1,4,15)])])
+
+sir.data$BUN<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
