@@ -4,8 +4,12 @@
 
 memory.size(100000)
 load("small.rda") 
+small<-unique(small)
 
-#This is the demographic data from the heart failure cohort selected from the processed sir.data.rda, 
+table(small$PatientID) >1 -> varied  
+table(varied) #check there is no conflicting information
+
+#This is the demographic data from he processed sir.data.rda, 
 #comprising PatientID, Gender, BirthDate and LSOA
 
 load("sir.data.rda") 
@@ -23,7 +27,7 @@ library(survival)
 library(lubridate)
 
 crea<-sir.data[sir.data$PatientID %in% small$PatientID & sir.data$ReadCode=="44J3.",]
-crea<-merge(crea,small,all.x=TRUE)
+crea<-merge(crea[!is.na(crea$PatientID),],small,all.x=TRUE)
 
 save(crea,file="revisedcrea.rda")
 
