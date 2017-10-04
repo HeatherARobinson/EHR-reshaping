@@ -1,0 +1,32 @@
+#This file recreates crea.rep based on demographic variables from the sir.data.rda in the processed directory, 
+#and the long format original sir.data file.
+#The purpose of this is to acquire the Source column from the long file.
+
+memory.size(100000)
+load("small.rda") 
+
+#This is the demographic data from the heart failure cohort selected from the processed sir.data.rda, 
+#comprising PatientID, Gender, BirthDate and LSOA
+
+load("sir.data.rda") 
+
+#This is the long format original sir.data.rda file
+
+###########################################################
+
+library(zoo)
+library(plyr)
+library(tidyverse)
+library(zoo)
+library(data.table)
+library(survival)
+library(lubridate)
+
+crea<-sir.data[sir.data$PatientID %in% small$PatientID & sir.data$ReadCode=="44J3.",]
+crea<-merge(crea,small,all.x=TRUE)
+
+save(crea,file="revisedcrea.rda")
+
+
+
+
