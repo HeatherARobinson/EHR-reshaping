@@ -1,6 +1,5 @@
 memory.size(100000)
 load ("sir.data.rda")
-load("datasource.rda")
 
 library(zoo)
 library(plyr)
@@ -13,9 +12,7 @@ library(lubridate)
 #READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-#To solve source code problem I took the dob, age and genders from the processed file (>small.rda) 
-#I went back to the long file to make a new crea.rep that would have source code attached to it:
-load("revisedcrea.rda")
+
 #######################################################################################
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
@@ -34,52 +31,91 @@ sir.data<-merge(sir.data[sir.data$PatientID %in% hf$PatientID,],as.data.frame(fi
 sir.data<-sir.data[sir.data$hfage>=18,]
 
 length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
-
 save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
 
 ####################################################################################
 #COHORT SELECTION
-#SELECT PATIENTS WITH CREATININE DATA
-
-#load("sirdatahfonly.rda")
-sir.data[sir.data$ReadCode=="44J3.",]->crea 
-length(unique(as.factor(crea$PatientID))) # 6972 hf patients over 18 at diagnosis with creatinine data
-
 #REMOVE DIALYSIS PATIENTS
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
+
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
+crea<-crea[!is.na(crea$CodeValue),]
+summary(crea$CodeValue)
+
+
+#SELECT PATIENTS WITH CREATININE DATA
+
+#sir.data[sir.data$ReadCode=="44J3.",]->crea 
+
+#To solve source code problem I took the dob, age and genders from the processed file (>small.rda) 
+#I went back to the long file to make a new crea.rep that would have source code attached to it:
+load("revisedcrea.rda")
+load ("sirdatahfonly.rda")
+crea<-crea[crea$PatientID %in% sir.data$PatientID,]
+
+length(unique(as.factor(crea$PatientID))) # x hf patients over 18 at diagnosis with creatinine data
+
 
 ###########################################################################
 #SENSITIVITY TESTS
-
-#HOW MANY ZERO CR VALUES 
-summary(crea$CodeValue)
-min(as.numeric(crea$CodeValue),na.rm=TRUE)
-No zero values present
-
-#HOW MANY CR VALUES UNDER 20, are they from the old assay?
-lowcr<-crea[crea$CodeValue<18,] 
+#HOW MANY ZERO CR VALUES AND HOW MANY CR VALUES UNDER 20
+lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] #2743
 length(lowcr$PatientID)
-#21 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-levels(as.factor(lowcr$PatientID)) #Only 21 patients are affected
+#218 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
+levels(as.factor(lowcr$PatientID)) #188 patients are affected
 table(lowcr$CodeValue)
-#only 16 are zero values, there are 5 that are between 0 and 20.
+#161 are zero values
+
+crea<-crea[crea$CodeValue>0,]
+lowcr<-crea[crea$CodeValue<18,] #57
+length(lowcr$PatientID) #54
+#ARE THESE FROM OLD ASSAY?
+lowcr <- droplevels(lowcr)
+head(lowcr)
+table(lowcr$CodeUnits)
+#             %      g/L    g/mol        L micmol/l     mmol   mmol/L 
+#   4400        1        1        1        1     6099        1      766 
+
+#  umol/l   umol/L        h    mol/L 
+#       5   891607        1        1 
+
+#In the first iteration 891607 records were retained. 
+#Evidently some were omitted due to minor typographic changes
+#We can assume post 2008 values unless otherwise marked were completed with the new assay as we believed the lab switched over to this in 2005
+#There is only one regional lab so the tests will be consistent, just potentially not the units used for recording.
+#Some units may ahve been incorrectly selected from the pulldown menu, so values over 50 should be assumed to be in umol not mmol.
+#We can use a simple formula to convert values under 100 in mmol to umol
+
+levels(crea$CodeUnits)
+#[1] ""         "%"        "g/L"      "g/mol"    "L"        "micmol/l"
+ #[7] "mmol"     "mmol/L"   "umol/l"   "umol/L"   "h"        "mol/L"  
+ 
+levels(crea$CodeUnits)[c(1,6,9)]<-"umol/L"
+levels(crea$CodeUnits)[c(6)]<-"mmol/L"
+levels(crea$CodeUnits)[c(2:5,7:8)]<-"NA"
+crea<-crea[!is.na(crea$CodeUnits),]
+crea$CodeValue<-ifelse(crea$CodeUnits=="mmol/L" & as.numeric(crea$CodeValue)<50,(as.numeric(crea$CodeValue)*1000),as.numeric(crea$CodeValue))
+crea$CodeUnits<-"umol/L"
+summary(crea$CodeValue) #Any remaining high and low values will be removed
+crea<-crea[as.numeric(crea$CodeValue)>=20 & !is.na(crea$CodeValue),] 
+#Upper limit TBA
 ###############################################################################
 
 #DATA CLEANING 
-crea<-merge(crea,sir.datasource,all.x=TRUE)
-crea<-crea[as.numeric(crea$CodeValue)>=20 & !is.na(crea$CodeValue),] 
-length(crea$CodeValue) #692357 records left
+
+length(crea$CodeValue) #902747 records left
 crea$Source<-ifelse(crea$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
 crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
 
 #REMOVE SAME DAY AND DELAYED CREATININE ENTRIES?
 names(crea)
 crea<-crea[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
-crea2<-crea[(duplicated(crea[,c(1,2,3,6)])&!duplicated(crea[,7])),]
-crea2<-crea[(duplicated(crea[,c(1,2,3,6)])),]
+crea2<-crea[(duplicated(crea[,c(1,4,6)])&!duplicated(crea[,7])),]
+length(crea2$CodeValue) #Only 27 same day duplicates are from different sources
+crea3<-crea[(duplicated(crea[,c(1,4,6)])),]
+length(crea3$CodeValue) #in total, 262588 of 902747 (29%) records have a same day duplicate
 
 #SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE) DO NOT HAVE DIFFERENT SOURCES
 crea4<-crea[(duplicated(crea[,c(1,2,3,6)]),] #SAME DAY DUPLICATES (SAME PATIENT, DATE, VALUE)
