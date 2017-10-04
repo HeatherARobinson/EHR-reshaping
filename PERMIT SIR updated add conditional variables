@@ -16,16 +16,15 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 #######################################################
 #######################################################
-load("crea.rep2tests.Rdata")
-load("sir.data2tests.Rdata")
+load("crea.rephf2tests.Rdata")
+load("sir.datahf2tests.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
-#Narrow lookup table to the full list of codes of interest to speed up processing
-
-merged <- Reduce(function(x, y) merge(x, y,all.x=TRUE,all.y=TRUE), 
-                 list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
-sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
+#Narrow lookup table to the full list of codes of interest to speed up processing- use for CPRD
+#merged <- Reduce(function(x, y) merge(x, y,all.x=TRUE,all.y=TRUE), 
+#                 list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
+#sir.data<-sir.data[which(sir.data$ReadCode %in% merged$ReadCode),]
 
 #######################################################
 #####OPTIONAL BREAKPOINT
@@ -40,7 +39,7 @@ save(sir.data, file = "sir.dataconditionsonly.Rdata")
 sir.data$SerumSodium<-as.numeric(ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
 
 smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])#CHECK THESE CORRESPOND TO PATIENT AND DATE
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -66,7 +65,7 @@ sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,a
 sir.datacalc<-sir.data[sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),])& sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),]),]
 
 BMItab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
-columns1=names(BMItab[c(1,3)])
+columns1=names(BMItab[c(1,2)])
 dots<-lapply(columns1, as.symbol)
 firstA <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -90,14 +89,13 @@ indx1 <- neardate(crea.rep$PatientID, firstB$PatientID, crea.rep$EntryDate, firs
                    best="prior")
 crea.rep$BMI<-firstB[indx1, "BMI"]
 crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx3])) >365, 1, NA)
-save(crea.rep, file = "crea.repongoing.Rdata")
 
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
 
 sir.data$UricAcid<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$UricAcid),c("PatientID","UricAcid","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -118,7 +116,7 @@ crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Ent
 #MAX DAILY BLOOD UREA NITROGEN #1 MONTH
 sir.data$BUN<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$BUN),c("PatientID","BUN","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -142,7 +140,7 @@ crea.rep$BUNDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 
 sir.data$SerumPotassium<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$SerumPotassium),c("PatientID","SerumPotassium","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -165,7 +163,7 @@ crea.rep$SerPotDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 #MIN DAILY HEART RATE #1 MONTH
 sir.data$HeartRate<-ifelse(sir.data$ReadCode %in% HeartRate1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$HeartRate),c("PatientID","HeartRate","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -188,7 +186,7 @@ crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$En
 #MIN DAILY SYSTOLIC BP #30 DAYS
 sir.data$SBP<-ifelse(sir.data$ReadCode %in% SBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$SBP),c("PatientID","SBP","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -210,7 +208,7 @@ crea.rep$SBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 #MIN DAILY DIASTOLIC BP #30 DAYS
 sir.data$DBP<-ifelse(sir.data$ReadCode %in% DBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$DBP),c("PatientID","DBP","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -233,7 +231,7 @@ crea.rep$DBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 #MAX DAILY SERUM ALBUMIN #1 YEAR
 sir.data$SerumAlbumin<-ifelse(sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$SerumAlbumin),c("PatientID","SerumAlbumin","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -255,7 +253,7 @@ crea.rep$SerumAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first
 #MAX DAILY URINE ALBUMIN #1 YEAR
 sir.data$UrineAlbumin<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$UrineAlbumin),c("PatientID","UrineAlbumin","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -278,7 +276,7 @@ save(crea.rep,file="crea.rep1yr2tests.Rdata")
 #MAX DAILY URINE ALBUMIN CREATININE RATIO #1 YEAR
 sir.data$UACratio<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$UACratio),c("PatientID","UACratio","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -300,7 +298,7 @@ crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 #MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 sir.data$MCV<-ifelse(sir.data$ReadCode %in% MCV1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$MCV),c("PatientID","MCV","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -324,7 +322,7 @@ save(crea.rep,file="crea.rep1yr2tests.Rdata")
 #MAX DAILY HAEMOGLOBIN #120 DAYS
 sir.data$Haemoglobin<-ifelse(sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$Haemoglobin),c("PatientID","Haemoglobin","EntryDate")]
-columns=names(smalltab[c(1,3)])
+columns=names(smalltab[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -343,15 +341,6 @@ crea.rep$Haemoglobin<-first[indx3, "Haemoglobin"]
 crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx3])) >120, 1, NA)
 
 #########################################################
-#MOVE ON TO CODE BINARY EXCLUSION CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
-#CODE FOR POTENTIAL LOOP (NEEDS WORK)
-#for (i in 1:length(temp)){
-#col_names<-""
-#eval(parse(text = paste0('sir.data2$colum', i, '<- with(sir.data2,
-#ifelse(sir.data2$ReadCode %in% (temp[[i]][,2]),paste(sir.data2$EntryDate), NA)
-#)')))
-#}
-############################################################################
 
 #NEPHRECTOMY
 sir.data$nephrectomydate<-with(sir.data,ifelse(sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,as.integer(paste(sir.data$EntryDate)), NA)) 
