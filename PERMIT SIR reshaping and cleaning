@@ -46,23 +46,32 @@ levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
+crea <- droplevels(crea)
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
+
+#CHECK FOR CASES WHERE A VIABLE VALUE IS ENTERED IN THE UNITS COLUMN BY MISTAKE
+temp<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 & as.numeric(as.character(crea$CodeUnits))<1000  & !is.na(crea$CodeValue),crea$CodeUnits,NA)
+table(temp) # 41 records affected, but most not viable values
+crea$CodeValue<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 
+& as.numeric(as.character(crea$CodeUnits))<1000  
+& is.na(crea$CodeValue),crea$CodeUnits,crea$CodeValue)
+crea$CodeUnits<-ifelse(!is.na(temp),paste(""),paste(crea$CodeUnits))
 crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 crea<-crea[!is.na(crea$CodeValue),]
 summary(crea$CodeValue)
 
-length(unique(as.factor(crea$PatientID))) 6922 hf patients over 18 at diagnosis with creatinine data
+length(unique(as.factor(crea$PatientID))) #6923 hf patients over 18 at diagnosis with creatinine data
 
 
 ###########################################################################
 #SENSITIVITY TESTS
 #HOW MANY ZERO CR VALUES AND HOW MANY CR VALUES UNDER 20
-lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] #2743
+lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] #21727
 length(lowcr$PatientID)
-#102 creatinine values less than 18 -ARE THESE FROM OLD ASSAY?
-levels(as.factor(lowcr$PatientID)) #88 patients are affected
+#ARE THESE FROM OLD ASSAY?
+levels(as.factor(lowcr$PatientID)) #4121 patients are affected
 table(lowcr$CodeValue)
-#77 are zero values
+#471 are zero values
 
 crea<-crea[crea$CodeValue>0,]
 lowcr<-crea[crea$CodeValue<18,] 
@@ -76,6 +85,11 @@ table(lowcr$CodeUnits)
 
 #  umol/l   umol/L        h    mol/L 
 #       5   891607        1        1 
+summary(lowcr$EventDate)
+#MOST SEEM TO BE IN RECENT UNITS AND RECENT VALUES
+
+
+
 
 #In the first iteration 891607 records were retained. 
 #Evidently some were omitted due to minor typographic changes
@@ -84,56 +98,67 @@ table(lowcr$CodeUnits)
 #Some units may ahve been incorrectly selected from the pulldown menu, so values over 50 should be assumed to be in umol not mmol.
 #We can use a simple formula to convert values under 100 in mmol to umol
 
+crea$CodeUnits<-as.factor(crea$CodeUnits)
 levels(crea$CodeUnits)
 #[1] ""         "%"        "g/L"      "g/mol"    "L"        "micmol/l"
- #[7] "mmol"     "mmol/L"   "umol/l"   "umol/L"   "h"        "mol/L"  
+ #[7] "mmol"     "mmol/L"   "umol/l"   "None"  "umol/L"  
  
 levels(crea$CodeUnits)[c(1,6,9)]<-"umol/L"
 levels(crea$CodeUnits)[c(6)]<-"mmol/L"
-levels(crea$CodeUnits)[c(2:5,7:8)]<-"NA"
+levels(crea$CodeUnits)[c(2:5)]<-"NA"
 crea<-crea[!is.na(crea$CodeUnits),]
 crea$CodeValue<-ifelse(crea$CodeUnits=="mmol/L" & as.numeric(crea$CodeValue)<50,(as.numeric(crea$CodeValue)*1000),as.numeric(crea$CodeValue))
 crea$CodeUnits<-"umol/L"
 summary(crea$CodeValue) #Any remaining high and low values will be removed
 crea<-crea[as.numeric(crea$CodeValue)>=20 & !is.na(crea$CodeValue),] 
 #Upper limit TBA
-###############################################################################
 
+save(crea,file="crearecleaned.rda")
+###############################################################################
 #DATA CLEANING 
 
-length(crea$CodeValue) #432711 records left
+#load("sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+#load("crearecleaned.rda") # all steps above completed
 
-#REMOVE SAME DAY AND DELAYED CREATININE ENTRIES?
+length(crea$CodeValue) #412394 records left
+
+#REMOVE SAME DAY CREATININE ENTRIES IF THE SOURCE LOCATION CODE DIFFERS.
 names(crea)
 crea<-crea[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
 crea2<-crea[(duplicated(crea[,c(1,4,6)])&!duplicated(crea[,7])),]
-length(crea2$CodeValue) #Only 29 same day duplicates are from different sources
+length(crea2$CodeValue) #Only 24 same day duplicates are from different sources
 crea3<-crea[(duplicated(crea[,c(1,4,6)])),]
-length(crea3$CodeValue) #in total, 111475 of 432711 (26%) records have a same day duplicate
+length(crea3$CodeValue) #in total, 105665 of 412394 (26%) records have a same day duplicate
+
+crea<-crea[!rownames(crea) %in% rownames(crea2),]
+
+#REMOVE DELAYED CREATININE ENTRIES FROM SAME CALENDAR MONTH IF THE SOURCE LOCATION CODE DIFFERS.
 
 crea$event.date<-as.Date(as.character(crea$EntryDate),format="%Y%m%d")
 (as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))) -> year
 (as.numeric(month(strptime(crea$event.date, format="%Y-%m-%d")))) -> month
 crea$EntryPeriod<-paste(month,year)
 
-crea$Source<-ifelse(crea$Source=="salfordt",paste("1"),paste("2")) #1 for hospital, 2 for GP
+crea$Source<-ifelse(crea$Source=="salfordt",paste("2"),paste("1")) #2 for hospital, 1 for GP
 crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
-crea<-crea[order(crea[,1], -(crea[,3]),(crea[,7])),]
-cread<-crea[(duplicated(crea[,c(1,6,16)])&!duplicated(crea[,7])),] #REMOVES DELAYED DUPLICATES (SAME PATIENT, DATE, VALUE)
-length(cread$PatientID) #- None of the remaining potential duplicate records outside of the same day window come from different locations
-cread<-crea[duplicated(crea[,c(1,6,16)]),] 
-table(cread$Source) #The vast majority (12802 of out of range duplicates are multiple tests from within hospital. Only 730 have a GP code and are repeats within GP practises)
 
-length(crea$PatientID) # 322148 records retained 
+crea<-crea[order(crea[,1], -(crea[,4]),(crea[,7])),]
+crea4<-crea[(duplicated(crea[,c(1,6,14)])&!duplicated(crea[,7])),] #DELAYED DUPLICATES (SAME PATIENT, MONTH, VALUE)
+length(crea4$PatientID) #- Only 1 of the remaining potential duplicate records outside of the same day window come from different locations
+crea5<-crea[duplicated(crea[,c(1,6,14)]),] 
+table(crea5$Source) #The vast majority (12802 of out of range duplicates are multiple tests from within hospital. Only 730 have a GP code and are repeats within GP practises)
+
+crea<-crea[!rownames(crea) %in% rownames(crea4),]
+
+length(crea$PatientID) # 412369 records retained 
 save(crea, file = "crea.ongoing.Rdata")
-
-
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea[,c("PatientID","CodeValue", "EntryDate")]
 xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
-summarize(Creatinine = mean(as.numeric(CodeValue)))
+summarize(Creatinine = mean(as.numeric(as.character(CodeValue))))
 head(xcrea)
+ungroup(xcrea)
 crea<-merge(crea,as.data.frame(xcrea),all.x=TRUE)
 
 ######################################################
@@ -149,13 +174,12 @@ ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
 ethnic.data$Category<-floor(ethnic.data$Category)
 crea<-merge(crea,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
 names(crea)
-crea<-subset(crea, select=-c(Ethnicity,ClinCode1,ReligionDescription,MaritalStatus,EntryPeriod,Rubric))
+crea<-subset(crea, select=-c(Ethnicity,ClinCode1,EntryPeriod,Rubric))
 colnames(crea)[which(names(crea) == "Category")] <- "Ethnicity"
 save(crea, file = "crea.ongoing.Rdata")
 
 levels(unique(as.factor(crea$PatientID))) 
-#6922 remaining with hf as an adult and 2 read codes post 2008, all same day duplicates removed.
-#All delayed duplicates beyond same day but within same calendar month appear to be from hospital settings so probably not duplicates. 
+#6918 remaining with hf as an adult, all same day duplicates removed.
 #No other duplicate pathology data removed, no data time range applied.
 
 #COHORT SELECTION
@@ -166,9 +190,9 @@ table(crea$PatientID) < 2 -> rare
 rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea.rep$PatientID))) # 6583 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
-length(crea.rep$PatientID) #217599 remaining
-sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID]
+levels(unique(as.factor(crea.rep$PatientID))) # 6589 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
+length(crea.rep$PatientID) #284233 remaining
+sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
 #Breakpoint
 #######################################################
 save(crea.rep, file = "crea.rephf2tests.Rdata")
