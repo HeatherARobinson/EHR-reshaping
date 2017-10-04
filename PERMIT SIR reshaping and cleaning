@@ -1,5 +1,11 @@
 memory.size(100000)
-load ("sir.data.rda")
+load ("sir.data.rda") #Taking the long format input file
+load("small.rda") #This is the demographic data from he processed sir.data.rda, 
+#comprising PatientID, Gender, BirthDate and LSOA
+small<-unique(small)
+sir.data<-merge(sir.data,small,all.x=TRUE)
+save(sir.data,file="sirdata.rda")
+#load("sirdata.rda")
 
 library(zoo)
 library(plyr)
@@ -17,7 +23,6 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 #SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
 hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
 length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
-datasource<-sir.datasource[sir.datasource$PatientID %in% hf$PatientID,]
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
@@ -40,11 +45,7 @@ dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
 levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
 
 #SELECT PATIENTS WITH CREATININE DATA
-#To solve source code problem I took the dob, age and genders from the processed file (>small.rda) 
-#I went back to the long file to make a new crea.rep that would have source code attached to it:
-load("revisedcrea.rda")
-#load ("sirdatahfonly.rda")
-#sir.data[sir.data$ReadCode=="44J3.",]->crea 
+sir.data[sir.data$ReadCode=="44J3.",]->crea 
 crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 crea<-crea[!is.na(crea$CodeValue),]
