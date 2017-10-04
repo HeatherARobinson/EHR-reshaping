@@ -2,16 +2,22 @@
 #and the long format original sir.data file.
 #The purpose of this is to acquire the Source column from the long file.
 
-memory.size(100000)
-load("small.rda") 
+#Following selection of adult hf patients but prior to selecting out diabetics
+names(sir.data)
+small<-sir.data[,c(1,8,9,12,13)]
 small<-unique(small)
+ 
 
 table(small$PatientID) >1 -> varied  
 table(varied) #check there is no conflicting information
+save(small,file="small.rda")
 
 #This is the demographic data from he processed sir.data.rda, 
 #comprising PatientID, Gender, BirthDate and LSOA
 
+
+memory.size(100000)
+#load("small.rda")
 load("sir.data.rda") 
 
 #This is the long format original sir.data.rda file
