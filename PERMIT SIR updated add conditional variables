@@ -9,6 +9,7 @@ library(data.table)
 library(survival)
 library(lubridate)
 
+#The processed sir.data file will be used from this point onwards, not the long format.
 ####################################################
 
 temp = list.files(pattern="*1.csv")
@@ -17,7 +18,7 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 #######################################################
 #######################################################
 load("crea.rephf2tests.Rdata")
-load("sir.datahf2tests.Rdata")
+load("sir.datahfonly.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
@@ -27,24 +28,20 @@ load("sir.datahf2tests.Rdata")
 #sir.data<-sir.data[which(sir.data$ReadCode %in% merged$ReadCode),]
 
 #######################################################
-#####OPTIONAL BREAKPOINT
-save(sir.data, file = "sir.dataconditionsonly.Rdata")
-#######################################################
 
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
 #################################################################
 
 #NEAREST PRIOR MEAN DAILY SERUM SODIUM #DATE FLAG 30 DAYS
 #OUT OF RANGE REMOVAL TBA
-sir.data$SerumSodium<-as.numeric(ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
+sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, sir.data$CodeValue,NA)
 
 smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
-columns=names(smalltab[c(1,2)])#CHECK THESE CORRESPOND TO PATIENT AND DATE
+columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(SerumSodium=mean(as.numeric(SerumSodium))) %>%
-ungroup()
+summarise(SerumSodium=mean(as.numeric(SerumSodium))) 
 
 length(as.factor(unique(first$SerumSodium)))
 length(as.factor(unique(smalltab$SerumSodium)))
@@ -65,7 +62,7 @@ sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,a
 sir.datacalc<-sir.data[sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),])& sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),]),]
 
 BMItab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
-columns1=names(BMItab[c(1,2)])
+columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
 firstA <-smalltab %>% 
 group_by_(.dots=dots) %>%
@@ -95,7 +92,7 @@ crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 
 sir.data$UricAcid<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$UricAcid),c("PatientID","UricAcid","EntryDate")]
-columns=names(smalltab[c(1,2)])
+columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
