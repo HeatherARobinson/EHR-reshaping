@@ -49,7 +49,7 @@ first <-smalltab %>%
 group_by_(.dots=dots) %>%
 summarise(SerumSodium=mean(CodeValue)) 
 
-length(first$SerumSodium)
+length(first$SerumSodium[!is.na(first$SerumSodium)])
 sir.data<-merge(sir.data,first,all.x=TRUE)
 first<-first[order(first[,c(1:3)])]
 length(sir.data$temp[!is.na(sir.data$temp)])
@@ -61,36 +61,32 @@ crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 #######################################################
 
 #CLOSEST DAILY BMI MEAN #1YR DATE FLAG
-sir.data$BMI<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
-sir.data$height<-as.numeric(ifelse(sir.data$ReadCode %in% Height1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA
-sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
-sir.datacalc<-sir.data[sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),])& sir.data$PatientID %in% (sir.data[!is.na(sir.data$height),]),]
+sir.data$temp<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
+sir.data$height<-as.numeric(ifelse(sir.data$ReadCode %in% Height1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
+#Apply max height across dataset
 
-BMItab<-sir.data[!is.na(sir.data$BMI),c("PatientID","BMI","EntryDate")]
+htab<-sir.data[!is.na(sir.data$height),c("PatientID","CodeValue","EntryDate")]
+columns1=names(htab[c(1,3)])
+dots<-lapply(columns1, as.symbol)
+firstH <-htab %>% 
+group_by_(.dots=dots) %>%
+summarize(Height=max(CodeValue)) 
+sir.data<-merge(sir.data,firstH,all.x=TRUE)
+
+sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
+sir.data$temp<-ifelse(is.na(sir.data$temp,(as.numeric(sir.data$weight)/(as.numeric(sir.data$height))^2),sir.data$temp)
+
+BMItab<-sir.data[!is.na(sir.data$temp),c("PatientID","temp","EntryDate")]
 columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
 firstA <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarize(BMI=mean(as.numeric(BMI))) 
+summarize(BMI=mean(temp)) 
 
-calctab<-sir.datacalc[!is.na(calctab$height),c("PatientID","height")]
-firstA <-calctab %>% 
-group_by_(PatientID) %>%
-summarize(height=max(as.numeric(height))) 
-
-calctab2<-[!is.na(calctab$weight),c("PatientID","weight","EntryDate")]
-calctab3<-merge(calctab2,calctab,all.x=TRUE)
-calctab3$BMI<-as.numeric(calctab3$weight)/(as.numeric(calctab3$height))^2
-#columns1=names(calctab3[c(1,3)])
-dots<-lapply(columns1, as.symbol)
-firstB <-calctab3 %>% 
-group_by_(.dots=dots) %>%
-summarize(BMI=mean(as.numeric(BMI))) 
-firstB<-as.data.frame(FirstB)
-indx1 <- neardate(crea.rep$PatientID, firstB$PatientID, crea.rep$EntryDate, firstB$EntryDate, 
+indx1 <- neardate(crea.rep$PatientID, firstA$PatientID, crea.rep$EntryDate, firstA$EntryDate, 
                    best="prior")
-crea.rep$BMI<-firstB[indx1, "BMI"]
-crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx3])) >365, 1, NA)
+crea.rep$BMI<-firstA[indx1, "BMI"]
+crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDate[indx3])) >365, 1, NA)
 
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
