@@ -78,31 +78,35 @@ sir.data$temp<-ifelse(is.na(sir.data$temp),(as.numeric(sir.data$weight)/(as.nume
 BMItab<-sir.data[!is.na(sir.data$temp),c("PatientID","temp","EntryDate")]
 columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
-firstA <-smalltab %>% 
+firstA <-BMItab %>% 
 group_by_(.dots=dots) %>%
 summarize(BMI=mean(temp)) 
 
 indx1 <- neardate(crea.rep$PatientID, firstA$PatientID, crea.rep$EntryDate, firstA$EntryDate, 
                    best="prior")
 crea.rep$BMI<-firstA[indx1, "BMI"]
-crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDate[indx3])) >365, 1, NA)
+crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDate[indx1])) >365, 1, NA)
 
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
 
-sir.data$UricAcid<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$UricAcid),c("PatientID","UricAcid","EntryDate")]
+sir.data$temp<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
+smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-slice(which.max(as.numeric(UricAcid))) %>%
-ungroup()
+summarise(means=mean(CodeValue)) 
+
+length(first$means[!is.na(first$means)])
 sir.data<-merge(sir.data,first,all.x=TRUE)
 
-indx1 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate)
-crea.rep$UricAcid<-first[indx1, "UricAcid"]
-crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx3])) >365, 1, NA)
+length(sir.data$temp[!is.na(sir.data$temp)])
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+                   best="prior")
+crea.rep$UricAcid<-first[indx1, "means"]
+crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
 ###################################################################
 #MAX DAILY BLOOD UREA NITROGEN #1 MONTH
 sir.data$BUN<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
