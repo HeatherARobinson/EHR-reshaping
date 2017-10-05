@@ -12,9 +12,6 @@ library(lubridate)
 #The processed sir.data file will be used from this point onwards, not the long format.
 ####################################################
 
-temp = list.files(pattern="*1.csv")
-for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-
 #######################################################
 #######################################################
 load("crea.rephf2tests.Rdata")
@@ -24,6 +21,9 @@ sir.data$CodeValue<-as.numeric(as.character(sir.data$CodeValue))
 sir.data<-sir.data[!is.na(sir.data$CodeValue),]
 head(sir.data[sir.data$EntryDate<19800101,]) #Historical xray data  etc has been retrospectively added 
 sir.data$EntryDate<-ifelse(sir.data$EntryDate>20170801|sir.data$EntryDate<19000101,NA,sir.data$EntryDate)
+
+allfiles = list.files(pattern="*1.csv")
+for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
@@ -74,7 +74,7 @@ summarize(Height=max(CodeValue))
 sir.data<-merge(sir.data,firstH,all.x=TRUE)
 
 sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
-sir.data$temp<-ifelse(is.na(sir.data$temp,(as.numeric(sir.data$weight)/(as.numeric(sir.data$height))^2),sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp),(as.numeric(sir.data$weight)/(as.numeric(sir.data$height))^2),sir.data$temp)
 
 BMItab<-sir.data[!is.na(sir.data$temp),c("PatientID","temp","EntryDate")]
 columns1=names(BMItab[c(1,3)])
