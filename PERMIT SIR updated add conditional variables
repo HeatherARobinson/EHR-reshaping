@@ -18,7 +18,12 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 #######################################################
 #######################################################
 load("crea.rephf2tests.Rdata")
-load("sir.datahfonly.Rdata")
+load("sirdatahfonly.rda")
+sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
+sir.data$CodeValue<-as.numeric(as.character(sir.data$CodeValue))
+sir.data<-sir.data[!is.na(sir.data$CodeValue),]
+head(sir.data[sir.data$EntryDate<19800101,]) #Historical xray data  etc has been retrospectively added 
+sir.data$EntryDate<-ifelse(sir.data$EntryDate>20170801|sir.data$EntryDate<19000101,NA,sir.data$EntryDate)
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
@@ -27,6 +32,7 @@ load("sir.datahfonly.Rdata")
 #                 list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
 #sir.data<-sir.data[which(sir.data$ReadCode %in% merged$ReadCode),]
 
+
 #######################################################
 
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
@@ -34,21 +40,19 @@ load("sir.datahfonly.Rdata")
 
 #NEAREST PRIOR MEAN DAILY SERUM SODIUM #DATE FLAG 30 DAYS
 #OUT OF RANGE REMOVAL TBA
-sir.data$SerumSodium<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, paste(sir.data$CodeValue),NA)
+sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, paste(sir.data$CodeValue),NA)
 
-smalltab<-sir.data[!is.na(sir.data$SerumSodium),c("PatientID","SerumSodium","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(SerumSodium=mean(as.numeric(smalltab$SerumSodium)),na.rm=TRUE) 
+summarise(SerumSodium=mean(CodeValue)) 
 
-length(as.factor(unique(first$SerumSodium)))
-length(as.factor(unique(smalltab$SerumSodium)))
+length(first$SerumSodium)
 sir.data<-merge(sir.data,first,all.x=TRUE)
 first<-first[order(first[,c(1:3)])]
-length(as.factor(unique(sir.data$SerumSodium)))
-
+length(sir.data$temp[!is.na(sir.data$temp)])
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
