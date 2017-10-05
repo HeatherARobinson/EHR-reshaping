@@ -151,7 +151,7 @@ table(crea5$Source) #The vast majority (12802 of out of range duplicates are mul
 crea<-crea[!rownames(crea) %in% rownames(crea4),]
 
 length(crea$PatientID) # 412369 records retained 
-save(crea, file = "crea.ongoing.Rdata")
+
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
 smalltab<-crea[,c("PatientID","CodeValue", "EntryDate")]
@@ -160,6 +160,8 @@ summarize(Creatinine = mean(as.numeric(as.character(CodeValue))))
 head(xcrea)
 ungroup(xcrea)
 crea<-merge(crea,as.data.frame(xcrea),all.x=TRUE)
+
+save(crea,file="crearecleaned.rda")
 
 ######################################################
 #Add demographic variables from lookup tables
