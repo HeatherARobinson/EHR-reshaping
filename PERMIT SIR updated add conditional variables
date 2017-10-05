@@ -51,7 +51,6 @@ summarise(SerumSodium=mean(CodeValue))
 
 length(first$SerumSodium[!is.na(first$SerumSodium)])
 sir.data<-merge(sir.data,first,all.x=TRUE)
-first<-first[order(first[,c(1:3)])]
 length(sir.data$temp[!is.na(sir.data$temp)])
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
