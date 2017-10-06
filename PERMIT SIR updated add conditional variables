@@ -325,14 +325,63 @@ crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),
 crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
 crea.rep$IHD<-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
 
+#PVD
+sir.data$PVDDate<-sir.data$EntryDate 
+sir.data$PVDDate<-ifelse(!sir.data$ReadCode  %in%  PVD1.csv$ReadCode,NA,sir.data$PVDDate) 
+smalltab<-sir.data[!is.na(sir.data$PVDDate),c("PatientID","PVDDate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(PVDDate) %>%
+    slice(which.min(as.numeric(PVDDate))) %>%
+    ungroup ()
+    head(first)
+    
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$PVDDate<-as.Date(as.character(crea.rep$PVDDate),format="%Y%m%d")
+crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$PVDDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
+crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
+save(crea.rep, file = "crea.repongoing.rda")
 
+#RENAL MALIGNANCY
+sir.data$RMDate<-sir.data$EntryDate 
+sir.data$RMDate<-ifelse(!sir.data$ReadCode  %in%  RM1.csv$ReadCode,NA,sir.data$RMDate) 
+smalltab<-sir.data[!is.na(sir.data$RMDate),c("PatientID","RMDate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(RMDate) %>%
+    slice(which.min(as.numeric(RMDate))) %>%
+    ungroup ()
+    head(first)
+    
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$RMDate<-as.Date(as.character(crea.rep$RMDate),format="%Y%m%d")
+crea.rep$DaysSinceRM<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RMDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceRM<-ifelse(crea.rep$DaysSinceRM<0,NA,crea.rep$DaysSinceRM)
+crea.rep$RM<-ifelse(is.na(crea.rep$DaysSinceRM),0,1)
+save(crea.rep, file = "crea.repongoing.rda")
 
-#also....
+#RENAL TRANSPLANT
+sir.data$RMDate<-sir.data$EntryDate 
+sir.data$RMDate<-ifelse(!sir.data$ReadCode  %in%  transplant1.csv$ReadCode,NA,sir.data$RMDate) 
+smalltab<-sir.data[!is.na(sir.data$RTDate),c("PatientID","RTDate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(RTDate) %>%
+    slice(which.min(as.numeric(RTDate))) %>%
+    ungroup ()
+    head(first)
+    
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$RTDate<-as.Date(as.character(crea.rep$RMDate),format="%Y%m%d")
+crea.rep$DaysSinceRT<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RTDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceRT<-ifelse(crea.rep$DaysSinceRT<0,NA,crea.rep$DaysSinceRT)
+crea.rep$RenalTransplant<-ifelse(is.na(crea.rep$DaysSinceRT),0,1)
+save(crea.rep, file = "crea.repongoing.rda")
 
-#Ischaemic Heart Disease
-#Peripheral Vascular Disease
-#Renal Malignancy
-#Renal transplant
 ##########################################################
 #CODE EACH OF THE FORMULA VARIABLES
 
