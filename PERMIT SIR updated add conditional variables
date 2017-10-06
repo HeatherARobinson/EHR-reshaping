@@ -47,7 +47,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(SerumSodium=mean(CodeValue)) 
+summarise(SerumSodium=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -65,7 +66,8 @@ columns1=names(htab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
 firstH <-htab %>% 
 group_by_(.dots=dots) %>%
-summarize(Height=max(CodeValue)) 
+summarize(Height=max(CodeValue)) %>%
+as.data.frame
 sir.data<-merge(sir.data,firstH,all.x=TRUE)
 
 sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
@@ -76,7 +78,8 @@ columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
 firstA <-BMItab %>% 
 group_by_(.dots=dots) %>%
-summarize(BMI=mean(temp)) 
+summarize(BMI=mean(temp)) %>%
+as.data.frame
 
 indx1 <- neardate(crea.rep$PatientID, firstA$PatientID, crea.rep$EntryDate, firstA$EntryDate, 
                    best="prior")
@@ -92,7 +95,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 firstU <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(UricAcid=mean(CodeValue)) 
+summarise(UricAcid=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, firstU$PatientID, crea.rep$EntryDate, firstU$EntryDate, 
                    best="prior")
@@ -106,7 +110,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(BUN=mean(CodeValue)) 
+summarise(BUN=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -123,7 +128,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(SerumPotassium=mean(CodeValue)) 
+summarise(SerumPotassium=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -139,8 +145,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(HeartRate=mean(CodeValue)) 
-
+summarise(HeartRate=mean(CodeValue)) %>%
+as.data.frame 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
 crea.rep$HeartRate<-first[indx1, "HeartRate"]
@@ -156,7 +162,7 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(SBP))) %>%
-ungroup()
+as.data.frame
 
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -172,7 +178,8 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(DBP))) %>%
-ungroup()
+ungroup()%>%
+as.data.frame
 
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -188,7 +195,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(SerumAlbumin=mean(CodeValue)) 
+summarise(SerumAlbumin=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -203,7 +211,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(UrineAlbumin=mean(CodeValue)) 
+summarise(UrineAlbumin=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -219,7 +228,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(UACratio=mean(CodeValue)) 
+summarise(UACratio=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -234,7 +244,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(MCV=mean(CodeValue)) 
+summarise(MCV=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -251,7 +262,8 @@ columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
-summarise(Haemoglobin=mean(CodeValue)) 
+summarise(Haemoglobin=mean(CodeValue)) %>%
+as.data.frame
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
                    best="prior")
@@ -266,10 +278,9 @@ smalltab<-sir.data[!is.na(sir.data$nephrectomydate),c("PatientID","nephrectomyda
 first<-smalltab %>%
     group_by(PatientID) %>%
     arrange(nephrectomydate) %>%
-    slice(1L) %>%
-    ungroup ()
-    head(first)# There are apparently no nephrectomies to add
-
+    slice(1L) %%>%
+as.data.frame
+    
 #DIABETES
 sir.data$DiabDate<-sir.data$EntryDate 
 sir.data$DiabDate<-ifelse(!sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,NA,sir.data$DiabDate) 
@@ -278,7 +289,7 @@ first<-smalltab %>%
     group_by(PatientID) %>%
     arrange(DiabDate) %>%
     slice(which.min(as.numeric(DiabDate))) %>%
-    ungroup ()
+as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
@@ -297,7 +308,7 @@ first<-smalltab %>%
     group_by(PatientID) %>%
     arrange(AFDate) %>%
     slice(which.min(as.numeric(AFDate))) %>%
-    ungroup ()
+as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
@@ -315,7 +326,7 @@ first<-smalltab %>%
     group_by(PatientID) %>%
     arrange(IHDDate) %>%
     slice(which.min(as.numeric(IHDDate))) %>%
-    ungroup ()
+as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
@@ -325,7 +336,7 @@ crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),
 crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
 crea.rep$IHD<-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
 
-#PVD
+#PERIPHERAL VASCULAR DISEASE
 sir.data$PVDDate<-sir.data$EntryDate 
 sir.data$PVDDate<-ifelse(!sir.data$ReadCode  %in%  PVD1.csv$ReadCode,NA,sir.data$PVDDate) 
 smalltab<-sir.data[!is.na(sir.data$PVDDate),c("PatientID","PVDDate")]
@@ -333,7 +344,7 @@ first<-smalltab %>%
     group_by(PatientID) %>%
     arrange(PVDDate) %>%
     slice(which.min(as.numeric(PVDDate))) %>%
-    ungroup ()
+as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
@@ -345,22 +356,22 @@ crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
 save(crea.rep, file = "crea.repongoing.rda")
 
 #RENAL MALIGNANCY
-sir.data$RMDate<-sir.data$EntryDate 
-sir.data$RMDate<-ifelse(!sir.data$ReadCode  %in%  RM1.csv$ReadCode,NA,sir.data$RMDate) 
-smalltab<-sir.data[!is.na(sir.data$RMDate),c("PatientID","RMDate")]
+sir.data$PVDDate<-sir.data$EntryDate 
+sir.data$PVDDate<-ifelse(!sir.data$ReadCode  %in%  PVD1.csv$ReadCode,NA,sir.data$PVDDate) 
+smalltab<-sir.data[!is.na(sir.data$PVDDate),c("PatientID","PVDDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
-    arrange(RMDate) %>%
-    slice(which.min(as.numeric(RMDate))) %>%
-    ungroup ()
+    arrange(PVDDate) %>%
+    slice(which.min(as.numeric(PVDDate))) %>%
+as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$RMDate<-as.Date(as.character(crea.rep$RMDate),format="%Y%m%d")
-crea.rep$DaysSinceRM<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RMDate,format="%Y-%m-%d"),unit="days")
-crea.rep$DaysSinceRM<-ifelse(crea.rep$DaysSinceRM<0,NA,crea.rep$DaysSinceRM)
-crea.rep$RM<-ifelse(is.na(crea.rep$DaysSinceRM),0,1)
+crea.rep$PVDDate<-as.Date(as.character(crea.rep$PVDDate),format="%Y%m%d")
+crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$PVDDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
+crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
 save(crea.rep, file = "crea.repongoing.rda")
 
 #RENAL TRANSPLANT
@@ -368,12 +379,9 @@ sir.data$RMDate<-sir.data$EntryDate
 sir.data$RMDate<-ifelse(!sir.data$ReadCode  %in%  transplant1.csv$ReadCode,NA,sir.data$RMDate) 
 smalltab<-sir.data[!is.na(sir.data$RTDate),c("PatientID","RTDate")]
 first<-smalltab %>%
-    group_by(PatientID) %>%
-    arrange(RTDate) %>%
-    slice(which.min(as.numeric(RTDate))) %>%
-    ungroup ()
-    head(first)
-    
+   group_by(PatientID) %>%    arrange(RTDate) %>%    slice(which.min(as.numeric(RTDate))) %>%
+as.data.frame    head(first)
+  
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 crea.rep$RTDate<-as.Date(as.character(crea.rep$RMDate),format="%Y%m%d")
@@ -381,7 +389,7 @@ crea.rep$DaysSinceRT<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),s
 crea.rep$DaysSinceRT<-ifelse(crea.rep$DaysSinceRT<0,NA,crea.rep$DaysSinceRT)
 crea.rep$RenalTransplant<-ifelse(is.na(crea.rep$DaysSinceRT),0,1)
 save(crea.rep, file = "crea.repongoing.rda")
-
+ 
 ##########################################################
 #CODE EACH OF THE FORMULA VARIABLES
 
