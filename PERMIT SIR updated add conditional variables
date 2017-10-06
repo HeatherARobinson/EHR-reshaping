@@ -285,12 +285,13 @@ crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 crea.rep$DiabDate<-as.Date(as.character(crea.rep$DiabDate),format="%Y%m%d")
 crea.rep$DaysSinceDiabetic<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$DiabDate,format="%Y-%m-%d"),unit="days")
-crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic])
+crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic)
 crea.rep$Diabetes<-ifelse(is.na(crea.rep$DaysSinceDiabetic),0,1)
 save(crea.rep, file = "crea.repongoing.rda")
 
 #ATRIAL FIBRILLATION
-sir.data$AFDate<-with(sir.data,ifelse(sir.data$ReadCode  %in%  AF1.csv$ReadCode,sir.data$EntryDate, NA)) 
+sir.data$AFDate<-sir.data$EntryDate 
+sir.data$AFDate<-ifelse(!sir.data$ReadCode  %in%  AF1.csv$ReadCode,NA,sir.data$AFDate) 
 smalltab<-sir.data[!is.na(sir.data$AFDate),c("PatientID","AFDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
@@ -300,11 +301,34 @@ first<-smalltab %>%
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$AtrialFibrillation<-ifelse(!is.na(crea.rep$AFDate) & crea.rep$AFDate<=crea.rep$EntryDate,1,0)
-crea.rep$DaysSinceAF<-ifelse(!is.na(crea.rep$AFDate) & crea.rep$AFDate<=crea.rep$EntryDate,(crea.rep$EntryDate-crea.rep$AFDate),0)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$AFDate<-as.Date(as.character(crea.rep$AFDate),format="%Y%m%d")
+crea.rep$DaysSinceAF<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$AFDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceAF<-ifelse(crea.rep$DaysSinceAF<0,NA,crea.rep$DaysSinceAF)
+crea.rep$AF<-ifelse(is.na(crea.rep$DaysSinceAF),0,1)
+
+#IHD
+sir.data$IHDDate<-sir.data$EntryDate 
+sir.data$IHDDate<-ifelse(!sir.data$ReadCode  %in%  IHD1.csv$ReadCode,NA,sir.data$AFDate) 
+smalltab<-sir.data[!is.na(sir.data$IHDDate),c("PatientID","IHDDate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(IHDDate) %>%
+    slice(which.min(as.numeric(IHDDate))) %>%
+    ungroup ()
+    head(first)
+    
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$AFDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
+crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$IHDDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
+crea.rep$IHD<-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
+
+
 
 #also....
-#Atrial Fibrillation
+
 #Ischaemic Heart Disease
 #Peripheral Vascular Disease
 #Renal Malignancy
