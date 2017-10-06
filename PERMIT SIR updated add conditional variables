@@ -406,13 +406,15 @@ save(crea.rep, file = "crea.repongoing.rda")
 crea.rep$log_CREA <- log10(crea.rep$Creatinine)
 crea.rep$PP<-sum(crea.rep$SBP-crea.rep$DBP)
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
+crea.rep$Anaemia<-ifelse(((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
+
 #crea.rep$AKI #Acute Kidney Injury
 
 
 #crea.rep$eGFR<- #Estimated glomerular filtration rate
 #crea.rep$CKD<- #Chronic Kidney Disease
 #crea.rep$RateRenChange #Rate of renal change
-crea.rep$Anaemia<-ifelse(((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
+
 #crea.rep$AKIepisodes<- #no. past AKI episodes?
 #crea.rep$WorsRenFail<- Worsening renal failure
 
