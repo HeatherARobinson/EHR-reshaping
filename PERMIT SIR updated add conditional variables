@@ -271,7 +271,8 @@ first<-smalltab %>%
     head(first)# There are apparently no nephrectomies to add
 
 #DIABETES
-sir.data$DiabDate<-with(sir.data,ifelse(sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,sir.data$EntryDate, NA)) 
+sir.data$DiabDate<-sir.data$EntryDate 
+sir.data$DiabDate<-ifelse(!sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,NA,sir.data$DiabDate) 
 smalltab<-sir.data[!is.na(sir.data$DiabDate),c("PatientID","DiabDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
@@ -281,9 +282,11 @@ first<-smalltab %>%
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$Diabetes<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,1,0)
-crea.rep$DaysSinceDiabetic<-ifelse(!is.na(crea.rep$DiabDate) & crea.rep$DiabDate<=crea.rep$EntryDate,(crea.rep$EntryDate-crea.rep$DiabDate),0)
-
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$DiabDate<-as.Date(as.character(crea.rep$DiabDate),format="%Y%m%d")
+crea.rep$DaysSinceDiabetic<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$DiabDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic])
+crea.rep$Diabetes<-ifelse(is.na(crea.rep$DaysSinceDiabetic),0,1)
 save(crea.rep, file = "crea.repongoing.rda")
 
 #ATRIAL FIBRILLATION
