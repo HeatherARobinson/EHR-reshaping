@@ -271,7 +271,7 @@ crea.rep$Haemoglobin<-first[indx1, "Haemoglobin"]
 crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >120, 1, NA)
 
 #########################################################
-
+length(sir.data$ReadCode[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode])# CHECK THERE ARE VALUES TO MATCH
 #NEPHRECTOMY
 sir.data$NephrectomyDate<-sir.data$EntryDate 
 sir.data$NephrectomyDate<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephrectomyDate) 
