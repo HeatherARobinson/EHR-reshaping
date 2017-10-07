@@ -54,6 +54,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
 crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
+table(crea.rep$SerSodDateFlag) #642
+a<-crea.rep[!is.na(crea.rep$SerumSodium),]
+length(a$PatientID) #284225
 #######################################################
 
 #CLOSEST DAILY BMI MEAN #1YR DATE FLAG
@@ -85,7 +88,9 @@ indx1 <- neardate(crea.rep$PatientID, firstA$PatientID, crea.rep$EntryDate, firs
                    best="prior")
 crea.rep$BMI<-firstA[indx1, "BMI"]
 crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDate[indx1])) >365, 1, NA)
-
+table(crea.rep$BMIDateFlag) #144029
+a<-crea.rep[!is.na(crea.rep$BMI),]
+length(a$PatientID) #278694
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
 
@@ -102,6 +107,9 @@ indx1 <-neardate(crea.rep$PatientID, firstU$PatientID, crea.rep$EntryDate, first
                    best="prior")
 crea.rep$UricAcid<-firstU[indx1, "UricAcid"]
 crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstU$EntryDate[indx1])) >365, 1, NA)
+table(crea.rep$UricAcidDateFlag) #87043
+a<-crea.rep[!is.na(crea.rep$UricAcid),]
+length(a$PatientID) #101829
 ##################################################################
 #MEAN DAILY BLOOD UREA NITROGEN #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -117,7 +125,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$BUN<-first[indx1, "BUN"]
 crea.rep$BUNDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-
+table(crea.rep$BUNDateFlag) #688
+a<-crea.rep[!is.na(crea.rep$BUN),]
+length(a$PatientID) #284218
 
 ##############################################################
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
@@ -135,6 +145,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$SerPotassium<-first[indx1, "SerumPotassium"]
 crea.rep$SerPotDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
+table(crea.rep$SerPotDateFlag) #4513
+a<-crea.rep[!is.na(crea.rep$SerPotassium),]
+length(a$PatientID) #284202
 
 
 ##############################################################
@@ -151,7 +164,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$HeartRate<-first[indx1, "HeartRate"]
 crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-
+table(crea.rep$HeartRateDateFlag) #30160
+a<-crea.rep[!is.na(crea.rep$HeartRate),]
+length(a$PatientID) #35414
 
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
@@ -168,6 +183,9 @@ indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first
                    best="prior")
 crea.rep$SBP<-first[indx2, "SBP"]
 crea.rep$SBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx2])) >30, 1, NA)
+table(crea.rep$SBPDateFlag) #160987
+a<-crea.rep[!is.na(crea.rep$SBP),]
+length(a$PatientID) #283818
 
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
