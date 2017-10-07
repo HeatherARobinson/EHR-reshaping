@@ -177,6 +177,7 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 slice(which.min(as.numeric(SBP))) %>%
+ungroup()%>%
 as.data.frame
 
 indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
@@ -204,6 +205,9 @@ indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first
 
 crea.rep$DBP<-first[indx2, "DBP"]
 crea.rep$DBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx2])) >30, 1, NA)
+table(crea.rep$DBPDateFlag) #161082
+a<-crea.rep[!is.na(crea.rep$DBP),]
+length(a$PatientID) #283818
 
 ##############################################################
 #MEAN DAILY SERUM ALBUMIN 
@@ -220,7 +224,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$SerumAlbumin<-first[indx1, "SerumAlbumin"]
 crea.rep$SerumAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstU$EntryDate[indx1])) >365, 1, NA)
-
+table(crea.rep$SerumAlbuminDateFlag) #10131
+a<-crea.rep[!is.na(crea.rep$SerumAlbumin),]
+length(a$PatientID) #284008
 ###################################################################
 #MAX DAILY URINE ALBUMIN 1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -236,8 +242,10 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$UrineAlbumin<-first[indx1, "UrineAlbumin"]
 crea.rep$UrineAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
-
 save(crea.rep,file="crea.repongoing.rda")
+table(crea.rep$UrineAlbuminDateFlag) #38916
+a<-crea.rep[!is.na(crea.rep$UrineAlbumin),]
+length(a$PatientID) #40757
 ###################################################################
 #MEAN DAILY URINE ALBUMIN CREATININE RATIO #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -253,7 +261,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$UACratio<-first[indx1, "UACratio"]
 crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
-
+table(crea.rep$UACDateFlag) #122174
+a<-crea.rep[!is.na(crea.rep$UACratio),]
+length(a$PatientID) #155908
 ###################################################################
 #MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% MCV1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -271,7 +281,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
 crea.rep$MCVDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >120, 1, NA)
 
 save(crea.rep,file="crea.repongoing.rda")
-
+table(crea.rep$MCVDateFlag) #50500
+a<-crea.rep[!is.na(crea.rep$MCV),]
+length(a$PatientID) #283524
 ###################################################################
 #MAX DAILY HAEMOGLOBIN #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -287,26 +299,30 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$Haemoglobin<-first[indx1, "Haemoglobin"]
 crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >120, 1, NA)
-
+table(crea.rep$HaemDateFlag) #40204
+a<-crea.rep[!is.na(crea.rep$Haemoglobin),]
+length(a$PatientID) #293668
 #########################################################
-levels(unique(sir.data$PatientID[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode]))# CHECK THERE ARE VALUES TO MATCH
+head(sir.data[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode,]))# CHECK THERE ARE VALUES TO MATCH
 #NEPHRECTOMY
-sir.data$NephrectomyDate<-sir.data$EntryDate 
-sir.data$NephrectomyDate<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephrectomyDate) 
-smalltab<-sir.data[!is.na(sir.data$NephrectomyDate),c("PatientID","NephrectomyDate")]
+sir.data$NephDate<-sir.data$EntryDate 
+sir.data$NephDate<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephDate) 
+
+smalltab<-sir.data[!is.na(sir.data$NephDate) & sir.data$PatientID %in% crea.rep$PatientID,c("PatientID","NephDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
-    arrange(NephrectomyDate) %>%
+    arrange(NephDate) %>%
     slice(1L) %>%
 as.data.frame
 head(first)
-    #THERE ARE NO NEPHRECTOMY PATIENTS IN THE SIR COHORT
-#crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-#crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-#crea.rep$NephrectomyDate<-as.Date(as.character(crea.rep$NephrectomyDate),format="%Y%m%d")
-#crea.rep$DaysSinceNephrectomy<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$NephrectomyDate,format="%Y-%m-%d"),unit="days")
-#crea.rep$DaysSinceNephrectomy<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephrectomyDate) 
-#crea.rep$Nephrectomy<-ifelse(is.na(crea.rep$DaysSinceNephrectomy),0,1)
+first$NephDate<-as.Date(as.character(first$NephDate),format="%Y%m%d")
+ 
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$NephDate<-as.Date(as.character(crea.rep$NephDate),format="%Y-%m-%d")
+crea.rep$DaysSinceNephrectomy<-difftime(strptime(crea.rep$NephDate,format="%Y-%m-%d"),strptime(crea.rep$event.date,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceNephrectomy<-as.numeric(crea.rep$DaysSinceNephrectomy, units="days")
+crea.rep$DaysSinceNephrectomy<-ifelse(crea.rep$DaysSinceNephrectomy<0,NA,crea.rep$DaysSinceNephrectomy)
 #save(crea.rep, file = "crea.repongoing.rda")
     
 #DIABETES
@@ -345,10 +361,11 @@ crea.rep$AFDate<-as.Date(as.character(crea.rep$AFDate),format="%Y%m%d")
 crea.rep$DaysSinceAF<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$AFDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceAF<-ifelse(crea.rep$DaysSinceAF<0,NA,crea.rep$DaysSinceAF)
 crea.rep$AF<-ifelse(is.na(crea.rep$DaysSinceAF),0,1)
+summary(crea.rep$DaysSinceAF,na.rm=TRUE)
 
 #IHD
 sir.data$IHDDate<-sir.data$EntryDate 
-sir.data$IHDDate<-ifelse(!sir.data$ReadCode  %in%  IHD1.csv$ReadCode,NA,sir.data$AFDate) 
+sir.data$IHDDate<-ifelse(!sir.data$ReadCode  %in%  IHD1.csv$ReadCode,NA,sir.data$IHDDate) 
 smalltab<-sir.data[!is.na(sir.data$IHDDate),c("PatientID","IHDDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
@@ -357,12 +374,14 @@ first<-smalltab %>%
 as.data.frame
     head(first)
     
+
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$AFDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")FDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
+crea.rep$IHDDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
 crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$IHDDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
-crea.rep$IHD<-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
+crea.rep$IHD-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
+summary(crea.rep$DaysSinceIHD,na.rm=TRUE)
 
 #PERIPHERAL VASCULAR DISEASE
 sir.data$PVDDate<-sir.data$EntryDate 
@@ -381,25 +400,29 @@ crea.rep$PVDDate<-as.Date(as.character(crea.rep$PVDDate),format="%Y%m%d")
 crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$PVDDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
 crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
+summary(crea.rep$DaysSincePVD,na.rm=TRUE)
+
 save(crea.rep, file = "crea.repongoing.rda")
 
 #RENAL MALIGNANCY
-sir.data$PVDDate<-sir.data$EntryDate 
-sir.data$PVDDate<-ifelse(!sir.data$ReadCode  %in%  PVD1.csv$ReadCode,NA,sir.data$PVDDate) 
-smalltab<-sir.data[!is.na(sir.data$PVDDate),c("PatientID","PVDDate")]
+sir.data$RMALDate<-sir.data$EntryDate 
+sir.data$RMALDate<-ifelse(!sir.data$ReadCode  %in%  RM1.csv$ReadCode,NA,sir.data$RMALDate) 
+smalltab<-sir.data[!is.na(sir.data$RMALDate),c("PatientID","RMALDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
-    arrange(PVDDate) %>%
-    slice(which.min(as.numeric(PVDDate))) %>%
+    arrange(RMALDate) %>%
+    slice(which.min(as.numeric(RMALDate))) %>%
 as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$PVDDate<-as.Date(as.character(crea.rep$PVDDate),format="%Y%m%d")
-crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$PVDDate,format="%Y-%m-%d"),unit="days")
-crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
-crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
+crea.rep$RMALDate<-as.Date(as.character(crea.rep$RMALDate),format="%Y%m%d")
+crea.rep$DaysSinceRenMal<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RMALDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceRenMal<-ifelse(crea.rep$DaysSinceRenMal<0,NA,crea.rep$DaysSinceRenMal)
+crea.rep$RenalMalignancy<-ifelse(is.na(crea.rep$DaysSinceRenMal),0,1)
+summary(crea.rep$DaysSinceRenMal,na.rm=TRUE)
+
 save(crea.rep, file = "crea.repongoing.rda")
 
 #RENAL TRANSPLANT
@@ -407,8 +430,11 @@ sir.data$RTDate<-sir.data$EntryDate
 sir.data$RTDate<-ifelse(!sir.data$ReadCode  %in%  transplant1.csv$ReadCode,NA,sir.data$RMDate) 
 smalltab<-sir.data[!is.na(sir.data$RTDate),c("PatientID","RTDate")]
 first<-smalltab %>%
-   group_by(PatientID) %>%    arrange(RTDate) %>%    slice(which.min(as.numeric(RTDate))) %>%
-as.data.frame    head(first)
+   group_by(PatientID) %>%  
+   arrange(RTDate) %>% 
+   slice(which.min(as.numeric(RTDate))) %>%
+as.data.frame    
+head(first)
   
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
@@ -416,6 +442,8 @@ crea.rep$RTDate<-as.Date(as.character(crea.rep$RTDate),format="%Y%m%d")
 crea.rep$DaysSinceRT<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RTDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceRT<-ifelse(crea.rep$DaysSinceRT<0,NA,crea.rep$DaysSinceRT)
 crea.rep$RenalTransplant<-ifelse(is.na(crea.rep$DaysSinceRT),0,1)
+summary(crea.rep$DaysSinceRT,na.rm=TRUE)
+
 save(crea.rep, file = "crea.repongoing.rda")
  
 ##########################################################
