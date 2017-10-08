@@ -227,6 +227,7 @@ crea.rep$SerumAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first
 table(crea.rep$SerumAlbuminDateFlag) #10131
 a<-crea.rep[!is.na(crea.rep$SerumAlbumin),]
 length(a$PatientID) #284008
+crea.rep$SerumAlbumin<-unlist(crea.rep$SerumAlbumin)
 ###################################################################
 #MAX DAILY URINE ALBUMIN 1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -427,7 +428,7 @@ save(crea.rep, file = "crea.repongoing.rda")
 
 #RENAL TRANSPLANT
 sir.data$RTDate<-sir.data$EntryDate 
-sir.data$RTDate<-ifelse(!sir.data$ReadCode  %in%  transplant1.csv$ReadCode,NA,sir.data$RMDate) 
+sir.data$RTDate<-ifelse(!sir.data$ReadCode  %in%  transplant1.csv$ReadCode,NA,sir.data$RTDate) 
 smalltab<-sir.data[!is.na(sir.data$RTDate),c("PatientID","RTDate")]
 first<-smalltab %>%
    group_by(PatientID) %>%  
