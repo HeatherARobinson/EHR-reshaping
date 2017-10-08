@@ -1,15 +1,12 @@
 #2 files can be used but only 1 is needed. 
 #Required: patient ID, code, date, instruction text field
 
-load("sir.data1yr2tests.Rdata")
+load("sir.datahfonly.Rdata")
 codes<-read.csv("READv2.csv")
-codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:2,4,5)]
-instructionsfile<-sir.data[sir.data$ReadCode %in% codes$CODE,c(1:4,5)]
+codes2<-read.csv("EMIS.csv")
+codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% codes2$CODE,c()]
 write.table(codesfile,file="codesh.txt", sep="\t")
-write.table(instructionsfile,file="instructions.txt", sep="\t")
 
 cd research-events-medication-htn
 npm install
 node index.js -c resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
-
-nodes index.js -a resources\instructionsh.txt 
