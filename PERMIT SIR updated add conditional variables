@@ -57,6 +57,7 @@ crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 table(crea.rep$SerSodDateFlag) #642
 a<-crea.rep[!is.na(crea.rep$SerumSodium),]
 length(a$PatientID) #284225
+crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
 #######################################################
 
 #CLOSEST DAILY BMI MEAN #1YR DATE FLAG
@@ -91,6 +92,7 @@ crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDa
 table(crea.rep$BMIDateFlag) #144029
 a<-crea.rep[!is.na(crea.rep$BMI),]
 length(a$PatientID) #278694
+crea.rep$BMI<-unlist(crea.rep$BMI)
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
 
@@ -110,6 +112,7 @@ crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstU$En
 table(crea.rep$UricAcidDateFlag) #87043
 a<-crea.rep[!is.na(crea.rep$UricAcid),]
 length(a$PatientID) #101829
+crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
 ##################################################################
 #MEAN DAILY BLOOD UREA NITROGEN #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -128,7 +131,7 @@ crea.rep$BUNDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 table(crea.rep$BUNDateFlag) #688
 a<-crea.rep[!is.na(crea.rep$BUN),]
 length(a$PatientID) #284218
-
+crea.rep$BUN<-unlist(crea.rep$BUN)
 ##############################################################
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
 
@@ -148,8 +151,7 @@ crea.rep$SerPotDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$Entry
 table(crea.rep$SerPotDateFlag) #4513
 a<-crea.rep[!is.na(crea.rep$SerPotassium),]
 length(a$PatientID) #284202
-
-
+crea.rep$SerPotassium<-unlist(crea.rep$SerPotassium)
 ##############################################################
 #MEAN DAILY HEART RATE #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% HeartRate1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -167,6 +169,7 @@ crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$En
 table(crea.rep$HeartRateDateFlag) #30160
 a<-crea.rep[!is.na(crea.rep$HeartRate),]
 length(a$PatientID) #35414
+crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
@@ -187,6 +190,8 @@ crea.rep$SBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 table(crea.rep$SBPDateFlag) #160987
 a<-crea.rep[!is.na(crea.rep$SBP),]
 length(a$PatientID) #283818
+crea.rep$SBP<-unlist(crea.rep$SBP)
+
 
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
@@ -208,7 +213,7 @@ crea.rep$DBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 table(crea.rep$DBPDateFlag) #161082
 a<-crea.rep[!is.na(crea.rep$DBP),]
 length(a$PatientID) #283818
-
+crea.rep$DBP<-unlist(crea.rep$DBP)
 ##############################################################
 #MEAN DAILY SERUM ALBUMIN 
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -247,6 +252,7 @@ save(crea.rep,file="crea.repongoing.rda")
 table(crea.rep$UrineAlbuminDateFlag) #38916
 a<-crea.rep[!is.na(crea.rep$UrineAlbumin),]
 length(a$PatientID) #40757
+crea.rep$UrineAlbumin<-unlist(crea.rep$UrineAlbumin)
 ###################################################################
 #MEAN DAILY URINE ALBUMIN CREATININE RATIO #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
