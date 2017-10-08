@@ -271,6 +271,7 @@ crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDat
 table(crea.rep$UACDateFlag) #122174
 a<-crea.rep[!is.na(crea.rep$UACratio),]
 length(a$PatientID) #155908
+crea.rep$UACratio<-unlist(crea.rep$UACratio)
 ###################################################################
 #MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% MCV1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -291,6 +292,7 @@ save(crea.rep,file="crea.repongoing.rda")
 table(crea.rep$MCVDateFlag) #50500
 a<-crea.rep[!is.na(crea.rep$MCV),]
 length(a$PatientID) #283524
+crea.rep$MCV<-unlist(crea.rep$MCV)
 ###################################################################
 #MAX DAILY HAEMOGLOBIN #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -309,6 +311,7 @@ crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDa
 table(crea.rep$HaemDateFlag) #40204
 a<-crea.rep[!is.na(crea.rep$Haemoglobin),]
 length(a$PatientID) #293668
+crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
 #########################################################
 head(sir.data[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode,]))# CHECK THERE ARE VALUES TO MATCH
 #NEPHRECTOMY
@@ -331,7 +334,8 @@ crea.rep$DaysSinceNephrectomy<-difftime(strptime(crea.rep$NephDate,format="%Y-%m
 crea.rep$DaysSinceNephrectomy<-as.numeric(crea.rep$DaysSinceNephrectomy, units="days")
 crea.rep$DaysSinceNephrectomy<-ifelse(crea.rep$DaysSinceNephrectomy<0,NA,crea.rep$DaysSinceNephrectomy)
 #save(crea.rep, file = "crea.repongoing.rda")
-    
+
+
 #DIABETES
 sir.data$DiabDate<-sir.data$EntryDate 
 sir.data$DiabDate<-ifelse(!sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,NA,sir.data$DiabDate) 
@@ -453,25 +457,6 @@ summary(crea.rep$DaysSinceRT,na.rm=TRUE)
 
 save(crea.rep, file = "crea.repongoing.rda")
  
-##########################################################
-#CODE EACH OF THE FORMULA VARIABLES
-
-crea.rep$log_CREA <- log10(crea.rep$Creatinine)
-crea.rep$PP<-sum(crea.rep$SBP-crea.rep$DBP)
-crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
-crea.rep$Anaemia<-ifelse(((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
-
-#crea.rep$AKI #Acute Kidney Injury
-
-
-#crea.rep$eGFR<- #Estimated glomerular filtration rate
-#crea.rep$CKD<- #Chronic Kidney Disease
-#crea.rep$RateRenChange #Rate of renal change
-
-#crea.rep$AKIepisodes<- #no. past AKI episodes?
-#crea.rep$WorsRenFail<- Worsening renal failure
-
-
 #########################################################
 #CODE STOP CODED VARIABLES  
 #smoking
