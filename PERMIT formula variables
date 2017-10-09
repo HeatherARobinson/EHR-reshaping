@@ -22,10 +22,17 @@ crea.rep$maxx<-ifelse((crea.rep$x)<1,1,crea.rep$x)
 
 crea.rep$CKDEPIeGFR<-(141*(crea.rep$minx^l))*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 ##################################################################################
+#CALCULATING MDRD
+o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+p<-ifelse(crea.rep$Gender=="F",0.742,1)
+
+#12156 test dates have 2 measures for an individual with different values
+
+crea.rep$MDRDeGFR<-(186*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
+##################################################################################
 
 
 #crea.rep$AKI #Acute Kidney Injury
-#crea.rep$MDRDeGFR<- #Estimated MDRD glomerular filtration rate
 #crea.rep$CKD<- #Chronic Kidney Disease
 #crea.rep$RateRenChange #Rate of renal change
 #crea.rep$AKIepisodes<- #no. past AKI episodes?
