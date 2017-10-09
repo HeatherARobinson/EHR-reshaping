@@ -16,9 +16,9 @@ n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
 
 #12156 test dates have 2 measures for an individual with different values
 
-crea.rep$x<-crea.rep$Creatinine/k
-crea.rep$minx<-ifelse((crea.rep$x/88.42)>1,1,crea.rep$x/88.42)
-crea.rep$maxx<-ifelse((crea.rep$x/88.42)<1,1,crea.rep$x/88.42)
+crea.rep$x<-(crea.rep$Creatinine/88.42)/k
+crea.rep$minx<-ifelse((crea.rep$x)>1,1,crea.rep$x)
+crea.rep$maxx<-ifelse((crea.rep$x)<1,1,crea.rep$x)
 
 crea.rep$CKDEPIeGFR<-(141*(crea.rep$minx^l))*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 ##################################################################################
