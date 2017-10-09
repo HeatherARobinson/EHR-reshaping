@@ -8,21 +8,21 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
-#CALCULATING CKDEPI
-k<-ifelse(crea.rep$Gender=="F",0.7,9)
+#CALCULATING CKDEPI eGFR IN UMOL/L Adapted from Ann Intern Med 2009;150:604-612
+k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
 l<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
 m<-ifelse(crea.rep$Gender=="F",1.108,1)
 n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
 
 #12156 test dates have 2 measures for an individual with different values
 
-crea.rep$x<-(crea.rep$Creatinine/88.42)/k
+crea.rep$x<-(crea.rep$Creatinine)/k
 crea.rep$minx<-ifelse((crea.rep$x)>1,1,crea.rep$x)
 crea.rep$maxx<-ifelse((crea.rep$x)<1,1,crea.rep$x)
 
 crea.rep$CKDEPIeGFR<-(141*(crea.rep$minx^l))*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 ##################################################################################
-#CALCULATING MDRD
+#CALCULATING MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
@@ -30,7 +30,6 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 crea.rep$MDRDeGFR<-(186*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
-
 
 #crea.rep$AKI #Acute Kidney Injury
 #crea.rep$CKD<- #Chronic Kidney Disease
