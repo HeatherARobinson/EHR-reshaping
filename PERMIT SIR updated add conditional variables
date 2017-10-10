@@ -172,6 +172,45 @@ length(a$PatientID) #35414
 crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 
 ##############################################################
+#MEAN BNP #1 YEAR
+sir.data$temp<-ifelse(sir.data$ReadCode %in% BNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+summarise(BNP=mean(as.numeric(CodeValue))) %>%
+as.data.frame 
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+                   best="prior")
+crea.rep$BNP<-first[indx1, "BNP"]
+crea.rep$BNPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
+table(crea.rep$BNPDateFlag) #41
+a<-crea.rep[!is.na(crea.rep$BNP),]
+length(a$PatientID) #58
+crea.rep$BNP<-unlist(crea.rep$BNP)
+
+##############################################################
+#MEAN NT-PRO BNP #1 YEAR
+sir.data$temp<-ifelse(sir.data$ReadCode %in% NTPROBNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+summarise(NTPROBNP=mean(as.numeric(CodeValue))) %>%
+as.data.frame 
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+                   best="prior")
+crea.rep$NTPROBNP<-first[indx1, "NTPROBNP"]
+crea.rep$NTPROBNPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
+table(crea.rep$NTPROBNPDateFlag) #733
+a<-crea.rep[!is.na(crea.rep$NTPROBNP),]
+length(a$PatientID) #1070
+crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
+
+
+##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
 sir.data$SBP<-ifelse(sir.data$ReadCode %in% SBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 smalltab<-sir.data[!is.na(sir.data$SBP),c("PatientID","SBP","EntryDate")]
