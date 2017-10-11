@@ -1,0 +1,8 @@
+library(fmsb)
+
+ratedifference(140.8, 147, 10000, 10000, CRC=FALSE, conf.level=0.95) 
+ratedifference(140, 124, 10000, 10000, CRC=FALSE, conf.level=0.95) 
+ratedifference(96, 124, 10000, 10000, CRC=FALSE, conf.level=0.95) 
+ratedifference(161, 124, 10000, 10000, CRC=FALSE, conf.level=0.95) 
+p<-read.table("agegendercomparison.csv",header=T,sep=",")
+summary(m1 <- glm(Mpttenthou ~ Site + Age, family="poisson", data=p))
