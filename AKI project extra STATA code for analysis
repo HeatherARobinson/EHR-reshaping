@@ -1,0 +1,61 @@
+**********************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+
+***CODE FOR EXTRA OUTPUT FOR FARR AKI WORK JAN 2017
+
+**********************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+
+***FOR THE WHOLE DATASET
+
+*1.1 count AKI individuals by sex, age in narrow age groups
+egen agenarrow = cut(age), at(0,30,50,60,70,80,200) label
+tab sex agenarrow if firstAKI ==1
+
+*1.2 calculate mean age & quartiles of (a) individuals with blood tests in index year and (b) AKI individuals
+bysort studyid yr12 (dos): gen yr12_n = _n if yr12==1
+tabstat age if yr12_n ==1, stat(mean sd p25 p50 p75)
+tabstat age if firstAKI ==1, stat(mean sd p25 p50 p75)
+
+*1.3 table of peak AKI severity vs age at first AKI epsiode in 2012
+tab AKIN agenarrow if firstAKI==1
+
+*1.4 table of peak AKI severity vs baseline of first AKI epsiode in 2012
+tab AKIN refGFRgroup if firstAKI==1
+
+*1.5 count of prior AKI episodes in 3 years before first AKI episode in 2012 by diagnosis and peak AKI severity
+gen priorAKI = prevAKIcount
+recode priorAKI 2/9 = 2
+tab AKINdx priorAKI if firstAKI==1
+tab AKIN priorAKI if firstAKI==1
+
+*1.6 
+gen recovery = 0 if recoveryratio>=1.2 & firstAKI==1 & recoveryratio!=.
+replace recovery= 1 if recoveryratio<1.2 & firstAKI==1
+recode recovery .=2 if firstAKI==1
+label define recovery 1 "recovery" 0 "non-recovery" 2 "untested"
+label values recovery recovery
+tab recovery
+
+*1.7 Look at recovery status in relation to peak and diagnosis AKI severity
+tab AKIN recovery if firstAKI==1 & recovery<2
+tab AKINdx recovery if firstAKI==1 & recovery<2
+
+
+*1.8 Look at location statistics
+tab location if yr12==1
+tab location if firstAKI==1
+
+*1.9 count of AKI happening wihtin a year before first AKI in 2012
+gen pre1yr=1 if newAKI==1 & dos<AKIdos & (dos+365)>=AKIdos
+bysort studyid: egen priorAKI1yr = max(pre1yr)
+count if priorAKI1yr==1 & firstAKI==1
+
+
+**********************************************************************************************************************************************************
+
+**********************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+
+**********************************************************************************************************************************************************
+**********************************************************************************************************************************************************
