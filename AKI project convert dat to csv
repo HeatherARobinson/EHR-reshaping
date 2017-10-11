@@ -1,0 +1,3 @@
+library(haven)
+yourData = read_dta("mockdataset.dta")
+write.csv(yourData, file = "yourStataFile.csv")
