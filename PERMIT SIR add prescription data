@@ -2,11 +2,12 @@
 #Required: patient ID, code, date, instruction text field
 
 load("sir.datahfonly.Rdata")
-codes<-read.csv("READv2.csv")
-codes2<-read.csv("EMIS.csv")
+codes<-read.table("drug-codes-READv2.txt",header=TRUE,sep="/")
+codes2<-read.table("drug-codes-EMIS.txt",header=TRUE,sep="/")
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% codes2$CODE,c()]
 write.table(codesfile,file="codesh.txt", sep="\t")
 
+#PERL COMMANDS
 cd research-events-medication-htn
 npm install
 node index.js -c resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
