@@ -354,6 +354,10 @@ a<-crea.rep[!is.na(crea.rep$Haemoglobin),]
 length(a$PatientID) #293668
 crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
 #########################################################
+#VARIABLES WITH START AND ONGOING DATES- MATCH FIRST OCCURENCE
+##########################################################
+load("sirdatahfonly.rda")
+
 head(sir.data[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode,]))# CHECK THERE ARE VALUES TO MATCH
 #NEPHRECTOMY
 sir.data$NephDate<-sir.data$EntryDate 
@@ -536,5 +540,3 @@ levels(as.factor(specheartpatients$PatientID))
 table(crea.rep$HeartFailureAll)
 #CODE BINARY CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
 
-########################################################
-crea.rep$DataSource<-1
