@@ -1,18 +1,40 @@
 #2 files can be used but only 1 is needed. 
 #Required: patient ID, code, date, instruction text field
 
+library(stringr)
+library(lubridate)
+
 load("sir.datahfonly.Rdata")
-write.table(codesfile,file="codesh.txt", sep="\t")
+temp = list.files(pattern="*1.csv")
+for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
+levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
+
+sir.data<-sir.data[!sir.data$PatientID %in% Dialysis1.csv$PatientID,]
+
 codes<-read.csv("drug-codes-READv2.csv",header=TRUE)
 codes2<-read.csv("drug-codes-EMIS.csv",header=TRUE)
 codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% codes2$CODE,c(1,2,3,4,5,6)]
-write.table(codesfile,file="codesh.txt", sep="\t")
+
+#remove punctuation this is not helpful here, 
+#replace it with spaces so the regex
+#recognises words still
+x <-codesfile 
+str_replace_all(x, "[[:punct:]]", " ")
+gsub("[[:punct:]]", "", codesfile, except(".", "-") )
+head(codesfile)
+
+#cut down to prescriptions in or after 2007
+codesfile$event.date<-as.Date(as.character(codesfile$EntryDate),format="%Y%m%d")
+codesfile<-codesfile[as.numeric(year(strptime(codesfile$event.date, format="%Y-%m-%d")))>=2007,]
+na.omit(codesfile)
+write.csv(codesfile,file="codesh.txt", row.names = FALSE)
 
 
 #PERL COMMANDS
 cd research-events-medication-htn
 npm install
-node index.js -c resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
+node index.js -a resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
 
 #CHECK THE REGEX FILE FOR ANY DESCRIPTIONS THAT DID NOT PARSE, 
 #YOU WILL MANUALLY NEED TO TEACH THESE TO THE REGEX
