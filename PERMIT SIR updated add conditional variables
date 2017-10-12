@@ -36,6 +36,8 @@ for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
 #######################################################
 
 #CODE CONDITIONS REQUIRING VALUES TO BE ADDED, NEAREST IF WITHIN X TIME PERIOD
+#NOTE THAT COERCION OF TIBBLES TO DATAFRAME FORMAT MAY NOT BE MAINTAINED IF YOU SAVE R OBJECTS
+#FORMATTING CAN BE CLEARED BY SAVING MIDWAY POINTS AS CSV FILES
 #################################################################
 
 #NEAREST PRIOR MEAN DAILY SERUM SODIUM #DATE FLAG 30 DAYS
@@ -423,8 +425,7 @@ first<-smalltab %>%
     slice(which.min(as.numeric(IHDDate))) %>%
 as.data.frame
     head(first)
-    
-
+   
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")FDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
 crea.rep$IHDDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
