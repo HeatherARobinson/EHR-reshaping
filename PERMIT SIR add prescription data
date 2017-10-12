@@ -19,8 +19,10 @@ codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% cod
 #remove punctuation this is not helpful here, 
 #replace it with spaces so the regex
 #recognises words still
+
 x <-codesfile 
-str_replace_all(x, "[[:punct:]]", " ")
+str_replace_all(x,"[[:punct:]]", " ")
+
 gsub("[[:punct:]]", "", codesfile, except(".", "-") )
 head(codesfile)
 
@@ -28,7 +30,8 @@ head(codesfile)
 codesfile$event.date<-as.Date(as.character(codesfile$EntryDate),format="%Y%m%d")
 codesfile<-codesfile[as.numeric(year(strptime(codesfile$event.date, format="%Y-%m-%d")))>=2007,]
 na.omit(codesfile)
-write.csv(codesfile,file="codesh.txt", row.names = FALSE)
+
+write.csv(codesfile[,c(1,2,4:6)],file="codesh.txt", row.names = FALSE)
 
 
 #PERL COMMANDS
