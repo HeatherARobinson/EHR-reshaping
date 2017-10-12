@@ -2,12 +2,18 @@
 #Required: patient ID, code, date, instruction text field
 
 load("sir.datahfonly.Rdata")
-codes<-read.table("drug-codes-READv2.txt",header=TRUE,sep="/")
-codes2<-read.table("drug-codes-EMIS.txt",header=TRUE,sep="/")
-codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% codes2$CODE,c()]
 write.table(codesfile,file="codesh.txt", sep="\t")
+codes<-read.csv("drug-codes-READv2.csv",header=TRUE)
+codes2<-read.csv("drug-codes-EMIS.csv",header=TRUE)
+codesfile<-sir.data[sir.data$ReadCode %in% codes$CODE|sir.data$ReadCode %in% codes2$CODE,c(1,2,3,4,5,6)]
+write.table(codesfile,file="codesh.txt", sep="\t")
+
 
 #PERL COMMANDS
 cd research-events-medication-htn
 npm install
 node index.js -c resources\codesh.txt && sort resources\codesh.txt.done > resources\codesh.txt.done.sorted
+
+#CHECK THE REGEX FILE FOR ANY DESCRIPTIONS THAT DID NOT PARSE, 
+#YOU WILL MANUALLY NEED TO TEACH THESE TO THE REGEX
+#ESPECIALLY IF YOUR MEDICATIONS ARE NOT ALL SOLID DOSE.
