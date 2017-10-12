@@ -500,7 +500,7 @@ crea.rep$RenalTransplant<-ifelse(is.na(crea.rep$DaysSinceRT),0,1)
 summary(crea.rep$DaysSinceRT,na.rm=TRUE)
 
 save(crea.rep, file = "crea.repongoing.rda")
- 
+ write.csv(crea.rep,file="crea.repongoing.csv")
 #########################################################
 #CODE STOP CODED VARIABLES  
 #smoking
