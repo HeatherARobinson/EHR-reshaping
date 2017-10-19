@@ -36,42 +36,14 @@ crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(
 #tabulate the first qualifying test for each patient
 CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,69)]
 CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
-CKs$EntryDate2<-CKs$EntryDate+90
+CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
 
 for (i in 1:length(CKs$PatientID)){
-temp<-crea.rep[crea.rep$PatientID==CKs$PatientID[i],]
-CKs$x<-ifelse(length(temp$PatientID)>0,1,0)
+CKs$x<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]])>0,1,0)
 }
-
-first<-CKs %>%
-    group_by(PatientID) %>%
-    arrange(EntryDate) %>%
-    slice(1L) %>%
-as.data.frame
-head(first)
-  #tabulate the last qualifying test for each patient
-
-last<-CKs %>%
-    group_by(PatientID) %>%
-    arrange(-EntryDate) %>%
-    slice(1L) %>%
-as.data.frame
-head(last)
- 
-ckDATES<-cbind(first,last)
-ckDATES$EntryDate<-as.Date(as.character(ckDATES$EntryDate),format="%Y%m%d")
-names(ckDATES)<-c("PatientID", "d1","CKDmark1","PatientID2","d2","mark2")
-ckDATES$d2<-as.Date(as.character(ckDATES$d2),format="%Y%m%d")
-difftime(ckDATES$d1,ckDATES$d2,units="days") -> ckDATES$range
-abs(difftime(ckDATES$d2,ckDATES$d1,units="days")) -> ckDATES$range
-ckDATES<-ckDATES[as.numeric(ckDATES$range)>=90,]
-length(ckDATES$PatientID) #6258 PATIENTS
-#select patients where the date differences between 1st and last qualifying test is >3 months 
-
-ck2<-crea.rep[crea.rep$PatientID %in% ckDATES$PatientID &crea.rep$CKDmark==0,c(1,2,69)]
-length(ck2$PatientID)#48518
-CK3<-merge(ck2,ckDATES,all.x=TRUE,by="PatientID")
+CKs<-CKs[Cks$x==0,]
+length(CKs$PatientID)#48518
 
 
 ###################################################################################
