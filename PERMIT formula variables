@@ -40,7 +40,7 @@ CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
 
 for (i in 1:length(CKs$PatientID)){
-CKs$x<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]])>0,1,0)
+CKs$x<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
 }
 CKs<-CKs[Cks$x==0,]
 length(CKs$PatientID)#48518
