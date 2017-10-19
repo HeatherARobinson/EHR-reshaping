@@ -11,7 +11,7 @@ crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & c
 #CALCULATING CKDEPI eGFR IN UMOL/L Adapted from Ann Intern Med 2009;150:604-612
 k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
 l<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
-m<-ifelse(crea.rep$Gender=="F",1.108,1)
+m<-ifelse(crea.rep$Gender=="F",1.018,1)
 n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
 
 #12156 test dates have 2 measures for an individual with different values
