@@ -30,8 +30,21 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 crea.rep$MDRDeGFR<-(186*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
+crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKD)
+#Tests marked with a 1 for CKDmark are qualifying tests, Where there are more than 2 more than  months apart there is CKD.
+#tabulate the first qualifying test for each patient
+#tabulate the last qualifying test for each patient
+#use neardate to match
+#select patients where the date differences is >3 months and mark as CKD patients
+
+
 
 #crea.rep$AKI #Acute Kidney Injury
+
+
+
+
 #crea.rep$CKD<- #Chronic Kidney Disease
 #crea.rep$RateRenChange #Rate of renal change
 #crea.rep$AKIepisodes<- #no. past AKI episodes?
