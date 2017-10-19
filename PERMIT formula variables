@@ -31,22 +31,57 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 crea.rep$MDRDeGFR<-(186*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
 crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
-crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKD)
+crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKDmark)
 #Tests marked with a 1 for CKDmark are qualifying tests, Where there are more than 2 more than  months apart there is CKD.
 #tabulate the first qualifying test for each patient
-#tabulate the last qualifying test for each patient
-#use neardate to match
-#select patients where the date differences is >3 months and mark as CKD patients
+CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,69)]
+CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
+CKs$EntryDate2<-CKs$EntryDate+90
+crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
+
+for (i in 1:length(CKs$PatientID)){
+temp<-crea.rep[crea.rep$PatientID==CKs$PatientID[i],]
+CKs$x<-ifelse(length(temp$PatientID)>0,1,0)
+}
+
+first<-CKs %>%
+    group_by(PatientID) %>%
+    arrange(EntryDate) %>%
+    slice(1L) %>%
+as.data.frame
+head(first)
+  #tabulate the last qualifying test for each patient
+
+last<-CKs %>%
+    group_by(PatientID) %>%
+    arrange(-EntryDate) %>%
+    slice(1L) %>%
+as.data.frame
+head(last)
+ 
+ckDATES<-cbind(first,last)
+ckDATES$EntryDate<-as.Date(as.character(ckDATES$EntryDate),format="%Y%m%d")
+names(ckDATES)<-c("PatientID", "d1","CKDmark1","PatientID2","d2","mark2")
+ckDATES$d2<-as.Date(as.character(ckDATES$d2),format="%Y%m%d")
+difftime(ckDATES$d1,ckDATES$d2,units="days") -> ckDATES$range
+abs(difftime(ckDATES$d2,ckDATES$d1,units="days")) -> ckDATES$range
+ckDATES<-ckDATES[as.numeric(ckDATES$range)>=90,]
+length(ckDATES$PatientID) #6258 PATIENTS
+#select patients where the date differences between 1st and last qualifying test is >3 months 
+
+ck2<-crea.rep[crea.rep$PatientID %in% ckDATES$PatientID &crea.rep$CKDmark==0,c(1,2,69)]
+length(ck2$PatientID)#48518
+CK3<-merge(ck2,ckDATES,all.x=TRUE,by="PatientID")
 
 
+###################################################################################
 
 #crea.rep$AKI #Acute Kidney Injury
-
-
-
-
-#crea.rep$CKD<- #Chronic Kidney Disease
+ifelse(crea.rep$CKD==0&)
+###################################################################################
 #crea.rep$RateRenChange #Rate of renal change
+###################################################################################
 #crea.rep$AKIepisodes<- #no. past AKI episodes?
+###################################################################################
 #crea.rep$WorsRenFail<- Worsening renal failure
 
