@@ -72,9 +72,31 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.r
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
 
 ###################################################################################
+#MEAN LOG CREATININE WITHIN 6M
 
-#crea.rep$AKI #Acute Kidney Injury
-ifelse(crea.rep$CKD==0&)
+C6<-crea.rep[,c(1,2,64)]
+C6$EntryDate<-as.Date(as.character(C6$EntryDate),format="%Y%m%d")
+C6$EntryDate2<-C6$EntryDate+180
+
+for (i in 1:length(C6$PatientID)){
+C6$LOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==C6$PatientID[i] &crea.rep$event.date>C6$EntryDate[i] & crea.rep$event.date<=C6$EntryDate2[i]])
+}
+crea.rep<-merge(crea.rep,C6,all.x=TRUE)
+
+
+###################################################################################
+#MEAN EGFR WITHIN 6M
+
+E6<-crea.rep[,c(1,2,70)]
+E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
+E6$EntryDate2<-E6$EntryDate+180
+
+for (i in 1:length(E6$PatientID)){
+E6$MDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] &crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
+}
+
+crea.rep<-merge(crea.rep,E6,all.x=TRUE)
+
 ###################################################################################
 #crea.rep$RateRenChange #Rate of renal change
 ###################################################################################
