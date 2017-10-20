@@ -97,6 +97,19 @@ E6$MDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] &cre
 
 crea.rep<-merge(crea.rep,E6,all.x=TRUE)
 
+
+###################################################################################
+#MEAN CREATININE WITHIN 6M
+
+Ca6<-crea.rep[,c(1,2,64)]
+Ca6$EntryDate<-as.Date(as.character(Ca6$EntryDate),format="%Y%m%d")
+Ca6$EntryDate2<-Ca6$EntryDate+180
+
+for (i in 1:length(C6$PatientID)){
+Ca6$LOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
+}
+crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
+
 ###################################################################################
 #crea.rep$RateRenChange #Rate of renal change
 ###################################################################################
