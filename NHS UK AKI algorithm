@@ -40,20 +40,20 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 ###################################################################################
 #AKI
 smalltab<-crea.rep[,c("PatientID","Creatinine","EntryDate")]
-columns=names(smalltab[c(1,3)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
-group_by_(.dots=dots) %>%
-summarise(Value=mean(CodeValue)) %>%
-as.data.frame
-#Use 1 entry per day (mean)
-
-indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate, smalltab$EntryDate, 
                    best="prior")
-first$priorc<-first[indx1, "Value"]
-first$priordate<-first[indx1, "EntryDate"]
+smalltab$priorc<-smalltab[indx1, "Value"]
+smalltab$priordate<-smalltab[indx1, "EntryDate"]
 
+#CALCULATE TIME DIFFERENCE TO LAST PRIOR CREATININE MEASUREMENT
 
+#IF NO PRIOR MEASUREMENT, CHECK IF LESS THAN THE POPULATION REFERENCE INTERVAL ()
+RI<-
+AKI<-ifelse(!is.na()&<RI,1,0)
+WEEK<-ifelse(<=7,1,0)
+YEAR<-ifelse(>7&<=365,1,0)
+
+#IF WITHIN A YEAR, FIND THE MEDIAN OF THE PAST YEAR'S RESULTS
 
 
 
