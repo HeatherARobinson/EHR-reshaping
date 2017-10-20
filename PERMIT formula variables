@@ -66,7 +66,7 @@ length(CKs$PatientID)#48518
 crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
 #ASSIGN CKD STAGES
-crea.rep$CKDStag<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
