@@ -46,8 +46,20 @@ for (i in 1:length(CKs$PatientID)){
 CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
 }
 
+CKs<-CKs[CKs$x==0,c(1:2,5)] #The CKD qualifying tests with another qualifying test at least 3 months prior and no normal tests in between
+names(CKs)<-c("PatientID","EntryDate","CKDStage")
+CKs$CKDStage<-1
+CKs$EntryDate<-as.character(CKs$EntryDate)
+CKs$EntryDate<-gsub("-","",CKs$EntryDate) 
 
+length(CKs$PatientID)#48518
+crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
+#ASSIGN CKD STAGES
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
 
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
