@@ -32,20 +32,18 @@ crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 summary(crea.rep$CKDEPIeGFR)
 
 #USING ALL CREATININE VALUES NOT JUST DAILY MAXIMA
-k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
-a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
-m<-ifelse(crea.rep$Gender=="F",1.018,1)
-n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
-n<-ifelse(is.na(n),1,n)
-
-#12156 test dates have 2 measures for an individual with different values
+crea.rep$k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
+crea.rep$a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
+crea.rep$m<-ifelse(crea.rep$Gender=="F",1.018,1)
+crea.rep$n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
+crea.rep$n<-ifelse(is.na(n),1,n)
 crea.rep$Age<-as.numeric(crea.rep$Age)
-x<-(crea.rep$CodeValue/88.42)/k 
+crea.rep$x<-(crea.rep$Creatinine/88.42)/crea.rep$k 
 #ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
-minx<-ifelse(x>1,1,x)
-maxx<-ifelse(x<1,1,x)
+crea.rep$minx<-ifelse(crea.rep$x>1,1,crea.rep$x)
+crea.rep$maxx<-ifelse(crea.rep$x<1,1,crea.rep$x)
 
-crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
+crea.rep$CKDEPIeGFR<-141*(crea.rep$minx^crea.rep$a)*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*crea.rep$m*crea.rep$n
 summary(crea.rep$CKDEPIeGFR)
 
 
