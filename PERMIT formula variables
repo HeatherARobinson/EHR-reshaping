@@ -8,39 +8,42 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
-#CALCULATING CKDEPI eGFR IN UMOL/L
+#CALCULATING CKDEPI eGFR IN UMOL/L- BY CONVERTING FIRST TO mg/dL
 k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
 a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
 m<-ifelse(crea.rep$Gender=="F",1.018,1)
 n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
+n<-ifelse(is.na(n),1,n)
+
 
 #12156 test dates have 2 measures for an individual with different values
 crea.rep$Age<-as.numeric(crea.rep$Age)
-crea.rep$x<-(crea.rep$Creatinine/88.4)/k 
-#ADJUSTMENT OF 88.4 MADE HERE FOR UNIT CONVERSION TO mg/dL
-crea.rep$minx<-ifelse((crea.rep$x)>1,1,crea.rep$x)
-crea.rep$maxx<-ifelse((crea.rep$x)<1,1,crea.rep$x)
+x<-(crea.rep$Creatinine/88.42)/k 
+#ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
+minx<-ifelse(x>1,1,x)
+maxx<-ifelse(x<1,1,x)
 
-crea.rep$CKDEPIeGFR<-141*(crea.rep$minx^a*crea.rep$maxx^-1.209*0.933^crea.rep$Age*m*n)
+crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 summary(crea.rep$CKDEPIeGFR)
 
-#TEST EDITS
-
-#CALCULATING CKDEPI eGFR IN UMOL/L
+#USING ALL CREATININE VALUES NOT JUST DAILY MAXIMA
 k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
 a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
 m<-ifelse(crea.rep$Gender=="F",1.018,1)
 n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
+n<-ifelse(is.na(n),1,n)
 
 #12156 test dates have 2 measures for an individual with different values
 crea.rep$Age<-as.numeric(crea.rep$Age)
-crea.rep$x<-crea.rep$Creatinine/k 
-#ADJUSTMENT OF 88.4 MADE HERE FOR UNIT CONVERSION TO mg/dL
-crea.rep$minx<-ifelse(crea.rep$x>1,1,crea.rep$x)
-crea.rep$maxx<-ifelse(crea.rep$x<1,1,crea.rep$x)
+x<-(crea.rep$CodeValue/88.42)/k 
+#ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
+minx<-ifelse(x>1,1,x)
+maxx<-ifelse(x<1,1,x)
 
-crea.rep$CKDEPIeGFR<-141*(crea.rep$minx^a)*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*m*n)
+crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 summary(crea.rep$CKDEPIeGFR)
+
+
 ##################################################################################
 #CALCULATING MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
