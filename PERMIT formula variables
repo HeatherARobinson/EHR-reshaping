@@ -9,19 +9,24 @@ crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
 #CALCULATING CKDEPI eGFR IN UMOL/L- BY CONVERTING FIRST TO mg/dL
-k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
-a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
-m<-ifelse(crea.rep$Gender=="F",1.018,1)
-n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
-n<-ifelse(is.na(n),1,n)
 
-
-#12156 test dates have 2 measures for an individual with different values
 crea.rep$Age<-as.numeric(crea.rep$Age)
-x<-(crea.rep$Creatinine/88.42)/k 
+
+for (i in 1:length(crea.rep$PatientID)){
+k[i]<-ifelse(crea.rep$Gender[i]=="F",61.9,79.6)
+a[i]<-ifelse(crea.rep$Gender[i]=="F",-0.329,-0.411)
+m[i]<-ifelse(crea.rep$Gender[i]=="F",1.018,1)
+n[i]<-ifelse(crea.rep$Ethnicity[i]==4,1.159,1)
+n[i]<-ifelse(is.na(n[i]),1,n[i])
+x[i]<-(crea.rep$Creatinine[i]/88.42)/k[i] 
+
 #ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
-minx<-ifelse(x>1,1,x)
-maxx<-ifelse(x<1,1,x)
+minx[i]<-ifelse(x[i]>1,1,x[i])
+maxx[i]<-ifelse(x[i]<1,1,x[i])
+CKDEPIeGFR[i]<-141*(minx[i]^a[i])*(maxx[i]^-1.209)*(0.933^crea.rep$Age[i])*m[i]*n[i]
+
+}
+
 
 crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
 summary(crea.rep$CKDEPIeGFR)
