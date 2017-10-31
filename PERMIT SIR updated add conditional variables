@@ -80,7 +80,7 @@ sir.data<-merge(sir.data,firstH,all.x=TRUE)
 sir.data$weight<-as.numeric(ifelse(sir.data$ReadCode %in% Weight1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
 sir.data$temp<-ifelse(is.na(sir.data$temp),(as.numeric(sir.data$weight)/(as.numeric(sir.data$height))^2),sir.data$temp)
 
-BMItab<-sir.data[!is.na(sir.data$temp),c("PatientID","temp","EntryDate")]
+BMItab<-sir.data[sir.data$temp>=10 & sir.data$temp<=80,c("PatientID","temp","EntryDate")]
 columns1=names(BMItab[c(1,3)])
 dots<-lapply(columns1, as.symbol)
 firstA <-BMItab %>% 
