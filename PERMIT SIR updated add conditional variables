@@ -42,7 +42,7 @@ for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
 
 #NEAREST PRIOR MEAN DAILY SERUM SODIUM #DATE FLAG 30 DAYS
 #OUT OF RANGE REMOVAL TBA
-sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode, paste(sir.data$CodeValue),NA)
+sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode & sir.data$CodeValue>=80 & sir.data$CodeValue<=200, paste(sir.data$CodeValue),NA)
 
 smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
@@ -56,14 +56,14 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
 crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-table(crea.rep$SerSodDateFlag) #642
+table(crea.rep$SerSodDateFlag) #652
 a<-crea.rep[!is.na(crea.rep$SerumSodium),]
 length(a$PatientID) #284225
 crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
 #######################################################
 
 #CLOSEST DAILY BMI MEAN #1YR DATE FLAG
-sir.data$temp<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA))
+sir.data$temp<-as.numeric(ifelse(sir.data$ReadCode %in% BMI1.csv$ReadCode & sir.data$CodeValue>=10 & sir.data$CodeValue<=80, as.numeric(paste(sir.data$CodeValue)),NA))
 sir.data$height<-as.numeric(ifelse(sir.data$ReadCode %in% Height1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA))
 #Apply max height across dataset
 
@@ -91,14 +91,21 @@ indx1 <- neardate(crea.rep$PatientID, firstA$PatientID, crea.rep$EntryDate, firs
                    best="prior")
 crea.rep$BMI<-firstA[indx1, "BMI"]
 crea.rep$BMIDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstA$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$BMIDateFlag) #144029
+table(crea.rep$BMIDateFlag) #144139
 a<-crea.rep[!is.na(crea.rep$BMI),]
-length(a$PatientID) #278694
+length(a$PatientID) #278489
 crea.rep$BMI<-unlist(crea.rep$BMI)
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
-
+#permitted: 145 µmol/L-
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
+UA<-sir.data[!is.na(sir.data$temp) & !is.na(sir.data$PatientID),]
+levels(UA$CodeUnits)
+sir.data$temp<-ifelse((sir.data$CodeUnits=="umol/L"|sir.data$CodeUnits=="umol/l") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,sir.data$temp/1000,sir.data$temp)
+sir.data$temp<-ifelse((sir.data$CodeUnits=="iu/L"|sir.data$CodeUnits=="IU/L"|sir.data$CodeUnits=="None") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,NA,sir.data$temp)
+sir.data$temp<-ifelse(sir.data$CodeValue>=0.001 & sir.data$CodeValue<=1, sir.data$temp,NA)
+sir.data$CodeUnits<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode&!is.na(sir.data$temp),paste("mmol/L"),sir.data$CodeUnits)
+
 smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
