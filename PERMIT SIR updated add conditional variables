@@ -224,7 +224,7 @@ crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
 sir.data$SBP<-ifelse(sir.data$ReadCode %in% SBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$SBP),c("PatientID","SBP","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$SBP)&sir.data$temp>=30&sir.data$temp<=300,c("PatientID","SBP","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -246,7 +246,7 @@ crea.rep$SBP<-unlist(crea.rep$SBP)
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
 sir.data$DBP<-ifelse(sir.data$ReadCode %in% DBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$DBP),c("PatientID","DBP","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$DBP)&sir.data$temp>=20&sir.data$temp<=200,c("PatientID","DBP","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
