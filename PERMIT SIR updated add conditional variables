@@ -98,10 +98,9 @@ length(a$PatientID) #278489
 crea.rep$BMI<-unlist(crea.rep$BMI)
 #######################################################
 #MAX DAILY SERUM URIC ACID #1 YEAR
-#permitted: 145 µmol/L-
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
 UA<-sir.data[!is.na(sir.data$temp) & !is.na(sir.data$PatientID),]
-levels(UA$CodeUnits)
+unique(UA$CodeUnits)
 sir.data$temp<-ifelse((sir.data$CodeUnits=="umol/L"|sir.data$CodeUnits=="umol/l") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,sir.data$temp/1000,sir.data$temp)
 sir.data$temp<-ifelse((sir.data$CodeUnits=="iu/L"|sir.data$CodeUnits=="IU/L"|sir.data$CodeUnits=="None") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,NA,sir.data$temp)
 sir.data$temp<-ifelse(sir.data$CodeValue>=0.001 & sir.data$CodeValue<=1, sir.data$temp,NA)
@@ -126,7 +125,10 @@ crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
 ##################################################################
 #MEAN DAILY BLOOD UREA NITROGEN #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>=1,as.numeric(sir.data$CodeUnits),sir.data$temp)
+sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode & (sir.data$CodeUnits=="%"|sir.data$CodeUnits=="h"),NA,sir.data$temp)
+
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=50,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -138,9 +140,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$BUN<-first[indx1, "BUN"]
 crea.rep$BUNDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-table(crea.rep$BUNDateFlag) #688
+table(crea.rep$BUNDateFlag) #7458
 a<-crea.rep[!is.na(crea.rep$BUN),]
-length(a$PatientID) #284218
+length(a$PatientID) #7458
 crea.rep$BUN<-unlist(crea.rep$BUN)
 ##############################################################
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
