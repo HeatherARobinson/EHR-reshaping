@@ -104,7 +104,7 @@ levels(UA$CodeUnits)
 sir.data$temp<-ifelse((sir.data$CodeUnits=="umol/L"|sir.data$CodeUnits=="umol/l") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,sir.data$temp/1000,sir.data$temp)
 sir.data$temp<-ifelse((sir.data$CodeUnits=="iu/L"|sir.data$CodeUnits=="IU/L"|sir.data$CodeUnits=="None") & sir.data$ReadCode %in% UricAcid1.csv$ReadCode,NA,sir.data$temp)
 sir.data$temp<-ifelse(sir.data$CodeValue>=0.001 & sir.data$CodeValue<=1, sir.data$temp,NA)
-sir.data$CodeUnits<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode&!is.na(sir.data$temp),paste("mmol/L"),sir.data$CodeUnits)
+sir.data$CodeUnits<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode,paste("mmol/L"),sir.data$CodeUnits)
 
 smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
@@ -118,9 +118,9 @@ indx1 <-neardate(crea.rep$PatientID, firstU$PatientID, crea.rep$EntryDate, first
                    best="prior")
 crea.rep$UricAcid<-firstU[indx1, "UricAcid"]
 crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstU$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$UricAcidDateFlag) #87043
+table(crea.rep$UricAcidDateFlag) #87055
 a<-crea.rep[!is.na(crea.rep$UricAcid),]
-length(a$PatientID) #101829
+length(a$PatientID) #101034
 crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
 ##################################################################
 #MEAN DAILY BLOOD UREA NITROGEN #30 DAYS
