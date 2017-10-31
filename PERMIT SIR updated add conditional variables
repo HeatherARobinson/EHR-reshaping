@@ -146,9 +146,8 @@ length(a$PatientID) #7458
 crea.rep$BUN<-unlist(crea.rep$BUN)
 ##############################################################
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
-
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=2&sir.data$temp<=10,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -167,7 +166,7 @@ crea.rep$SerPotassium<-unlist(crea.rep$SerPotassium)
 ##############################################################
 #MEAN DAILY HEART RATE #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% HeartRate1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=20&sir.data$temp<=200,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -186,7 +185,7 @@ crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 ##############################################################
 #MEAN BNP #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=1000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -205,7 +204,7 @@ crea.rep$BNP<-unlist(crea.rep$BNP)
 ##############################################################
 #MEAN NT-PRO BNP #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% NTPROBNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=6000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
