@@ -373,6 +373,10 @@ crea.rep$MCV<-unlist(crea.rep$MCV)
 #MAX DAILY HAEMOGLOBIN #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode])
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode&sir.data$CodeUnits=="g/dl"|sir.data$CodeUnits=="g/dL",sir.data$temp*10,sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode&sir.data$CodeUnits=="g/dl"|sir.data$CodeUnits=="g/dL",sir.data$temp*10,sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode&sir.data$CodeUnits=="mmol/mol"|sir.data$CodeUnits=="None",NA,sir.data$temp)
 
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=30&sir.data$temp<=260,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
