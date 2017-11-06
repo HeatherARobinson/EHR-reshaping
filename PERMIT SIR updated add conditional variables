@@ -341,13 +341,16 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$UACratio<-first[indx1, "UACratio"]
 crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$UACDateFlag) #122174
+table(crea.rep$UACDateFlag) #122181
 a<-crea.rep[!is.na(crea.rep$UACratio),]
-length(a$PatientID) #155908
+length(a$PatientID) #159870
 crea.rep$UACratio<-unlist(crea.rep$UACratio)
 ###################################################################
 #MAX DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% MCV1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% MCV1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% MCV1.csv$ReadCode])
+#1femtoliter=1 cubic micron
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=50&sir.data$temp<=150,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -362,13 +365,15 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
 crea.rep$MCVDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >120, 1, NA)
 
 save(crea.rep,file="crea.repongoing.rda")
-table(crea.rep$MCVDateFlag) #50500
+table(crea.rep$MCVDateFlag) #50532
 a<-crea.rep[!is.na(crea.rep$MCV),]
 length(a$PatientID) #283524
 crea.rep$MCV<-unlist(crea.rep$MCV)
 ###################################################################
 #MAX DAILY HAEMOGLOBIN #120 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% Haemoglobin1.csv$ReadCode])
+
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=30&sir.data$temp<=260,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
