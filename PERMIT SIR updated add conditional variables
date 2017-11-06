@@ -152,6 +152,8 @@ crea.rep$BUN<-unlist(crea.rep$BUN)
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,])
+sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>=1,as.numeric(sir.data$CodeUnits),sir.data$temp)
+sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode & (sir.data$CodeUnits=="mL/min"),NA,sir.data$temp)
 
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=2&sir.data$temp<=10,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
