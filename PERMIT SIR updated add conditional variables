@@ -174,6 +174,7 @@ crea.rep$SerPotassium<-unlist(crea.rep$SerPotassium)
 ##############################################################
 #MEAN DAILY HEART RATE #30 DAYS
 sir.data$temp<-ifelse(sir.data$ReadCode %in% HeartRate1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% HeartRate1.csv$ReadCode])
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=20&sir.data$temp<=200,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -185,7 +186,7 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$HeartRate<-first[indx1, "HeartRate"]
 crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-table(crea.rep$HeartRateDateFlag) #30160
+table(crea.rep$HeartRateDateFlag) #30167
 a<-crea.rep[!is.na(crea.rep$HeartRate),]
 length(a$PatientID) #35414
 crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
@@ -193,6 +194,8 @@ crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 ##############################################################
 #MEAN BNP #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+#1ng/L=1pg/ml
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% BNP1.csv$ReadCode])
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=1000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -204,14 +207,16 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$BNP<-first[indx1, "BNP"]
 crea.rep$BNPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$BNPDateFlag) #41
+table(crea.rep$BNPDateFlag) #7
 a<-crea.rep[!is.na(crea.rep$BNP),]
-length(a$PatientID) #58
+length(a$PatientID) #14
 crea.rep$BNP<-unlist(crea.rep$BNP)
 
 ##############################################################
 #MEAN NT-PRO BNP #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% NTPROBNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% NTPROBNP1.csv$ReadCode])
+#1ng/L=1pg/ml
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=6000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -223,9 +228,9 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$NTPROBNP<-first[indx1, "NTPROBNP"]
 crea.rep$NTPROBNPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$NTPROBNPDateFlag) #733
+table(crea.rep$NTPROBNPDateFlag) #643
 a<-crea.rep[!is.na(crea.rep$NTPROBNP),]
-length(a$PatientID) #1070
+length(a$PatientID) #914
 crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
 
 
