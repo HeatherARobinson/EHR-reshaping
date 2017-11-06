@@ -237,7 +237,9 @@ crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
 sir.data$SBP<-ifelse(sir.data$ReadCode %in% SBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$SBP)&sir.data$temp>=30&sir.data$temp<=300,c("PatientID","SBP","EntryDate")]
+sir.data$temp<-sir.data$SBP
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% SBP1.csv$ReadCode])
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=30&sir.data$temp<=300,c("PatientID","SBP","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -250,16 +252,17 @@ indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first
                    best="prior")
 crea.rep$SBP<-first[indx2, "SBP"]
 crea.rep$SBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx2])) >30, 1, NA)
-table(crea.rep$SBPDateFlag) #160987
+table(crea.rep$SBPDateFlag) #159424
 a<-crea.rep[!is.na(crea.rep$SBP),]
-length(a$PatientID) #283818
+length(a$PatientID) #282541
 crea.rep$SBP<-unlist(crea.rep$SBP)
 
 
 ##############################################################
 #MIN DAILY DIASTOLIC BP #30 DAYS
 sir.data$DBP<-ifelse(sir.data$ReadCode %in% DBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
-smalltab<-sir.data[!is.na(sir.data$DBP)&sir.data$temp>=20&sir.data$temp<=200,c("PatientID","DBP","EntryDate")]
+sir.data$temp<-sir.data$DBP
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=20&sir.data$temp<=200,c("PatientID","DBP","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -273,13 +276,14 @@ indx2 <- neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first
 
 crea.rep$DBP<-first[indx2, "DBP"]
 crea.rep$DBPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx2])) >30, 1, NA)
-table(crea.rep$DBPDateFlag) #161082
+table(crea.rep$DBPDateFlag) #159537
 a<-crea.rep[!is.na(crea.rep$DBP),]
-length(a$PatientID) #283818
+length(a$PatientID) #282538
 crea.rep$DBP<-unlist(crea.rep$DBP)
 ##############################################################
 #MEAN DAILY SERUM ALBUMIN #`1 year
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode])
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=10&sir.data$temp<=60,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -292,13 +296,15 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$SerumAlbumin<-first[indx1, "SerumAlbumin"]
 crea.rep$SerumAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - firstU$EntryDate[indx1])) >365, 1, NA)
-table(crea.rep$SerumAlbuminDateFlag) #10131
+table(crea.rep$SerumAlbuminDateFlag) #9309
 a<-crea.rep[!is.na(crea.rep$SerumAlbumin),]
 length(a$PatientID) #284008
 crea.rep$SerumAlbumin<-unlist(crea.rep$SerumAlbumin)
 ###################################################################
 #MAX DAILY URINE ALBUMIN 1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% UAlbumin1.csv$ReadCode])
+sir.data$temp<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode&sir.data$CodeUnits=="g/L",sir.data$temp*1000,sir.data$temp)
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=0&sir.data$temp<=1000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -312,13 +318,17 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
 crea.rep$UrineAlbumin<-first[indx1, "UrineAlbumin"]
 crea.rep$UrineAlbuminDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, NA)
 save(crea.rep,file="crea.repongoing.rda")
-table(crea.rep$UrineAlbuminDateFlag) #38916
+table(crea.rep$UrineAlbuminDateFlag) #117810
 a<-crea.rep[!is.na(crea.rep$UrineAlbumin),]
-length(a$PatientID) #40757
+length(a$PatientID) #152986
 crea.rep$UrineAlbumin<-unlist(crea.rep$UrineAlbumin)
 ###################################################################
 #MEAN DAILY URINE ALBUMIN CREATININE RATIO #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% UACR1.csv$ReadCode])
+sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode&sir.data$CodeUnits=="ratio"|sir.data$CodeUnits=="None"|sir.data$CodeUnits=="U/ml"|sir.data$CodeUnits=="GPL",NA,sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% UACR1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)]
+
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=0&sir.data$temp<=3000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
