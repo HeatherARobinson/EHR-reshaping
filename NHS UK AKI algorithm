@@ -9,11 +9,14 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
-crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
-crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKDmark)
-#Tests marked with a 1 for CKDmark are qualifying tests, Where there are more than 2 more than  months apart there is CKD.
-#tabulate the first qualifying test for each patient
-CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,69)]
+#List creatinine tests, marking those of CKD patients
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$KDmark)
+#Tests marked with a 1 for KDmark are qualifying tests
+
+#Check for and exclude CKD patients
+tabulate the first qualifying test for each patient
+CKs<-crea.rep[crea.rep$KDmark==1,c(1,2,69)]
 CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
 CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
@@ -22,7 +25,7 @@ for (i in 1:length(CKs$PatientID)){
 CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
 }
 
-CKs<-CKs[CKs$x==0,c(1:2,5)] #The CKD qualifying tests with another qualifying test at least 3 months prior and no normal tests in between
+CKs<-CKs[CKs$x==0,c(1:2,5)] #CKD qualifying tests-with another qualifying test at least 3 months prior and no normal tests in between
 names(CKs)<-c("PatientID","EntryDate","CKDStage")
 CKs$CKDStage<-1
 CKs$EntryDate<-as.character(CKs$EntryDate)
@@ -32,15 +35,41 @@ length(CKs$PatientID)#48518
 crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
 #ASSIGN CKD STAGES
-crea.rep$CKDStag<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
 
 ###################################################################################
-#AKI
+#NHS UKI AKI ALGORITHM
+#Mark AKI qualifying tests
+attach(crea.rep)
+CI<-Creatinine
+crea.rep$KImark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+
+#Check if data available within 365 days prior
+#Check if data available within 7 days prior
+#Chec if data available 2 days prior
+
+#IF YEARLY LOOKBACK, TAKE MEDIAN OF RESULTS=RV2
+
+#IF WEEKLY LOOKBACK, TAKE LOWEST VALUE=RV1
+#IS INDEX CREATININE(C1)/RV1 OR RV2 >=1.5?
+RV_ratio<-ifelse(!is.na(RV1),C1/RV1>=1.5,C1/RV2>=1.5)
+
+#IF NO...
+AKI_Stage<-ifelse(RV_Ratio<1.5&D>26&2day==1,1,AKI_Stage)
+
+#IF YES...
+
+AKI_Stage<-ifelse(RV_Ratio>=1.5&C1>(3*ULRI),3,AKI_Stage)
+AKI_Stage<-ifelse(RV_Ratio>=3&C1<=(3*ULRI),3,AKI_Stage)
+AKI_Stage<-ifelse(RV_Ratio>=2&RV_Ratio<3&C1<=(3*ULRI),2,AKI_Stage)
+AKI_Stage<-ifelse(RV_Ratio>=1.5&RV_Ratio<2&C1<=(3*ULRI),1,AKI_Stage)
 
 
+
+CKD$AKI<-NA
 
 
 
