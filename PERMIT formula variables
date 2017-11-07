@@ -60,7 +60,7 @@ crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKDmark)
 #Tests marked with a 1 for CKDmark are qualifying tests, Where there are more than 2 more than  months apart there is CKD.
 #tabulate the first qualifying test for each patient
-CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,69)]
+CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,50)]
 CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
 CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
@@ -78,6 +78,7 @@ CKs$EntryDate<-gsub("-","",CKs$EntryDate)
 length(CKs$PatientID)#48518
 crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
+
 #ASSIGN CKD STAGES
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
@@ -92,7 +93,7 @@ C6$EntryDate<-as.Date(as.character(C6$EntryDate),format="%Y%m%d")
 C6$EntryDate2<-C6$EntryDate+180
 
 for (i in 1:length(C6$PatientID)){
-C6$LOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==C6$PatientID[i] &crea.rep$event.date>C6$EntryDate[i] & crea.rep$event.date<=C6$EntryDate2[i]])
+C6$MEANLOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==C6$PatientID[i] &crea.rep$event.date>C6$EntryDate[i] & crea.rep$event.date<=C6$EntryDate2[i]])
 }
 crea.rep<-merge(crea.rep,C6,all.x=TRUE)
 
@@ -105,9 +106,8 @@ E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
 E6$EntryDate2<-E6$EntryDate+180
 
 for (i in 1:length(E6$PatientID)){
-E6$MDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] &crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
+E6$MEANMDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] &crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
 }
-
 crea.rep<-merge(crea.rep,E6,all.x=TRUE)
 
 
@@ -119,7 +119,7 @@ Ca6$EntryDate<-as.Date(as.character(Ca6$EntryDate),format="%Y%m%d")
 Ca6$EntryDate2<-Ca6$EntryDate+180
 
 for (i in 1:length(C6$PatientID)){
-Ca6$LOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
+Ca6$MEANCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
 }
 crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
 
