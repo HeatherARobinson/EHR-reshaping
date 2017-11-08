@@ -8,7 +8,7 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
-#CALCULATING CKDEPI eGFR IN UMOL/L- BY CONVERTING FIRST TO mg/dL
+#CALCULATING CKDEPI eGFR IN UMOL/L- BY CONVERTING FIRST TO mg/dL #THIS SECTION NOT CURRENTLY WORKING- USE DUNJA'S CODE
 
 crea.rep$Age<-as.numeric(crea.rep$Age)
 
@@ -124,9 +124,9 @@ Ca6$MEANCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &cre
 crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
 
 ###################################################################################
-#crea.rep$RateRenChange #Rate of renal change
+#crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
 ###################################################################################
-#crea.rep$AKIepisodes<- #no. past AKI episodes?
+#crea.rep$AKIepisodes<- #no. past AKI episodes- SEE ADDITIONAL FILE FOR NHS ALGORITHM
 ###################################################################################
-#crea.rep$WorsRenFail<- Worsening renal failure
+#crea.rep$WorsRenFail<- Worsening renal failure- DUNJA WILL CODE
 
