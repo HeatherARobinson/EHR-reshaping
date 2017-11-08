@@ -2,7 +2,7 @@ load("crea.repongoing.rda")
 load("sir.datahfonly.Rdata")
 ###########################################################
 #CODE EACH OF THE FORMULA VARIABLES
-
+crea.rep$Ethnicity<-ifelse(is.na(crea.rep$Ethnicity),7,crea.rep$Ethnicity)
 crea.rep$log_CREA <- log10(crea.rep$Creatinine)
 crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
@@ -66,7 +66,7 @@ CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
 
 for (i in 1:length(CKs$PatientID)){
-CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
+CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark[i]==0])>0,1,0)
 }
 
 CKs<-CKs[CKs$x==0,c(1:2,5)] #The CKD qualifying tests with another qualifying test at least 3 months prior and no normal tests in between
