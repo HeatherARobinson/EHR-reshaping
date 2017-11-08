@@ -11,12 +11,11 @@ crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.2
 ##################################################################################
 #List creatinine tests, marking those of CKD patients
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
-crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$KDmark)
 #Tests marked with a 1 for KDmark are qualifying tests
 
 #Check for and exclude CKD patients
 tabulate the first qualifying test for each patient
-CKs<-crea.rep[crea.rep$KDmark==1,c(1,2,69)]
+CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")]
 CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
 CKs$EntryDate2<-CKs$EntryDate-90
 crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
