@@ -1,0 +1,9 @@
+load("crea.repongoing.rda")
+inst<-read.csv("instructions_decoded.csv")
+codes1<-read.csv("reads.csv")
+codes2<-read.csv("emis.csv")
+
+crea.sub<-crea.rep[crea.rep$ReadCode %in% inst$ReadCode,c("PatientID","ReadCode","CodeValue","CodeUnits")
+crea.drugs<-merge(crea.sub,crea.drugs,all.x==TRUE)
+crea.drugs<-merge(crea.drugs,crea.codes1,all.x==TRUE) #Add ReadCode dosage information
+crea.drugs<-merge(crea.drugs,crea.codes2,all.x==TRUE) #Add EMIS/OXMIS dosage information
