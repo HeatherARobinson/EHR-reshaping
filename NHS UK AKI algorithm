@@ -115,6 +115,7 @@ yearmarker<-NA
 #monthmarker<-NA
 weekmarker<-NA
 #daymarker<-NA
+overvalue<-NA
 a <-a[order(PatientID,event.date),] 
 attach(a)
 
@@ -128,8 +129,8 @@ overdate<-ifelse(testno==i,event.date[i],overdate)
 testnodate<-(ave(overdate,PatientID,FUN=max))
 yearmarker<-ifelse((testnodate-as.numeric(event.date))<=365 & (testnodate-as.numeric(event.date))>90,1,yearmarker)
 weekmarker<-ifelse((testnodate-as.numeric(event.date))<=7 & !testnodate==as.numeric(event.date),1,weekmarker)
-overvalue[i]<-ifelse(testno==i,Creatinine[i],NA)
-testnovalue<-ave(overvalue[!is.na(overvalue)],PatientID,FUN=max) 
+overvalue<-ifelse(testno==i,Creatinine[i],overvalue)
+testnovalue<-ave(overvalue[!is.na(overvalue)][i],PatientID,FUN=max) 
 }
 #END OF LOOP
 close(pb)
@@ -139,18 +140,18 @@ a$testnovalue<-testnovalue
 head(a,n=30)
 
 #IF YEARLY LOOKBACK, TAKE MEDIAN OF RESULTS=RV2
-sorted2 <- a %>% 
+sorted2 <- a[yearmarker==1] %>% 
           arrange(PatientID,event.date) %>%
           group_by(PatientID,event.date) %>%
-          mutate(RV2=median(testnovalue[yearmarker==1]))
+          mutate(RV2=median(testnovalue))
 sorted2<-data.frame(sorted2)
 
 #IF WEEKLY LOOKBACK, TAKE LOWEST VALUE=RV1
 
-sorted3 <- a %>% 
+sorted3 <- a[weekmarker==1] %>% 
           arrange(PatientID,event.date) %>%
           group_by(PatientID,event.date) %>%
-          mutate(RV1=min(testnovalue[weekmarker==1]))
+          mutate(RV1=min(testnovalue))
 sorted3<-data.frame(sorted2)
 
 sorted2<-sorted2[,c("PatientID","event.date","RV1")]
@@ -159,11 +160,20 @@ a<-merge(a,sorted2,all.x=TRUE)
 a<-merge(a,sorted3,all.x=TRUE)
 attach(a)
 
-
-
-
 #IS INDEX CREATININE(C1)/RV1 OR RV2 >=1.5?
-RV_ratio<-ifelse(!is.na(RV1),C1/RV1>=1.5,C1/RV2>=1.5)
+a$RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
+a$RV_ratio<-ifelse(!is.na(a$RV1),a$Creatinine/a$RV1,a$RV_ratio)
+
+#IF YES...
+
+a$AKI_Stage<-ifelse(a$RV_Ratio>=1.5&a$Creatinine>354,3,NA)
+a$AKI_Stage<-ifelse(a$RV_Ratio>=3& a$Creatinine<=354,3,AKI_Stage)
+a$AKI_Stage<-ifelse(a$RV_Ratio>=2&RV_Ratio<3&C1<=(3*ref.up),2,AKI_Stage)
+a$AKI_Stage<-ifelse(a$RV_Ratio>=1.5&RV_Ratio<2&C1<=(3*ref.up),1,AKI_Stage)
+
+
+
+>=1.5,C1/RV2>=1.5)
 
 #IF NO...
 AKI_Stage<-ifelse(RV_Ratio<1.5&D>26&2day==1,1,AKI_Stage)
