@@ -63,6 +63,7 @@ a$o<-ifelse(a$Ethnicity==4,1.212,1)
 a$p<-ifelse(a$Gender=="F",0.742,1)
 a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*a$o*a$p
 a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
+attach(a)
 
 #Order creatinine values and find the max per day per patient
 destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
@@ -70,13 +71,15 @@ a <- a[order(-Creatinine),] #The highest stcreat per day will be retained
 table(duplicated(a[,1:2]))
 a2<-a[duplicated(a[,1:2]),]
 a<-a[!rownames(a) %in% rownames(a2),]#drop other values
-length(a$PatientID) #Number of records following duplicate removal #202641
-#a<-a[!is.na(a$stcreat),]
+length(a$PatientID) #Number of records following duplicate removal #284233
+a<-a[!is.na(a$Creatinine),]
 #a<-a[!a$mdrd>250,]
 #length(a$PatientID) #Remaining entries after removing missing and impossible values
 a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
 attach(a)
 
+a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
+attach(a)
 #DEFINE POPULATION LEVEL REF. VALUE
 ref.up=ref.low=NULL
   if(Gender=="M"){    
@@ -85,7 +88,6 @@ ref.up=ref.low=NULL
     } else {    
     ref.low=44
     ref.up=97}
-
 
 #ADD AN INDEX NUMBER FOR EACH TEST
 require(dplyr)
