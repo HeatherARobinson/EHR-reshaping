@@ -49,12 +49,21 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 attach(crea.rep)
 crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
+ethnic.data$Category<-floor(ethnic.data$Category)
+sir.data<-merge(sir.data,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
+colnames(sir.data)[which(names(sir.data) == "Category")] <- "Ethnicity"
+sir.data$Age<-sir.data$hfage
+o<-ifelse(sir.data$Ethnicity==4,1.212,1)
+p<-ifelse(sir.data$Gender=="F",0.742,1)
 
-d1<-crea.rep[,c("PatientID","event.date","Creatinine","Age", "Gender")]
-d2<-sir.data[sir.data$ReadCode=="44J3."&sir.data$event.date>=("2007-01-01"),]
-d2$Creatinine<-d2$CodeValue
+
+d1<-crea.rep[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
+d2<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID & as.numeric(sir.data$EntryDate)>=20070101,]
+d2$Creatinine<-as.numeric(d2$CodeValue)
 d2$Age<-(as.numeric(year(strptime(d2$EntryDate, format="%Y%m%d"))))-d2$BirthYear
-d2<-d2[,c("PatientID","event.date","Creatinine","Age", "Gender")]
+d2$MDRDeGFR<-(175*((d2$Creatinine/88.42)^-1.154))*(d2$Age^-0.203)*o*p
+d2<-d2[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
 a<-rbind(d1,d2)
 
 #Order creatinine values and find the max per day per patient
