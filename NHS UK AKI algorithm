@@ -47,24 +47,22 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 #NHS UKI AKI ALGORITHM
 #Mark AKI qualifying tests
 attach(crea.rep)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
 ethnic.data$Category<-floor(ethnic.data$Category)
 sir.data<-merge(sir.data,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
 colnames(sir.data)[which(names(sir.data) == "Category")] <- "Ethnicity"
-sir.data$Age<-sir.data$hfage
-o<-ifelse(sir.data$Ethnicity==4,1.212,1)
-p<-ifelse(sir.data$Gender=="F",0.742,1)
 
 
-d1<-crea.rep[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
-d2<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID & as.numeric(sir.data$EntryDate)>=20070101,]
-d2$Creatinine<-as.numeric(d2$CodeValue)
-d2$Age<-(as.numeric(year(strptime(d2$EntryDate, format="%Y%m%d"))))-d2$BirthYear
-d2$MDRDeGFR<-(175*((d2$Creatinine/88.42)^-1.154))*(d2$Age^-0.203)*o*p
-d2<-d2[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
-a<-rbind(d1,d2)
+a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID,]
+a$Creatinine<-as.numeric(a$CodeValue)
+a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
+a<-a[!is.na(a$Creatinine)&!is.na(a$Ethnicity)&!is.na(a$Age),]
+a$o<-ifelse(a$Ethnicity==4,1.212,1)
+a$p<-ifelse(a$Gender=="F",0.742,1)
+a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*a$o*a$p
+a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
 
 #Order creatinine values and find the max per day per patient
 destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
@@ -81,15 +79,12 @@ attach(a)
 
 #DEFINE POPULATION LEVEL REF. VALUE
 ref.up=ref.low=NULL
-  if(Gender=="M"){
-    
+  if(Gender=="M"){    
     ref.low=62
     ref.up=115
-    
-  } else {
-    
+    } else {    
     ref.low=44
-    ref.up=97
+    ref.up=97}
 
 
 #ADD AN INDEX NUMBER FOR EACH TEST
@@ -144,15 +139,23 @@ head(a,n=30)
 #IF YEARLY LOOKBACK, TAKE MEDIAN OF RESULTS=RV2
 sorted2 <- a %>% 
           arrange(PatientID,event.date) %>%
-          group_by(PatientID) %>%
+          group_by(PatientID,event.date) %>%
           mutate(RV2=median(testnovalue[yearmarker==1]))
 sorted2<-data.frame(sorted2)
 
-
-attach(a)
-
 #IF WEEKLY LOOKBACK, TAKE LOWEST VALUE=RV1
 
+sorted3 <- a %>% 
+          arrange(PatientID,event.date) %>%
+          group_by(PatientID,event.date) %>%
+          mutate(RV1=min(testnovalue[weekmarker==1]))
+sorted3<-data.frame(sorted2)
+
+sorted2<-sorted2[,c("PatientID","event.date","RV1")]
+sorted3<-sorted3,c("PatientID","event.date","RV2")]
+a<-merge(a,sorted2,all.x=TRUE)
+a<-merge(a,sorted3,all.x=TRUE)
+attach(a)
 
 
 
