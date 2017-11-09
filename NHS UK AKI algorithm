@@ -47,8 +47,16 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 #NHS UKI AKI ALGORITHM
 #Mark AKI qualifying tests
 attach(crea.rep)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 
-a<-crea.rep[,c(1,11,2,12:13,49)]
+d1<-crea.rep[,c("PatientID","event.date","Creatinine","Age", "Gender")]
+d2<-sir.data[sir.data$ReadCode=="44J3."&sir.data$event.date>=("2007-01-01"),]
+d2$Creatinine<-d2$CodeValue
+d2$Age<-(as.numeric(year(strptime(d2$EntryDate, format="%Y%m%d"))))-d2$BirthYear
+d2<-d2[,c("PatientID","event.date","Creatinine","Age", "Gender")]
+a<-rbind(d1,d2)
+
 #Order creatinine values and find the max per day per patient
 destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
 a <- a[order(-Creatinine),] #The highest stcreat per day will be retained
