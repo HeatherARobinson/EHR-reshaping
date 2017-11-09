@@ -98,31 +98,42 @@ max(testno) #number of loop iterations needed.
 overdate<-NA
 testnodate<-NA
 yearmarker<-NA
-monthmarker<-NA
+#monthmarker<-NA
 weekmarker<-NA
-daymarker<-NA
+#daymarker<-NA
 a <-a[order(PatientID,event.date),] 
 attach(a)
 
 #for each index (investigated) creatinine of key interest:
 #Find the most recent prior test and note the date (testnodate) and value (testnovalue). 
 
-pb<-tkProgressBar(title="progress bar",min=0,max=max(testno),width=300) 
+pb<-tkProgressBar(title="Processing creatinine values",min=0,max=max(testno),width=300) 
 for (i in 1:max(testno)) {
 setTkProgressBar(pb,i,label=paste(round(i/(max(testno))*100, 0),"% done"))
-overdate<-ifelse(testno==i,event.date,overdate)
+overdate<-ifelse(testno==i,event.date[i],overdate)
 testnodate<-(ave(overdate,PatientID,FUN=max))
 yearmarker<-ifelse((testnodate-as.numeric(event.date))<=365 & (testnodate-as.numeric(event.date))>90,1,yearmarker)
 weekmarker<-ifelse((testnodate-as.numeric(event.date))<=7 & !testnodate==as.numeric(event.date),1,weekmarker)
-monthmarker<-ifelse((testnodate-as.numeric(event.date))<=90 &(testnodate-as.numeric(event.date))>=8,1,monthmarker)
-daymarker<-ifelse((testnodate-as.numeric(event.date))<=2 & !testnodate==as.numeric(event.date),1,daymarker)
-overvalue<-ifelse(testno==i,Creatinine,NA)
+overvalue[i]<-ifelse(testno==i,Creatinine[i],NA)
 testnovalue<-ave(overvalue[!is.na(overvalue)],PatientID,FUN=max) 
 }
 #END OF LOOP
 close(pb)
 
+a$overdate<-overdate
+a$testnovalue<-testnovalue
+head(a,n=30)
+
 #IF YEARLY LOOKBACK, TAKE MEDIAN OF RESULTS=RV2
+sorted2 <- a %>% 
+          arrange(PatientID,event.date) %>%
+          group_by(PatientID) %>%
+          mutate(RV2=median(testnovalue[yearmarker==1]))
+sorted2<-data.frame(sorted2)
+
+
+attach(a)
+
 #IF WEEKLY LOOKBACK, TAKE LOWEST VALUE=RV1
 
 
