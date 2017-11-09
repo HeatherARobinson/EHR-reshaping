@@ -126,7 +126,7 @@ pb<-tkProgressBar(title="Processing creatinine values",min=0,max=max(testno),wid
 for (i in 1:max(testno)) {
 setTkProgressBar(pb,i,label=paste(round(i/(max(testno))*100, 0),"% done"))
 overdate<-ifelse(testno==i,event.date[i],overdate)
-testnodate<-(ave(overdate,PatientID,FUN=max))
+testnodate<-(ave(as.numeric(event.date)[-match(unique(PatientID, as.numeric(event.date)),rev(event.date))+1,],PatientID,FUN=max))
 yearmarker<-ifelse((testnodate-as.numeric(event.date))<=365 & (testnodate-as.numeric(event.date))>90,1,yearmarker)
 weekmarker<-ifelse((testnodate-as.numeric(event.date))<=7 & !testnodate==as.numeric(event.date),1,weekmarker)
 overvalue<-ifelse(testno==i,Creatinine[i],overvalue)
