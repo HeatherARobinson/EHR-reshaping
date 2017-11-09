@@ -1,18 +1,22 @@
 load("crea.repongoing.rda")
 load("sir.datahfonly.Rdata")
+
+library (taRifx)
+library (dplyr)
+library(tcltk)
+library(lubridate)
+
 ###########################################################
 #MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
-
-#12156 test dates have 2 measures for an individual with different values
-
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
 #List creatinine tests, marking those of CKD patients
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 #Tests marked with a 1 for KDmark are qualifying tests
 
+##############################################################################################
 #Check for and exclude CKD patients
 tabulate the first qualifying test for each patient
 CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")]
@@ -43,8 +47,29 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 #NHS UKI AKI ALGORITHM
 #Mark AKI qualifying tests
 attach(crea.rep)
-CI<-Creatinine
-crea.rep$KImark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+
+a<-crea.rep[,c(1,11,2,12:13,49)]
+#Order creatinine values and find the max per day per patient
+destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
+a <- a[order(-Creatinine),] #The highest stcreat per day will be retained
+table(duplicated(a[,1:2]))
+a2<-a[duplicated(a[,1:2]),]
+a<-a[!rownames(a) %in% rownames(a2),]#drop other values
+length(a$PatientID) #Number of records following duplicate removal #202641
+#a<-a[!is.na(a$stcreat),]
+#a<-a[!a$mdrd>250,]
+#length(a$PatientID) #Remaining entries after removing missing and impossible values
+a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
+attach(a)
+
+require(dplyr)
+sorted <- a %>% 
+          arrange(PatientID,event.date) %>%
+          group_by(PatientID) %>%
+          mutate(testno=row_number())
+a<-data.frame(sorted)
+attach(a)
+summary(testno)
 
 #Check if data available within 365 days prior
 #Check if data available within 7 days prior
