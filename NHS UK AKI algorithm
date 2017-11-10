@@ -129,16 +129,16 @@ attach(a)
 pb3<-tkProgressBar(title="Processing creatinine values",min=0,max=max(protagonist),width=300) 
 
 for (i in 1:max(protagonist)) {
-setTkProgressBar(pb3,i,label=paste(round(i/(max(testno))*100, 0),"% done"))
-mightydate<-ifelse(protagonist==protagonist)[i],event.date,mightydate}
+setTkProgressBar(pb3,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
+mightydate<-ifelse(protagonist==protagonist[i],event.date,mightydate)
 protagonistdos<-ave(mightydate,PatientID,FUN=max)
-yearmarker<-ifelse((protagonistdos-event.date)<=365 & (protagonistdos-event.date)>90,1,yearmarker)
-weekmarker<-ifelse((protagonistdos-event.date)<=7 & (protagonistdos-event.date>=0,1,weekmarker)
+yearmarker<-ifelse((protagonistdos-as.numeric(event.date))<=365 & (protagonistdos-as.numeric(event.date))>90,1,yearmarker)
+weekmarker<-ifelse((protagonistdos-as.numeric(event.date))<=7 & (protagonistdos-as.numeric(event.date))>=0,1,weekmarker)
 
 yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
 weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
-yearmedian<-ave(yearvalue,PatientID,FUN=median)
-weekmin<-ave(weekvalue,PatientID,FUN=min)
+yearmedian<-ave(yearvalue[!is.na(yearvalue)],PatientID,FUN=function(x) median(x,na.rm=TRUE))
+weekmin<-ave(weekvalue,PatientID,FUN=min)}
 
 mightyvalue<-Creatinine[protagonist==i, ]
 protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
