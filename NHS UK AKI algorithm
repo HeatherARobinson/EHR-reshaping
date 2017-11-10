@@ -138,10 +138,10 @@ weekmarker<-ifelse((protagonistdos-as.numeric(event.date))<=7 & (protagonistdos-
 yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
 weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
 yearmedian<-ave(yearvalue[!is.na(yearvalue)],PatientID,FUN=function(x) median(x,na.rm=TRUE))
-weekmin<-ave(weekvalue,PatientID,FUN=min)}
+weekmin<-ave(weekvalue,PatientID,FUN=function(x) min(x,na.rm=TRUE))
 
-mightyvalue<-Creatinine[protagonist==i, ]
-protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
+mightyvalue[i]<-Creatinine[protagonist==i]}
+protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)}
 
 AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
 AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="NA",1,0)
