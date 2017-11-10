@@ -5,6 +5,7 @@ library (taRifx)
 library (dplyr)
 library(tcltk)
 library(lubridate)
+require(dplyr)
 
 ###########################################################
 #MDRD eGFR
@@ -13,29 +14,35 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
 #List creatinine tests, marking those of CKD patients
-crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+
 #Tests marked with a 1 for KDmark are qualifying tests
 
 ##############################################################################################
 #Check for and exclude CKD patients
-tabulate the first qualifying test for each patient
-CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")]
-CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
-CKs$EntryDate2<-CKs$EntryDate-90
-crea.rep$event.date<-as.Date(as.character(crea.rep$event.date),format="%Y/%m/%d")
+#tabulate the first qualifying test for each patient
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
 
-for (i in 1:length(CKs$PatientID)){
-CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
+#find all tests in window, take min KDmark. If 1, CKD, if 0, not.
+
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,]
+CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
+CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+CKpot<-CKpot[,c(1:2,71:73)] 
+
+pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
+
+for (i in 1:length(CKpot$PatientID)){
+CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
+setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
 
-CKs<-CKs[CKs$x==0,c(1:2,5)] #CKD qualifying tests-with another qualifying test at least 3 months prior and no normal tests in between
-names(CKs)<-c("PatientID","EntryDate","CKDStage")
-CKs$CKDStage<-1
-CKs$EntryDate<-as.character(CKs$EntryDate)
-CKs$EntryDate<-gsub("-","",CKs$EntryDate) 
+#CKpot<-c(,[])
+#crea.rep<-merge(crea.rep,CKpot[,c()],all.x=TRUE)
+#summary(crea.rep$CKD)
 
-length(CKs$PatientID)#48518
-crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
+crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
 
 #ASSIGN CKD STAGES
 crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
@@ -53,7 +60,6 @@ ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
 ethnic.data$Category<-floor(ethnic.data$Category)
 sir.data<-merge(sir.data,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
 colnames(sir.data)[which(names(sir.data) == "Category")] <- "Ethnicity"
-
 
 a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID,]
 a$Creatinine<-as.numeric(a$CodeValue)
@@ -78,7 +84,7 @@ a<-a[!is.na(a$Creatinine),]
 a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
 attach(a)
 
-a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
+a$KDmark<-ifelse(!is.na(a$MDRDeGFR)&a$MDRDeGFR<60,1,0)
 attach(a)
 #DEFINE POPULATION LEVEL REF. VALUE
 ref.up=ref.low=NULL
@@ -94,27 +100,25 @@ require(dplyr)
 sorted <- a %>% 
           arrange(PatientID,event.date) %>%
           group_by(PatientID) %>%
-          mutate(testno=row_number())
+          mutate(protagonist=row_number())
 a<-data.frame(sorted)
 attach(a)
-summary(testno)
+summary(protagonist)
 
 newAKI<-0
 AKImonth<-0
 AKIyear<-0
 AKIweek<-0
 AKIday<-0
-max(testno) #number of loop iterations needed.
+max(protagonist) #number of loop iterations needed.
 
 
 #Check if data available within 365 days prior,7 days or 2 days
 #LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
-overdate<-NA
-testnodate<-NA
+mightydate<-NA
+protagonistdos<-NA
 yearmarker<-NA
-#monthmarker<-NA
 weekmarker<-NA
-#daymarker<-NA
 overvalue<-NA
 a <-a[order(PatientID,event.date),] 
 attach(a)
@@ -122,15 +126,26 @@ attach(a)
 #for each index (investigated) creatinine of key interest:
 #Find the most recent prior test and note the date (testnodate) and value (testnovalue). 
 
-pb<-tkProgressBar(title="Processing creatinine values",min=0,max=max(testno),width=300) 
-for (i in 1:max(testno)) {
-setTkProgressBar(pb,i,label=paste(round(i/(max(testno))*100, 0),"% done"))
-overdate<-ifelse(testno==i,event.date[i],overdate)
-testnodate<-(ave(as.numeric(event.date)[-match(unique(PatientID, as.numeric(event.date)),rev(event.date))+1,],PatientID,FUN=max))
-yearmarker<-ifelse((testnodate-as.numeric(event.date))<=365 & (testnodate-as.numeric(event.date))>90,1,yearmarker)
-weekmarker<-ifelse((testnodate-as.numeric(event.date))<=7 & !testnodate==as.numeric(event.date),1,weekmarker)
-overvalue<-ifelse(testno==i,Creatinine[i],overvalue)
-testnovalue<-ave(overvalue[!is.na(overvalue)][i],PatientID,FUN=max) 
+pb3<-tkProgressBar(title="Processing creatinine values",min=0,max=max(protagonist),width=300) 
+
+for (i in 1:max(protagonist)) {
+setTkProgressBar(pb3,i,label=paste(round(i/(max(testno))*100, 0),"% done"))
+mightydate<-ifelse(protagonist==protagonist)[i],event.date,mightydate}
+protagonistdos<-ave(mightydate,PatientID,FUN=max)
+yearmarker<-ifelse((protagonistdos-event.date)<=365 & (protagonistdos-event.date)>90,1,yearmarker)
+weekmarker<-ifelse((protagonistdos-event.date)<=7 & (protagonistdos-event.date>=0,1,weekmarker)
+
+yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
+weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
+yearmedian<-ave(yearvalue,PatientID,FUN=median)
+weekmin<-ave(weekvalue,PatientID,FUN=min)
+
+mightyvalue<-Creatinine[protagonist==i, ]
+protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
+
+AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
+AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="NA",1,0)
+
 }
 #END OF LOOP
 close(pb)
