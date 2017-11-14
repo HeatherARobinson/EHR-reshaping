@@ -53,8 +53,6 @@ attach(crea.rep)
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID,]
 
-# add date range from 2007 onwards
-
 a$Creatinine<-as.numeric(a$CodeValue)
 a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
 a<-a[!is.na(a$Creatinine)&!is.na(a$Ethnicity)&!is.na(a$Age),]
@@ -74,27 +72,90 @@ length(a$PatientID) #Number of records following duplicate removal #284233
 a<-a[!is.na(a$Creatinine),]
 #length(a$PatientID) #Remaining entries after removing missing and impossible values
 
-attach(a)
+#CUT EARLY UNWANTED DATA AAY FROM TABLE
 
-
-library(lubridate)
 attach(a)
-start_2008 <- ymd("2008-01-01")
-index<-which(dmy(EntryDate)>=start_2008)
+start_A <- ymd("2008-01-01")
+index<-which(event.date>=as.Date(start_A))
 a$yr03<-0
-a$yr03[index]<-1 #MARK INDEX YEAR
+a$yr03[index]<-1 #MARK POST 2008 TESTS
 
-start_2000 <- ymd("2007-01-01")
-a$post2000<-ifelse(dmy(EntryDate)>=start_2000,1,0) #sample after 1st jan 
+start_B <- ymd("2007-01-01")
+a$post2000<-ifelse(event.date>=as.Date(start_B),1,0) #sample after 1st jan 2007
 a <-a[a$post2000==1,] 
 attach(a)
 
+#THE 2007 TESTS ARE NEEDED TO DETECT AKIS IN 2008.
 
-
-
-
-a$KDmark<-ifelse(!is.na(a$MDRDeGFR)&a$MDRDeGFR<60,1,0)
+#######################################################################################
+require(dplyr)
+sorted <- a %>% 
+          arrange(PatientID,event.date) %>%
+          group_by(PatientID) %>%
+          mutate(protagonist=row_number())
+a<-data.frame(sorted)
 attach(a)
+
+#GIVE EACH TEST AN ORDER NUMBER PER PATIENT SO WE CAN LATER LOOP THROUGH THEM
+#######################################################################################
+# PART 2 - LOOP FOR AKI FLAGS 
+#LOOP FORMATION FOR COMPARING EACH TEST WITH PREVIOUS TESTS
+#CREATE A MARKER VARIABLE FOR EACH TIME AKI EALERT CRITERIA SATISFIED
+
+newAKI<-0
+AKIyear<-0
+AKIweek<-0
+max(protagonist) #number of loop iterations needed.
+
+#LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
+mightdate<-NA
+protagonistdos<-NA
+yearmarker<-0
+weekmarker<-0
+a <-a[order(PatientID, event.date),] 
+attach(a)
+#############################################################################################################
+pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
+
+for (i in 1:max(protagonist)) {
+setTkProgressBar(pb,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
+mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
+protagonistdos<-ave(mightydate,PatientID,FUN=max)
+
+#Select the date for each test and apply it to all other tests from the same patient to find the time difference
+
+yearmarker<-ifelse(as.Date(protagonistdos)-event.date<=365 & (protagonistdos-event.date>90),1,yearmarker)
+weekmarker<-ifelse(as.Date(protagonistdos)-event.date<=7 & (protagonistdos-event.date)>=0,1,weekmarker) 
+
+
+#The above variables mark the dates of blood tests that fit the ealert AKI windows or those required for sensitivity analysis
+
+yearvalue<-ifelse(yearmarker==1,Creatinine,"NA")
+weekvalue<-ifelse(weekmarker==1,Creatinine,"NA")
+
+#finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
+
+yearmedian<-as.numeric(ave(yearvalue,PatientID,FUN=median))
+weekmin<-ave(weekvalue,PatientID,FUN=min)
+
+#applies the optimal reference creatinine across all patient samples
+
+mightyvalue<-Creatinine[PatientID==PatientID[i]]
+protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
+
+#finds the index (investigated) creatinine of key interest, applies this value across all patient samples
+
+AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
+AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="NA",1,0)
+}
+#END OF LOOP, HAVE NOW FLAGGED ALL TESTS MEETING EACH TYPE OF AKI CONDITION
+close(pb)
+
+#DEVELOP COMBINED GROUPS AND MARK FIRST AKI
+newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
+
+
+
 #DEFINE POPULATION LEVEL REF. VALUE
 ref.up=ref.low=NULL
   if(Gender=="M"){    
@@ -158,6 +219,10 @@ AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="
 }
 #END OF LOOP
 close(pb)
+
+
+
+
 
 a$overdate<-overdate
 a$testnovalue<-testnovalue
