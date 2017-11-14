@@ -8,46 +8,7 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
-#CALCULATING CKDEPI eGFR IN UMOL/L- BY CONVERTING FIRST TO mg/dL #THIS SECTION NOT CURRENTLY WORKING- USE DUNJA'S CODE
 
-crea.rep$Age<-as.numeric(crea.rep$Age)
-
-for (i in 1:length(crea.rep$PatientID)){
-k[i]<-ifelse(crea.rep$Gender[i]=="F",61.9,79.6)
-a[i]<-ifelse(crea.rep$Gender[i]=="F",-0.329,-0.411)
-m[i]<-ifelse(crea.rep$Gender[i]=="F",1.018,1)
-n[i]<-ifelse(crea.rep$Ethnicity[i]==4,1.159,1)
-n[i]<-ifelse(is.na(n[i]),1,n[i])
-x[i]<-(crea.rep$Creatinine[i]/88.42)/k[i] 
-
-#ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
-minx[i]<-ifelse(x[i]>1,1,x[i])
-maxx[i]<-ifelse(x[i]<1,1,x[i])
-CKDEPIeGFR[i]<-141*(minx[i]^a[i])*(maxx[i]^-1.209)*(0.933^crea.rep$Age[i])*m[i]*n[i]
-
-}
-
-
-crea.rep$CKDEPIeGFR<-141*(minx^a)*(maxx^-1.209)*(0.933^crea.rep$Age)*m*n
-summary(crea.rep$CKDEPIeGFR)
-
-#USING ALL CREATININE VALUES NOT JUST DAILY MAXIMA
-crea.rep$k<-ifelse(crea.rep$Gender=="F",61.9,79.6)
-crea.rep$a<-ifelse(crea.rep$Gender=="F",-0.329,-0.411)
-crea.rep$m<-ifelse(crea.rep$Gender=="F",1.018,1)
-crea.rep$n<-ifelse(crea.rep$Ethnicity==4,1.159,1)
-crea.rep$n<-ifelse(is.na(n),1,n)
-crea.rep$Age<-as.numeric(crea.rep$Age)
-crea.rep$x<-(crea.rep$Creatinine/88.42)/crea.rep$k 
-#ADJUSTMENT OF 88.42 MADE HERE FOR UNIT CONVERSION TO mg/dL
-crea.rep$minx<-ifelse(crea.rep$x>1,1,crea.rep$x)
-crea.rep$maxx<-ifelse(crea.rep$x<1,1,crea.rep$x)
-
-crea.rep$CKDEPIeGFR<-141*(crea.rep$minx^crea.rep$a)*(crea.rep$maxx^-1.209)*(0.933^crea.rep$Age)*crea.rep$m*crea.rep$n
-summary(crea.rep$CKDEPIeGFR)
-
-
-##################################################################################
 #CALCULATING MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
@@ -106,9 +67,12 @@ E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
 E6$EntryDate2<-E6$EntryDate+180
 
 for (i in 1:length(E6$PatientID)){
-E6$MEANMDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] &crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
+E6$MEANMDRDeGFR6[i]<-mean(crea.rep$PatientID==E6$PatientID[i] & crea.rep$MDRDeGFR[crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
 }
 crea.rep<-merge(crea.rep,E6,all.x=TRUE)
+
+E6$MEANMDRDeGFR6<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID &crea.rep$event.date>E6$EntryDate & crea.rep$event.date<=E6$EntryDate2)
+}
 
 ###################################################################################
 #MEAN CKDEPI eGFR WITHIN 6M
