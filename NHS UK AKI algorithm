@@ -116,7 +116,7 @@ attach(a)
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(PatientID),width=300) #indicates progress through the loop
 
 for (j in 1:length(PatientID)) {
-setTkProgressBar(pb,i,label=paste(round(i/max(PatientID)*100, 0),"% done"))
+setTkProgressBar(pb,i,label=paste(round(j/length(PatientID)*100, 0),"% done"))
 for (i in 1:max(protagonist)) {
 mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
 protagonistdos<-ave(mightydate,PatientID[j],FUN=max)
