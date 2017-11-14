@@ -114,11 +114,12 @@ attach(a)
 
 #############################################################################################################
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(PatientID),width=300) #indicates progress through the loop
-#for (i in 1:length(PatientID)) {
+
+for (j in 1:length(PatientID)) {
 setTkProgressBar(pb,i,label=paste(round(i/max(PatientID)*100, 0),"% done"))
 for (i in 1:max(protagonist)) {
 mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
-protagonistdos<-ave(mightydate,PatientID,FUN=max)
+protagonistdos<-ave(mightydate,PatientID[j],FUN=max)
 #Select the date for each test and apply it to all other tests from the same patient to find the time difference
 
 yearmarker<-ifelse(as.Date(protagonistdos)-event.date<=365 & (protagonistdos-event.date>90),1,yearmarker)
@@ -133,14 +134,14 @@ Dvalue<-ifelse(Dmarker==1,Creatinine,NA)
 
 #finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
 
-yearmedian<-as.numeric(ave(yearvalue,PatientID,FUN=median))
-weekmin<-as.numeric(ave(weekvalue,PatientID,FUN=min))
-Dvalue<-as.numeric(ave(weekvalue,PatientID,FUN=min))
+yearmedian<-as.numeric(ave(yearvalue,PatientID[j],FUN=median))
+weekmin<-as.numeric(ave(weekvalue,PatientID[j],FUN=min))
+Dvalue<-as.numeric(ave(weekvalue,PatientID[j],FUN=min))
 
 #applies the optimal reference creatinine across all patient samples
 
-mightyvalue<-Creatinine[PatientID==PatientID[i]]
-protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
+mightyvalue<-Creatinine[PatientID==PatientID[j]]
+protagonistvalue<-ave(mightyvalue,PatientID[j],FUN=max)
 
 D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
 
