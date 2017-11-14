@@ -72,10 +72,26 @@ a2<-a[duplicated(a[,1:2]),]
 a<-a[!rownames(a) %in% rownames(a2),]#drop other values
 length(a$PatientID) #Number of records following duplicate removal #284233
 a<-a[!is.na(a$Creatinine),]
-#a<-a[!a$mdrd>250,]
 #length(a$PatientID) #Remaining entries after removing missing and impossible values
-a$KImark<-ifelse(a$MDRDeGFR<60,1,0)
+
 attach(a)
+
+
+library(lubridate)
+attach(a)
+start_2008 <- ymd("2008-01-01")
+index<-which(dmy(EntryDate)>=start_2008)
+a$yr03<-0
+a$yr03[index]<-1 #MARK INDEX YEAR
+
+start_2000 <- ymd("2007-01-01")
+a$post2000<-ifelse(dmy(EntryDate)>=start_2000,1,0) #sample after 1st jan 
+a <-a[a$post2000==1,] 
+attach(a)
+
+
+
+
 
 a$KDmark<-ifelse(!is.na(a$MDRDeGFR)&a$MDRDeGFR<60,1,0)
 attach(a)
