@@ -108,12 +108,25 @@ AKIweek<-0
 max(protagonist) #number of loop iterations needed.
 
 #LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
-mightdate<-NA
+mightydate<-NA
 protagonistdos<-NA
 yearmarker<-0
 weekmarker<-0
+
+ if(Gender=="M"){    
+    ref.low=62
+    ref.up=115
+    } else {    
+    ref.low=44
+    ref.up=97}
+   
+   #IS INDEX CREATININE(C1)/RV1 OR RV2 >=1.5?
+RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
+RV_ratio<-ifelse(!is.na(a$RV1),a$Creatinine/a$RV1,a$RV_ratio)
+
 a <-a[order(PatientID, event.date),] 
 attach(a)
+
 #############################################################################################################
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
 
@@ -136,17 +149,22 @@ weekvalue<-ifelse(weekmarker==1,Creatinine,"NA")
 #finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
 
 yearmedian<-as.numeric(ave(yearvalue,PatientID,FUN=median))
-weekmin<-ave(weekvalue,PatientID,FUN=min)
+weekmin<-as.numeric(ave(weekvalue,PatientID,FUN=min))
 
 #applies the optimal reference creatinine across all patient samples
 
 mightyvalue<-Creatinine[PatientID==PatientID[i]]
 protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
 
-#finds the index (investigated) creatinine of key interest, applies this value across all patient samples
+
 
 AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
-AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="NA",1,0)
+AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
+
+
+
+
+AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & (|) &protagonist=='i' & !weekmin=="NA",1,0)
 }
 #END OF LOOP, HAVE NOW FLAGGED ALL TESTS MEETING EACH TYPE OF AKI CONDITION
 close(pb)
@@ -154,104 +172,6 @@ close(pb)
 #DEVELOP COMBINED GROUPS AND MARK FIRST AKI
 newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
 
-
-
-#DEFINE POPULATION LEVEL REF. VALUE
-ref.up=ref.low=NULL
-  if(Gender=="M"){    
-    ref.low=62
-    ref.up=115
-    } else {    
-    ref.low=44
-    ref.up=97}
-
-#ADD AN INDEX NUMBER FOR EACH TEST
-require(dplyr)
-sorted <- a %>% 
-          arrange(PatientID,event.date) %>%
-          group_by(PatientID) %>%
-          mutate(protagonist=row_number())
-a<-data.frame(sorted)
-attach(a)
-summary(protagonist)
-
-newAKI<-0
-AKImonth<-0
-AKIyear<-0
-AKIweek<-0
-AKIday<-0
-max(protagonist) #number of loop iterations needed.
-
-
-#Check if data available within 365 days prior,7 days or 2 days
-#LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
-mightydate<-NA
-protagonistdos<-NA
-yearmarker<-NA
-weekmarker<-NA
-overvalue<-NA
-a <-a[order(PatientID,event.date),] 
-attach(a)
-
-#for each index (investigated) creatinine of key interest:
-#Find the most recent prior test and note the date (testnodate) and value (testnovalue). 
-
-pb3<-tkProgressBar(title="Processing creatinine values",min=0,max=max(protagonist),width=300) 
-
-for (i in 1:max(protagonist)) {
-setTkProgressBar(pb3,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
-mightydate<-ifelse(protagonist==protagonist[i],event.date,mightydate)
-protagonistdos<-ave(mightydate,PatientID,FUN=max)
-yearmarker<-ifelse((protagonistdos-as.numeric(event.date))<=365 & (protagonistdos-as.numeric(event.date))>90,1,yearmarker)
-weekmarker<-ifelse((protagonistdos-as.numeric(event.date))<=7 & (protagonistdos-as.numeric(event.date))>=0,1,weekmarker)
-
-yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
-weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
-yearmedian<-ave(yearvalue[!is.na(yearvalue)],PatientID,FUN=function(x) median(x,na.rm=TRUE))
-weekmin<-ave(weekvalue,PatientID,FUN=function(x) min(x,na.rm=TRUE))
-
-mightyvalue[i]<-Creatinine[protagonist==i]}
-protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)}
-
-AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian),1,0)
-AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i' & !weekmin=="NA",1,0)
-
-}
-#END OF LOOP
-close(pb)
-
-
-
-
-
-a$overdate<-overdate
-a$testnovalue<-testnovalue
-head(a,n=30)
-
-#IF YEARLY LOOKBACK, TAKE MEDIAN OF RESULTS=RV2
-sorted2 <- a[yearmarker==1] %>% 
-          arrange(PatientID,event.date) %>%
-          group_by(PatientID,event.date) %>%
-          mutate(RV2=median(testnovalue))
-sorted2<-data.frame(sorted2)
-
-#IF WEEKLY LOOKBACK, TAKE LOWEST VALUE=RV1
-
-sorted3 <- a[weekmarker==1] %>% 
-          arrange(PatientID,event.date) %>%
-          group_by(PatientID,event.date) %>%
-          mutate(RV1=min(testnovalue))
-sorted3<-data.frame(sorted2)
-
-sorted2<-sorted2[,c("PatientID","event.date","RV1")]
-sorted3<-sorted3,c("PatientID","event.date","RV2")]
-a<-merge(a,sorted2,all.x=TRUE)
-a<-merge(a,sorted3,all.x=TRUE)
-attach(a)
-
-#IS INDEX CREATININE(C1)/RV1 OR RV2 >=1.5?
-a$RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
-a$RV_ratio<-ifelse(!is.na(a$RV1),a$Creatinine/a$RV1,a$RV_ratio)
 
 #IF YES...
 
