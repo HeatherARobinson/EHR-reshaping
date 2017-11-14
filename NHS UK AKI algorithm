@@ -113,13 +113,13 @@ a <-a[order(PatientID, event.date),]
 attach(a)
 
 #############################################################################################################
-pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(PatientID),width=300) #indicates progress through the loop
+pb<-tkProgressBar(title="Identifying AKI events",min=0,max=length(PatientID),width=300) #indicates progress through the loop
 
 for (j in 1:length(PatientID)) {
 setTkProgressBar(pb,i,label=paste(round(j/length(PatientID)*100, 0),"% done"))
 for (i in 1:max(protagonist)) {
-mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
-protagonistdos<-ave(mightydate,PatientID[j],FUN=max)
+mightydate<-as.Date(ifelse(protagonist==protagonist[c(i,j)],event.date,mightydate),origin="1970-01-01")
+protagonistdos<-ave(mightydate,PatientID[c(i,j)],FUN=max)
 #Select the date for each test and apply it to all other tests from the same patient to find the time difference
 
 yearmarker<-ifelse(as.Date(protagonistdos)-event.date<=365 & (protagonistdos-event.date>90),1,yearmarker)
@@ -128,20 +128,20 @@ Dmarker<-ifelse(as.Date(protagonistdos)-event.date<=2 & (protagonistdos-event.da
 
 #The above variables mark the dates of blood tests that fit the ealert AKI windows or those required for sensitivity analysis
 
-yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
-weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
-Dvalue<-ifelse(Dmarker==1,Creatinine,NA)
+yearvalue<-ifelse(yearmarker==1,Creatinine[c(i,j)],NA)
+weekvalue<-ifelse(weekmarker==1,Creatinine[c(i,j)],NA)
+Dvalue<-ifelse(Dmarker==1,Creatinine[c(i,j),NA)
 
 #finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
 
-yearmedian<-as.numeric(ave(yearvalue,PatientID[j],FUN=median))
-weekmin<-as.numeric(ave(weekvalue,PatientID[j],FUN=min))
-Dvalue<-as.numeric(ave(weekvalue,PatientID[j],FUN=min))
+yearmedian<-as.numeric(ave(yearvalue,PatientID[c(i,j)],FUN=median))
+weekmin<-as.numeric(ave(weekvalue,PatientID[i,j],FUN=min))
+Dvalue<-as.numeric(ave(weekvalue,PatientID[i,j],FUN=min))
 
 #applies the optimal reference creatinine across all patient samples
 
-mightyvalue<-Creatinine[PatientID==PatientID[j]]
-protagonistvalue<-ave(mightyvalue,PatientID[j],FUN=max)
+mightyvalue<-Creatinine[PatientID==PatientID[i,j]]
+protagonistvalue<-ave(mightyvalue,PatientID[i,j],FUN=max)
 
 D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
 
