@@ -1,4 +1,4 @@
-load("crea.rep191117.rda")
+load("crea.rep091117.rda")
 load("sir.datahfonly.Rdata")
 
 library (taRifx)
@@ -7,11 +7,6 @@ library(tcltk)
 library(lubridate)
 require(dplyr)
 
-###########################################################
-#MDRD eGFR
-o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
-p<-ifelse(crea.rep$Gender=="F",0.742,1)
-crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
 #List creatinine tests, marking those of CKD patients
 
@@ -207,10 +202,3 @@ CKD$AKI<-NA
 
 
 #crea.rep$AKI
-
-###################################################################################
-#crea.rep$RateRenChange #Rate of renal change
-###################################################################################
-#crea.rep$AKIepisodes<- #no. past AKI episodes?
-###################################################################################
-#crea.rep$WorsRenFail<- Worsening renal failure
