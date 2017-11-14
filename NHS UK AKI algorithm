@@ -113,7 +113,7 @@ a <-a[order(PatientID, event.date),]
 attach(a)
 
 #############################################################################################################
-pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
+pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(PatientID),width=300) #indicates progress through the loop
 #for (i in 1:length(PatientID)) {
 setTkProgressBar(pb,i,label=paste(round(i/max(PatientID)*100, 0),"% done"))
 for (i in 1:max(protagonist)) {
