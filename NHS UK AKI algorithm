@@ -51,12 +51,10 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 attach(crea.rep)
 
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
-ethnic.data<-read.table("ethnic.data.csv",header=TRUE,sep=",")
-ethnic.data$Category<-floor(ethnic.data$Category)
-sir.data<-merge(sir.data,ethnic.data,by.x="Ethnicity",by.y="ClinCode2",all.x=TRUE, all.y=FALSE)
-colnames(sir.data)[which(names(sir.data) == "Category")] <- "Ethnicity"
-
 a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID,]
+
+# add date range from 2007 onwards
+
 a$Creatinine<-as.numeric(a$CodeValue)
 a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
 a<-a[!is.na(a$Creatinine)&!is.na(a$Ethnicity)&!is.na(a$Age),]
