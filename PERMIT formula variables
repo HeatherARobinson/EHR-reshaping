@@ -124,6 +124,13 @@ Ca6$MEANCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &cre
 crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
 
 ###################################################################################
+
+#MDRD eGFR
+o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+p<-ifelse(crea.rep$Gender=="F",0.742,1)
+crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
+
+################################################################################
 #crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
 ###################################################################################
 #crea.rep$AKIepisodes<- #no. past AKI episodes- SEE ADDITIONAL FILE FOR NHS ALGORITHM
