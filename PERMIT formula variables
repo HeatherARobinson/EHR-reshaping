@@ -88,7 +88,7 @@ crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
 
-C6<-crea.rep[,c(1,2,64)]
+C6<-crea.rep[,c("PatientID","EntryDate","log_CREA")]
 C6$EntryDate<-as.Date(as.character(C6$EntryDate),format="%Y%m%d")
 C6$EntryDate2<-C6$EntryDate+180
 
@@ -99,9 +99,9 @@ crea.rep<-merge(crea.rep,C6,all.x=TRUE)
 
 
 ###################################################################################
-#MEAN EGFR WITHIN 6M
+#MEAN EGFR WITHIN 6M-MDRD
 
-E6<-crea.rep[,c(1,2,70)]
+E6<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
 E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
 E6$EntryDate2<-E6$EntryDate+180
 
@@ -110,16 +110,27 @@ E6$MEANMDRDeGFR6[i]<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID[i] 
 }
 crea.rep<-merge(crea.rep,E6,all.x=TRUE)
 
+###################################################################################
+#MEAN CKDEPI eGFR WITHIN 6M
 
+E6<-crea.rep[,c("PatientID","EntryDate","CKDEPIeGFR")]
+E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
+E6$EntryDate2<-E6$EntryDate+180
+
+for (i in 1:length(E6$PatientID)){
+E6$MEANCKDEPIeGFR6[i]<-mean(crea.rep$CKDEPIeGFR[crea.rep$PatientID==E6$PatientID[i] &crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
+
+}
+crea.rep<-merge(crea.rep,E6,all.x=TRUE)
 ###################################################################################
 #MEAN CREATININE WITHIN 6M
 
-Ca6<-crea.rep[,c(1,2,64)]
+Ca6<-crea.rep[,c("PatientID","EntryDate","Creatinine")]
 Ca6$EntryDate<-as.Date(as.character(Ca6$EntryDate),format="%Y%m%d")
 Ca6$EntryDate2<-Ca6$EntryDate+180
 
 for (i in 1:length(C6$PatientID)){
-Ca6$MEANCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
+Ca6$MEANCR6[i]<-mean(crea.rep$Creatinine[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
 }
 crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
 
