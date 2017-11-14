@@ -1,0 +1,177 @@
+load("crea.rep091117.rda")
+load("sir.datahfonly.Rdata")
+
+library (taRifx)
+library (dplyr)
+library(tcltk)
+library(lubridate)
+require(dplyr)
+
+##################################################################################
+#List creatinine tests, marking those of CKD patients
+
+#Tests marked with a 1 for KDmark are qualifying tests
+
+##############################################################################################
+#Check for and exclude CKD patients
+#tabulate the first qualifying test for each patient
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
+
+#find all tests in window, take min KDmark. If 1, CKD, if 0, not.
+
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,]
+CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
+CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+CKpot<-CKpot[,c(1:2,71:73)] 
+
+pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
+
+for (i in 1:length(CKpot$PatientID)){
+CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
+setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
+}
+
+#CKpot<-c(,[])
+#crea.rep<-merge(crea.rep,CKpot[,c()],all.x=TRUE)
+#summary(crea.rep$CKD)
+
+crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
+
+#ASSIGN CKD STAGES
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
+
+###################################################################################
+#NHS UKI AKI ALGORITHM
+#Mark AKI qualifying tests
+attach(crea.rep)
+
+sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% crea.rep$PatientID,]
+
+a$Creatinine<-as.numeric(a$CodeValue)
+a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
+a<-a[!is.na(a$Creatinine)&!is.na(a$Ethnicity)&!is.na(a$Age),]
+a$o<-ifelse(a$Ethnicity==4,1.212,1)
+a$p<-ifelse(a$Gender=="F",0.742,1)
+a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*a$o*a$p
+a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
+attach(a)
+
+#Order creatinine values and find the max per day per patient
+destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
+a <- a[order(-Creatinine),] #The highest stcreat per day will be retained
+table(duplicated(a[,1:2]))
+a2<-a[duplicated(a[,1:2]),]
+a<-a[!rownames(a) %in% rownames(a2),]#drop other values
+length(a$PatientID) #Number of records following duplicate removal #284233
+a<-a[!is.na(a$Creatinine),]
+#length(a$PatientID) #Remaining entries after removing missing and impossible values
+
+#CUT EARLY UNWANTED DATA AAY FROM TABLE
+
+attach(a)
+start_A <- ymd("2008-01-01")
+index<-which(event.date>=as.Date(start_A))
+a$yr03<-0
+a$yr03[index]<-1 #MARK POST 2008 TESTS
+
+start_B <- ymd("2007-01-01")
+a$post2000<-ifelse(event.date>=as.Date(start_B),1,0) #sample after 1st jan 2007
+a <-a[a$post2000==1,] 
+attach(a)
+
+#THE 2007 TESTS ARE NEEDED TO DETECT AKIS IN 2008.
+
+#######################################################################################
+require(dplyr)
+sorted <- a %>% 
+          arrange(PatientID,event.date) %>%
+          group_by(PatientID) %>%
+          mutate(protagonist=row_number())
+a<-data.frame(sorted)
+attach(a)
+
+#GIVE EACH TEST AN ORDER NUMBER PER PATIENT SO WE CAN LATER LOOP THROUGH THEM
+#######################################################################################
+# PART 2 - LOOP FOR AKI FLAGS 
+#LOOP FORMATION FOR COMPARING EACH TEST WITH PREVIOUS TESTS
+#CREATE A MARKER VARIABLE FOR EACH TIME AKI EALERT CRITERIA SATISFIED
+
+newAKI<-0
+AKIyear<-0
+AKIweek<-0
+max(protagonist) #number of loop iterations needed.
+
+#LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
+mightydate<-NA
+protagonistdos<-NA
+yearmarker<-0
+weekmarker<-0
+Dmarker<-0
+
+
+ if(Gender[i]=="M"){    
+    ref.low=62
+    ref.up=115
+    } else {    
+    ref.low=44
+    ref.up=97}
+   
+a <-a[order(PatientID, event.date),] 
+attach(a)
+
+#############################################################################################################
+pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
+for (i in 1:length(PatientID)) {
+setTkProgressBar(pb,i,label=paste(round(i/max(PatientID)*100, 0),"% done"))
+for (i in 1:max(protagonist)) {
+mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
+protagonistdos<-ave(mightydate,PatientID,FUN=max)
+#Select the date for each test and apply it to all other tests from the same patient to find the time difference
+
+yearmarker<-ifelse(as.Date(protagonistdos)-event.date<=365 & (protagonistdos-event.date>90),1,yearmarker)
+weekmarker<-ifelse(as.Date(protagonistdos)-event.date<=7 & (protagonistdos-event.date)>=0,1,weekmarker) 
+Dmarker<-ifelse(as.Date(protagonistdos)-event.date<=2 & (protagonistdos-event.date)>=0,1,Dmarker) 
+
+
+#The above variables mark the dates of blood tests that fit the ealert AKI windows or those required for sensitivity analysis
+
+yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
+weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
+Dvalue<-ifelse(Dmarker==1,Creatinine,NA)
+
+#finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
+
+yearmedian<-as.numeric(ave(yearvalue,PatientID,FUN=median))
+weekmin<-as.numeric(ave(weekvalue,PatientID,FUN=min))
+Dvalue<-as.numeric(ave(weekvalue,PatientID,FUN=min))
+
+#applies the optimal reference creatinine across all patient samples
+
+mightyvalue<-Creatinine[PatientID==PatientID[i]]
+protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
+
+D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
+
+RV1<-Creatinine/weekmin
+RV2<-Creatinine/yearmedian
+RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
+RV_ratio<-ifelse(!is.na(a$RV1) & (a$Creatinine/a$RV1)>(a$Creatinine/a$RV2),a$Creatinine/a$RV1,a$RV_ratio)
+
+AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
+AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i'& !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
+
+AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIyear)
+AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIweek)
+}
+}
+#END OF LOOP, HAVE NOW FLAGGED ALL TESTS MEETING EACH TYPE OF AKI CONDITION
+close(pb)
+
+#DEVELOP COMBINED GROUPS AND MARK FIRST AKI
+newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
