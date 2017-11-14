@@ -112,78 +112,66 @@ mightydate<-NA
 protagonistdos<-NA
 yearmarker<-0
 weekmarker<-0
-48marker<-0
+Dmarker<-0
 
 
- if(Gender=="M"){    
+ if(Gender[i]=="M"){    
     ref.low=62
     ref.up=115
     } else {    
     ref.low=44
     ref.up=97}
    
-   #IS INDEX CREATININE(C1)/RV1 OR RV2 >=1.5?
-RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
-RV_ratio<-ifelse(!is.na(a$RV1) & (a$Creatinine/a$RV1)>(a$Creatinine/a$RV2),a$Creatinine/a$RV1,a$RV_ratio)
-
-
 a <-a[order(PatientID, event.date),] 
 attach(a)
 
 #############################################################################################################
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
-
+for (i in 1:length(PatientID)) {
+setTkProgressBar(pb,i,label=paste(round(i/max(PatientID)*100, 0),"% done"))
 for (i in 1:max(protagonist)) {
-setTkProgressBar(pb,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
 mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
 protagonistdos<-ave(mightydate,PatientID,FUN=max)
-
 #Select the date for each test and apply it to all other tests from the same patient to find the time difference
 
 yearmarker<-ifelse(as.Date(protagonistdos)-event.date<=365 & (protagonistdos-event.date>90),1,yearmarker)
 weekmarker<-ifelse(as.Date(protagonistdos)-event.date<=7 & (protagonistdos-event.date)>=0,1,weekmarker) 
-48marker<-ifelse(as.Date(protagonistdos)-event.date<=2 & (protagonistdos-event.date)>=0,1,48marker) 
+Dmarker<-ifelse(as.Date(protagonistdos)-event.date<=2 & (protagonistdos-event.date)>=0,1,Dmarker) 
 
 
 #The above variables mark the dates of blood tests that fit the ealert AKI windows or those required for sensitivity analysis
 
-yearvalue<-ifelse(yearmarker==1,Creatinine,"NA")
-weekvalue<-ifelse(weekmarker==1,Creatinine,"NA")
-48value<-ifelse(48marker==1,Creatinine,"NA")
+yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
+weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
+Dvalue<-ifelse(Dmarker==1,Creatinine,NA)
 
 #finds the appropriate creatinine within these windows, excludes missing creatinines which would all be exceptionally high
 
 yearmedian<-as.numeric(ave(yearvalue,PatientID,FUN=median))
 weekmin<-as.numeric(ave(weekvalue,PatientID,FUN=min))
-48value<-as.numeric(ave(weekvalue,PatientID,FUN=min))
+Dvalue<-as.numeric(ave(weekvalue,PatientID,FUN=min))
 
 #applies the optimal reference creatinine across all patient samples
 
 mightyvalue<-Creatinine[PatientID==PatientID[i]]
 protagonistvalue<-ave(mightyvalue,PatientID,FUN=max)
 
-D<-ifelse(48marker==1,abs(Creatinine-48value),NA)
+D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
+
+RV1<-Creatinine/weekmin
+RV2<-Creatinine/yearmedian
+RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
+RV_ratio<-ifelse(!is.na(a$RV1) & (a$Creatinine/a$RV1)>(a$Creatinine/a$RV2),a$Creatinine/a$RV1,a$RV_ratio)
 
 AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
-AKIweek<-ifelse((protagonistvalue/weekmedian)>=1.5 & protagonist=='i'& !is.na(weekmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
+AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i'& !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
 
-AKIyear<-ifelse(is.na(AKIyear & !is.na(yearmedian) & protagonist=='i& RV_ratio<1.5 & D>26, 1, AKIyear)
-AKIweek<-ifelse(is.na(AKIweek & !is.na(weekmedian) & protagonist=='i& RV_ratio<1.5 & D>26, 1, AKIweek)
->=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio<1.5),1,0)
-
+AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIyear)
+AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIweek)
+}
+}
 #END OF LOOP, HAVE NOW FLAGGED ALL TESTS MEETING EACH TYPE OF AKI CONDITION
 close(pb)
 
 #DEVELOP COMBINED GROUPS AND MARK FIRST AKI
 newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
-
-
-#IF YES...
-
-a$AKI<-ifelse(a$RV_Ratio>=1.5&a$Creatinine>354,1,NA)
-a$AKI<-ifelse(a$RV_Ratio>=3& a$Creatinine<=354,1,AKI)
-a$AKI<-ifelse(a$RV_Ratio>=2&RV_Ratio<3&C1<=(3*ref.up),1,AKI)
-a$AKIe<-ifelse(a$RV_Ratio>=1.5&RV_Ratio<2&C1<=(3*ref.up),1,AKI_Stage)
-
-#IF NO...
-AKI<-ifelse(RV_Ratio<1.5&D>26&2day==1,1,AKI)
