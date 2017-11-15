@@ -55,19 +55,22 @@ crea.rep<-merge(crea.rep,C6,all.x=TRUE)
 ###################################################################################
 #MEAN EGFR WITHIN 6M-MDRD
 
-E6<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
-E6$EntryDate<-as.Date(as.character(E6$EntryDate),format="%Y%m%d")
-E6$EntryDate2<-E6$EntryDate+180
+smalltab<-[,c("PatientID","EntryDate","MDRDeGFR")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
+smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
+smalltab$EntryDate2<-smalltab$EntryDate+180
+crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smalltab$EntryDate2,best="after")
 
-for (i in 1:length(E6$PatientID)){
-E6$MEANMDRDeGFR6[i]<-mean(crea.rep$PatientID==E6$PatientID[i] & crea.rep$MDRDeGFR[crea.rep$event.date>E6$EntryDate[i] & crea.rep$event.date<=E6$EntryDate2[i]])
-}
-crea.rep<-merge(crea.rep,E6,all.x=TRUE)
+crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
+summary(crea.rep$MDRD6M) #only 41 are missing
+crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
 
-E6$MEANMDRDeGFR6<-mean(crea.rep$MDRDeGFR[crea.rep$PatientID==E6$PatientID &crea.rep$event.date>E6$EntryDate & crea.rep$event.date<=E6$EntryDate2)
-}
-
-###################################################################################
+################################################################################### CHECKED
 #MEAN CKDEPI eGFR WITHIN 6M
 library(survival)
 smalltab<-[,c("PatientID","EntryDate","CKDEPIeGFR")]
@@ -83,11 +86,10 @@ indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smal
 
 crea.rep$CKDEPI6M<-smalltab[indx1, "CKDEPIeGFR"]
 summary(crea.rep$CKDEPI6M) #only 41 are missing
+crea.rep$CKDEPI6M<-unlist(crea.rep$CKDEPI6M)
 
 
-a<-crea.rep[!is.na(crea.rep$UricAcid),]
-length(a$PatientID) #101034
-crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
+
 
 
 
