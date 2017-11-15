@@ -62,12 +62,12 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-smalltab$EntryDate2<-smalltab$EntryDate+180
-smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
-smalltab$EntryDate2<-as.Date(as.character(smalltab$EntryDate2),format="%Y%m%d")
+first$EntryDate2<-first$EntryDate+180
+first$EntryDate<-as.Date(as.character(first$EntryDate),format="%Y%m%d")
+first$EntryDate2<-as.Date(as.character(first$EntryDate2),format="%Y%m%d")
 
 crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smalltab$EntryDate2,best="after")
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate,first$EntryDate2,best="after")
 
 crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
 summary(crea.rep$MDRD6M) #20657 are missing
