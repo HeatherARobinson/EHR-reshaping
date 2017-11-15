@@ -11,6 +11,7 @@ crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & c
 
 #CALCULATING MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+o<-ifelse(is.na(crea.rep$Ethnicity),1,crea.rep$Ethnicity)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 #12156 test dates have 2 measures for an individual with different values
@@ -55,40 +56,41 @@ crea.rep<-merge(crea.rep,C6,all.x=TRUE)
 ###################################################################################
 #MEAN EGFR WITHIN 6M-MDRD
 
-smalltab<-[,c("PatientID","EntryDate","MDRDeGFR")]
+smalltab<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
 smalltab$EntryDate2<-smalltab$EntryDate+180
+smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
+smalltab$EntryDate2<-as.Date(as.character(smalltab$EntryDate2),format="%Y%m%d")
+
 crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smalltab$EntryDate2,best="after")
 
 crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
-summary(crea.rep$MDRD6M) #only 41 are missing
+summary(crea.rep$MDRD6M) #20657 are missing
 crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
 
 ################################################################################### CHECKED
 #MEAN CKDEPI eGFR WITHIN 6M
-library(survival)
-smalltab<-[,c("PatientID","EntryDate","CKDEPIeGFR")]
+smalltab<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
 smalltab$EntryDate2<-smalltab$EntryDate+180
+smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
+smalltab$EntryDate2<-as.Date(as.character(smalltab$EntryDate2),format="%Y%m%d")
+
 crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smalltab$EntryDate2,best="after")
 
-crea.rep$CKDEPI6M<-smalltab[indx1, "CKDEPIeGFR"]
-summary(crea.rep$CKDEPI6M) #only 41 are missing
-crea.rep$CKDEPI6M<-unlist(crea.rep$CKDEPI6M)
-
-
+crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
+summary(crea.rep$MDRD6M) #20657 are missing
+crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
 
 
 
