@@ -42,144 +42,70 @@ crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
+smalltab<-crea.rep[,c("PatientID","event.date","log_CREA")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
+first$event.date2<-first$event.date+180
 
-C6<-crea.rep[,c("PatientID","EntryDate","log_CREA")]
-C6$EntryDate<-as.Date(as.character(C6$EntryDate),format="%Y%m%d")
-C6$EntryDate2<-C6$EntryDate+180
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
-for (i in 1:length(C6$PatientID)){
-C6$MEANLOGCR6[i]<-mean(crea.rep$log_CREA[crea.rep$PatientID==C6$PatientID[i] &crea.rep$event.date>C6$EntryDate[i] & crea.rep$event.date<=C6$EntryDate2[i]])
-}
-crea.rep<-merge(crea.rep,C6,all.x=TRUE)
+crea.rep$LOGCREA6M<-first[indx1, "log_CREA"]
+summary(crea.rep$LOGCREA6M) #20657 are missing
+crea.rep$LOGCREA6M<-unlist(crea.rep$LOGCREA6M)
 
 
 ###################################################################################
 #MEAN EGFR WITHIN 6M-MDRD
 
-smalltab<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
+smalltab<-crea.rep[,c("PatientID","event.date","MDRDeGFR")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-first$EntryDate2<-first$EntryDate+180
-first$EntryDate<-as.Date(as.character(first$EntryDate),format="%Y%m%d")
-first$EntryDate2<-as.Date(as.character(first$EntryDate2),format="%Y%m%d")
+first$event.date2<-first$event.date+180
 
-crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate,first$EntryDate2,best="after")
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
-crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
+crea.rep$MDRD6M<-first[indx1, "MDRDeGFR"]
 summary(crea.rep$MDRD6M) #20657 are missing
 crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
 
 ################################################################################### CHECKED
 #MEAN CKDEPI eGFR WITHIN 6M
-smalltab<-crea.rep[,c("PatientID","EntryDate","MDRDeGFR")]
+smalltab<-crea.rep[,c("PatientID","event.date","CKDEPIeGFR")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-smalltab$EntryDate2<-smalltab$EntryDate+180
-smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
-smalltab$EntryDate2<-as.Date(as.character(smalltab$EntryDate2),format="%Y%m%d")
+first$event.date2<-first$event.date+180
 
-crea.rep$EntryDate<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,smalltab$EntryDate2,best="after")
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
-crea.rep$MDRD6M<-smalltab[indx1, "MDRDeGFR"]
-summary(crea.rep$MDRD6M) #20657 are missing
-crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
+crea.rep$CKDEPI6M<-first[indx1, "CKDEPIeGFR"]
+summary(crea.rep$CKDEPI6M) #20657 are missing
+crea.rep$CKDEPI6M<-unlist(crea.rep$CKDEPI6M)
 
+################################################################################### CHECKED
 
-
-
-
-
-
-
-
-
-
-
-
-
-library(quantmod)
-
-mutate(EntryDate = ymd(EntryDate)) %>%
-filter(Entrydate >= today() + days(180) %>%
-arrange(EntryDate)%>%
-group_by(PatientID) %>%
-mutate(moving_average = roll_mean(CKDEPIeGFR,180,align="right", fill=0)) %>%
-as.data.frame
-
-indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,first$EntryDate2,best="after")
-
-
-
-
-
-
-
-
-
-
-
-columns=names(smalltab[c(1,3)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
-smalltab$EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
-smalltab$EntryDate2<-smalltab$EntryDate+180
-
-indx1 <-neardate(crea.rep$PatientID, smalltab$PatientID, crea.rep$EntryDate,first$EntryDate2,best="after")
-
-
-crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
-crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-table(crea.rep$SerSodDateFlag) #652
-a<-crea.rep[!is.na(crea.rep$SerumSodium),]
-length(a$PatientID) #284225
-crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
-
-
-crea.rep$MEANCKDEPIeGFR6<-mean(crea.rep$CKDEPIeEGFR[crea.rep$PatientID $in$ E6$PatientID & crea.rep$EntryDate>E6$EntryDate & crea.rep$EntryDate<=E6$EntryDate2)
-}
-
-attach(E6)
-x<-for (i in 1:length(PatientID)){
-  for (j in 1:length(EntryDate)){
-
-  Dmarker<-ifelse(as.Date(EntryDate)>as.Date(EntryDate[j]),1,0)
-  Dmarker2<-ifelse(as.Date(EntryDate)<as.Date(EntryDate[j]+180) & Dmarker==1,1,0)  
-  MEANKDEPI6[i,j]<-mean(CKDEPIeGFR[i,j,Dmarker2==1])
-}}
-
-library(foreach)
-
-x<-foreach(p=PatientID, .combine='cbind')%:%
-
-
-foreach(d=EntryDate, .combine='c') %do% {
-test<-ifelse(PatientID==PatientID[i] & EntryDate>EntryDate[d]& EntryDate<=EntryDate2[d],1,0)}
-mean(E6$EPIeGFR[E6$EntryDate>d & EntryDate<=EntryDate2[d]]}
-
-
-
-crea.rep<-merge(crea.rep,E6,all.x=TRUE)
-###################################################################################
 #MEAN CREATININE WITHIN 6M
+smalltab<-crea.rep[,c("PatientID","event.date","Creatinine")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
+first$event.date2<-first$event.date+180
 
-Ca6<-crea.rep[,c("PatientID","EntryDate","Creatinine")]
-Ca6$EntryDate<-as.Date(as.character(Ca6$EntryDate),format="%Y%m%d")
-Ca6$EntryDate2<-Ca6$EntryDate+180
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
-for (i in 1:length(C6$PatientID)){
-Ca6$MEANCR6[i]<-mean(crea.rep$Creatinine[crea.rep$PatientID==Ca6$PatientID[i] &crea.rep$event.date>Ca6$EntryDate[i] & crea.rep$event.date<=Ca6$EntryDate2[i]])
-}
-crea.rep<-merge(crea.rep,Ca6,all.x=TRUE)
+crea.rep$CREATININE6M<-first[indx1, "Creatinine"]
+summary(crea.rep$CREATININE6M) #20657 are missing
+crea.rep$CREATININE6M<-unlist(crea.rep$CREATININE6M)
 
 ###################################################################################
 
