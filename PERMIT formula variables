@@ -36,7 +36,7 @@ CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
 CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
 
 pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
-for (i in 1:length(CKpot$PatientID[1:10])){
+for (i in 1:length(CKpot$PatientID)){
 CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
 setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
