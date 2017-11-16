@@ -1,4 +1,8 @@
-load("crea.rep091117.rda")
+ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
+module load apps/gcc/R/3.3.3
+R
+
+load("crea.rep151117.rda")
 load("sir.datahfonly.Rdata")
 
 library (taRifx)
@@ -13,29 +17,30 @@ require(dplyr)
 #Tests marked with a 1 for KDmark are qualifying tests
 
 ##############################################################################################
-#Check for and exclude CKD patients
+#Identify kidney injury patients
 #tabulate the first qualifying test for each patient
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
-
 #find all tests in window, take min KDmark. If 1, CKD, if 0, not.
 
-CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,]
+#Create a dataset including all patients with a KD flag:
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
 CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
 CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-CKpot<-CKpot[,c(1:2,71:73)] 
+#The flag will appear from the point at which the patient crosses the threshold of being classifiecd as having CKD.
+
+############################################################################################## CHECKED
+#Diagnose CKD
+CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
 
 pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
-
-for (i in 1:length(CKpot$PatientID)){
+for (i in 1:length(CKpot$PatientID[1:10])){
 CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
 setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
 
-#CKpot<-c(,[])
-#crea.rep<-merge(crea.rep,CKpot[,c()],all.x=TRUE)
-#summary(crea.rep$CKD)
+crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
+summary(crea.rep$CKD)
 
 crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
 
