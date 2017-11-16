@@ -123,12 +123,12 @@ D<-ifelse(as.numeric(Dmarker)>0,abs(Creatinine-as.numeric(Dvalue)),NA)
 
 #END OF LOOP
 close(pb)
-######################################################################################################################### CHECKED
 
 RV1<-Creatinine/weekmin
 RV2<-Creatinine/yearmedian
-a$RV_ratio<-ifelse(!is.na(RV2),Creatinine/RV2,NA)
-RV_ratio<-ifelse(!is.na(a$RV1) & (a$Creatinine/a$RV1)>(a$Creatinine/a$RV2),a$Creatinine/a$RV1,a$RV_ratio)
+RV_ratio<-ifelse(RV1>RV2,RV1,RV2) 
+######################################################################################################################### CHECKED
+
 
 AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
 AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i'& !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
