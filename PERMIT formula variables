@@ -18,27 +18,40 @@ p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
-crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
-crea.rep$CKDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR>=60&!is.na(crea.rep$UACratio)&crea.rep$UACratio>=3,1,crea.rep$CKDmark)
-#Tests marked with a 1 for CKDmark are qualifying tests, Where there are more than 2 more than  months apart there is CKD.
+##############################################################################################
+#Identify kidney injury patients
 #tabulate the first qualifying test for each patient
-CKs<-crea.rep[crea.rep$CKDmark==1,c(1,2,50)]
-CKs$EntryDate<-as.Date(as.character(CKs$EntryDate),format="%Y%m%d")
-CKs$EntryDate2<-CKs$EntryDate-90
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
+#find all tests in window, take min KDmark. If 1, CKD, if 0, not.
 
-for (i in 1:length(CKs$PatientID)){
-CKs$x[i]<-ifelse(length(crea.rep$PatientID[crea.rep$PatientID==CKs$PatientID[i] &crea.rep$event.date>CKs$EntryDate[i] & crea.rep$event.date<CKs$EntryDate2[i]&crea.rep$CKDmark==0])>0,1,0)
+#Create a dataset including all patients with a KD flag:
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
+CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
+CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
+#The flag will appear from the point at which the patient crosses the threshold of being classifiecd as having CKD.
+
+############################################################################################## CHECKED
+#Diagnose CKD
+CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
+
+pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
+for (i in 1:length(CKpot$PatientID[1:10])){
+CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
+setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
 
-CKs<-CKs[CKs$x==0,c(1:2,5)] #The CKD qualifying tests with another qualifying test at least 3 months prior and no normal tests in between
-names(CKs)<-c("PatientID","EntryDate","CKDStage")
-CKs$CKDe<-1
-CKs$EntryDate<-as.character(CKs$EntryDate)
-CKs$EntryDate<-gsub("-","",CKs$EntryDate) 
+crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
+summary(crea.rep$CKD)
 
-length(CKs$PatientID)#48518
-crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
+crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
+
+#ASSIGN CKD STAGES
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
+
 
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
