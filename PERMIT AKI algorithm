@@ -38,9 +38,6 @@ p<-ifelse(a$Gender=="F",0.742,1)
 a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
 a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*o*p
 
-#Age needs coding!
-
-
 a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
 attach(a)
 names(a)
@@ -115,17 +112,22 @@ weekmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TR
 Dmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
 
 #applies the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all patient samples
-######################################################################################################################### CHECKED
+
 mightyvalue[i]<-Creatinine[i]
 protagonistvalue[i]<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
-}
 #finds the index (investigated) creatinine of key interest, applies this value across all patient samples
 
-D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
+D<-ifelse(as.numeric(Dmarker)>0,abs(Creatinine-as.numeric(Dvalue)),NA)
+#Finds the 48 hour difference in 2 samples taken within a 48 hour window
+}
+
+#END OF LOOP
+close(pb)
+######################################################################################################################### CHECKED
 
 RV1<-Creatinine/weekmin
 RV2<-Creatinine/yearmedian
-RV_ratio<-ifelse(!is.na(a$RV2),a$Creatinine/a$RV2,NA)
+a$RV_ratio<-ifelse(!is.na(RV2),Creatinine/RV2,NA)
 RV_ratio<-ifelse(!is.na(a$RV1) & (a$Creatinine/a$RV1)>(a$Creatinine/a$RV2),a$Creatinine/a$RV1,a$RV_ratio)
 
 AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
