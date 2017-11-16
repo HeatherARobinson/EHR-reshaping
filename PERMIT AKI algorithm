@@ -113,12 +113,13 @@ Dvalue[i]<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
 yearmedian<-ave(as.numeric(yearvalue),PatientID,FUN = function(x) median(x, na.rm = TRUE))
 weekmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
 Dmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
-}
 
 #applies the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all patient samples
 ######################################################################################################################### CHECKED
-mightyvalue[i]<-Creatinine[i&PatientID==PatientID[i]]
+mightyvalue[i]<-Creatinine[i]
 protagonistvalue[i]<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
+}
+#finds the index (investigated) creatinine of key interest, applies this value across all patient samples
 
 D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
 
