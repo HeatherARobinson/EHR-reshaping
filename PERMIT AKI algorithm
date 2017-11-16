@@ -99,29 +99,26 @@ pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),widt
 for (i in 1:max(protagonist)) {
 setTkProgressBar(pb,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
 mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
-a$protagonistdos<-ave(mightydate,PatientID,FUN=max)
-#SApply each test date to all other tests from the same patient to find the time difference
+protagonistdos<-ave(mightydate,PatientID,FUN=max)
+#Apply each test date to all other tests from the same patient to find the time difference
 
-a$yearmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=365 & (protagonistdos[i]-event.date[i]>90),1,yearmarker)
-a$weekmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=7 & (protagonistdos[i]-event.date)[i]>=0,1,weekmarker) 
-a$Dmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=2 & (protagonistdos[i]-event.date)[i]>=0,1,Dmarker) 
-}
-CHECKED
+yearmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=365 & (protagonistdos[i]-event.date[i]>90),1,yearmarker)
+weekmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=7 & (protagonistdos[i]-event.date)[i]>=0,1,weekmarker) 
+Dmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=2 & (protagonistdos[i]-event.date)[i]>=0,1,Dmarker) 
 
-#The above variables mark the dates of blood tests that fit the ealert AKI windows or those required for sensitivity analysis
+yearvalue[i]<-ifelse(yearmarker[i]>0,Creatinine[i],NA)
+weekvalue[i]<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
+Dvalue[i]<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
 
-yearvalue<-ifelse(yearmarker==1,Creatinine,NA)
-weekvalue<-ifelse(weekmarker==1,Creatinine,NA)
-Dvalue<-ifelse(Dmarker==1,Creatinine,NA)
 yearmedian<-ave(as.numeric(yearvalue),PatientID,FUN = function(x) median(x, na.rm = TRUE))
-weekmin<-as.numeric(ave(weekvalue,PatientID,FUN = function(x) min(x, na.rm = TRUE)))
-Dvalue<-as.numeric(ave(weekvalue,PatientID,FUN = function(x) min(x, na.rm = TRUE)))
+weekmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
+Dmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
 }
 
-#applies the optimal reference creatinine across all patient samples
-
-mightyvalue<-Creatinine[PatientID==PatientID[i]]
-protagonistvalue<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
+#applies the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all patient samples
+######################################################################################################################### CHECKED
+mightyvalue[i]<-Creatinine[i&PatientID==PatientID[i]]
+protagonistvalue[i]<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
 
 D<-ifelse(Dmarker==1,abs(Creatinine-Dvalue),NA)
 
