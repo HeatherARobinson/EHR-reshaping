@@ -11,7 +11,7 @@ crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & c
 
 #CALCULATING MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
-o<-ifelse(is.na(crea.rep$Ethnicity),1,crea.rep$Ethnicity)
+o<-ifelse(is.na(crea.rep$Ethnicity),1,o)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
 
 #12156 test dates have 2 measures for an individual with different values
