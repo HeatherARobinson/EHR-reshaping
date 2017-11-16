@@ -91,7 +91,7 @@ Dmarker<-0
 a <-a[order(PatientID, event.date),] 
 attach(a)
 
-#############################################################################################################
+############################################################################################################# CHECKED
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
 for (i in 1:max(protagonist)) {
 setTkProgressBar(pb,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
@@ -128,17 +128,12 @@ RV1<-Creatinine/weekmin
 RV2<-Creatinine/yearmedian
 RV_ratio<-ifelse(RV1>RV2,RV1,RV2) 
 ######################################################################################################################### CHECKED
+#Identify AKI here
 
-
-AKIyear<-ifelse((protagonistvalue/yearmedian)>=1.5 & protagonist=='i'& !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
-AKIweek<-ifelse((protagonistvalue/weekmin)>=1.5 & protagonist=='i'& !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
-
-AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIyear)
-AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & protagonist=='i'& RV_ratio<1.5 & D>26,1,AKIweek)
-}
-}
-#END OF LOOP, HAVE NOW FLAGGED ALL TESTS MEETING EACH TYPE OF AKI CONDITION
-close(pb)
-
-#DEVELOP COMBINED GROUPS AND MARK FIRST AKI
+AKIyear<-ifelse((Creatinine/yearmedian)>=1.5 & !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
+AKIweek<-ifelse((Creatinine/weekmin)>=1.5 & !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
+AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & RV_ratio<1.5 & D>26,1,AKIyear)
+AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & RV_ratio<1.5 & D>26,1,AKIweek)
 newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
+############################################################################################################################
+#DEVELOP COMBINED GROUPS AND MARK FIRST AKI
