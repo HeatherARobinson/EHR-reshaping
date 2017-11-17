@@ -139,15 +139,14 @@ newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
 
 #DIVIDE AKI INTO 90 DAY SESSIONS
 #Assign an akicounter value of 1 to all AKI blood tests
-AKIcounter<-ifelse(newAKI==1,1,NA) #AKI episode counter
+AKIcounter<-ifelse(newAKI==1,1,NA) #Prelim value of 1 for AKI episode counter
 a <- a[order(PatientID,AKIcounter,event.date),]
 attach(a)
 
 #Add +1 to aki counter if the date of the sample was >90 days after the first sample with an akicounter value of 1
-#Play around with the maximum AKIs allowed to reduce computational time
-for(x in 1:110(AKI$counter){
-counterdate<-ifelse(AKIcounter==x,ave(as.numeric(event.date),studyid,FUN=min),NA)
-AKIcounter<-ifelse((as.numeric(event.date)-90)>(as.numeric(counterdate)) & AKIcounter==x,AKIcounter+1,AKIcounter)
+for(x in 1:length(AKIcounter)){
+counterdate[x]<-min(event.date[AKIcounter==x&PatientID==PatientID[x]])}
+a$AKIcounter<-ifelse(as.numeric(event.date)-90>(as.numeric(counterdate))&AKIcounter==x,AKIcounter[x-1]+1,AKIcounter[x-1])
 }
 
 #Repeat for up to 110 episodes (or 110 90 day AKI periods, which equates to 27 years- the span of our CPRD data)
