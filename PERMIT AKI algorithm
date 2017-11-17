@@ -151,16 +151,20 @@ AKIcounter<-ifelse((as.numeric(event.date)-90)>(as.numeric(counterdate)) & AKIco
 }
 
 #Repeat for up to 110 episodes (or 110 90 day AKI periods, which equates to 27 years- the span of our CPRD data)
-
-#Make a count variable 'AKIspellcounter' -the count of the nth blood test per episode
+#MARK FIRST AKI AND ITS CONSTITUENT PARTS
 
 a<-a[with(a, order(PatientID,AKIcounter,event.date)),]
 attach(a)
 a$AKIspellcounter<-ave(AKIcounter,PatientID,FUN = seq_along)#nth AKI blood test within each AKI episode
 
-#MARK FIRST AKI AND ITS CONSTITUENT PARTS
-a <- a[with(a,order(PatientID,newAKI, AKIspellcounter,event.date)),]
+
+a <- a[with(a,order(PatientID,newAKI,AKIspellcounter event.date)),]
+a$AKIcount<-AKIcounter
 attach(a)
+firstAKI<-ifelse(newAKI==1& AKIspellcounter==1& yr03==1&AKIspellcounter==min(AKIspellcounter),1,NA)
+
+
+##############################################################################################################################
 
 
 
