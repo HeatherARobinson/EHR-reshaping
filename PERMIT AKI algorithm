@@ -163,7 +163,12 @@ a$AKIcount<-AKIcounter
 attach(a)
 firstAKI<-ifelse(newAKI==1& AKIspellcounter==1& yr03==1&AKIspellcounter==min(AKIspellcounter),1,NA)
 
+library(data.table)
+library(zoo)
+a <- data.table(a, key=c("PatientID", "Minutes"))
 
+## Compute rolling means, with on-the-fly padded minutes
+a[ CJ(unique(PatientID), seq(min(AKIcounter), max(AKIcounter))) ][,  rollapply(value, 60, mean, na.rm=TRUE), by=PatientID]
 ##############################################################################################################################
 
 
