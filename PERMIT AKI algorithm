@@ -134,19 +134,18 @@ AKIyear<-ifelse((Creatinine/yearmedian)>=1.5 & !is.na(yearmedian) & (Creatinine>
 AKIweek<-ifelse((Creatinine/weekmin)>=1.5 & !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
 AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & RV_ratio<1.5 & D>26,1,AKIyear)
 AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & RV_ratio<1.5 & D>26,1,AKIweek)
-newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
+AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
 ############################################################################################################################
 
 #DIVIDE AKI INTO 90 DAY SESSIONS
 #Assign an akicounter value of 1 to all AKI blood tests
-AKIcounter<-ifelse(newAKI==1,1,NA) #Prelim value of 1 for AKI episode counter
 a <- a[order(PatientID,AKIcounter,event.date),]
 attach(a)
 
 #Add +1 to aki counter if the date of the sample was >90 days after the first sample with an akicounter value of 1
-for(x in 1:length(AKIcounter)){
-counterdate[x]<-min(event.date[AKIcounter==x&PatientID==PatientID[x]])}
-a$AKIcounter<-ifelse(as.numeric(event.date)-90>(as.numeric(counterdate))&AKIcounter==x,AKIcounter[x-1]+1,AKIcounter[x-1])
+for(x in 1:110)){
+counterdate[x]<-min(event.date[AKIcounter==AKIcounter[x]&PatientID==PatientID[x]])}
+a$AKIcounter[x]<-ifelse(as.numeric(event.date[x])-90>(as.numeric(counterdate[x]))&AKIcounter==AKIcounter[x],AKIcounter[x-1]+1,AKIcounter[x-1])
 }
 
 #Repeat for up to 110 episodes (or 110 90 day AKI periods, which equates to 27 years- the span of our CPRD data)
@@ -161,13 +160,10 @@ a <- a[with(a,order(PatientID,newAKI,AKIspellcounter event.date)),]
 a$AKIcount<-AKIcounter
 attach(a)
 firstAKI<-ifelse(newAKI==1& AKIspellcounter==1& yr03==1&AKIspellcounter==min(AKIspellcounter),1,NA)
+#Marks the first qualifying test of each episode
 
-library(data.table)
-library(zoo)
-a <- data.table(a, key=c("PatientID", "Minutes"))
+#Use dplyr to sum the numbers of AKIs per patient
 
-## Compute rolling means, with on-the-fly padded minutes
-a[ CJ(unique(PatientID), seq(min(AKIcounter), max(AKIcounter))) ][,  rollapply(value, 60, mean, na.rm=TRUE), by=PatientID]
 ##############################################################################################################################
 
 
