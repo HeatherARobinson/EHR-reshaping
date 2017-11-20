@@ -5,6 +5,7 @@ load("sir.datahfonly.Rdata")
 crea.rep$Ethnicity<-ifelse(is.na(crea.rep$Ethnicity),7,crea.rep$Ethnicity)
 crea.rep$log_CREA <- log10(crea.rep$Creatinine)
 crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
+crea.rep$PP<-ifelse(crea.rep$PP<0,NA,crea.rep$PP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 ###############################################################################
