@@ -157,34 +157,20 @@ AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,A
 close(pb)
 
 ####
-#Identify AKI here
-AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
-for (i in seq_along(AKIcounter)){
-  if (datediff[i]>90){
-    AKIcounter[i] = AKIcounter[i] + 1
-  }
-  AKcounter
+#Split into AKI episodes
+#DIVIDE AKI INTO 90 DAY SESSIONS
 
 ############################################################################################################################
 
 #DIVIDE AKI INTO 90 DAY SESSIONS
 #Assign an akicounter value of 1 to all AKI blood tests
 a <- a[order(PatientID,AKIcounter,event.date),]
-attach(a)
-
-
-
-require(dplyr)
-sort <- a %>% 
-          arrange(PatientID,akicounter) %>%
-          group_by(PatientID) %>%
-          mutate(countaki=row_number())
-a<-data.frame(sorted)
-attach(a)
-
-
-
-
+a$AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
+for (i in seq_along(AKIcounter)){
+  if (datediff[i]>90){
+    AKIcounter[i] = AKIcounter[i] + 1
+  }
+head(a$AKIcounter)
 
 #Add +1 to aki counter if the date of the sample was >90 days after the first sample with an akicounter value of 1
 for(x in 1:110)){
@@ -205,8 +191,6 @@ a$AKIcount<-AKIcounter
 attach(a)
 firstAKI<-ifelse(newAKI==1& AKIspellcounter==1& yr03==1&AKIspellcounter==min(AKIspellcounter),1,NA)
 #Marks the first qualifying test of each episode
-
-#Use dplyr to sum the numbers of AKIs per patient
 
 ##############################################################################################################################
 
