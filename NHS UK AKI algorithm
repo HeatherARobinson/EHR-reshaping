@@ -19,8 +19,7 @@ CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney In
 CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,]
 CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
 CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-CKpot<-CKpot[,c(1:2,71:73)] 
+CKpot<-CKpot[,c("PatientID","event.date","EntryDate1","EntryDate2")] 
 
 pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
 
@@ -37,16 +36,10 @@ crea.rep$CKD<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
 
 ###################################################################################
 attach(crea.rep)
-sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
-a<-sir.data[sir.data$ReadCode=="44J3." & is.na(a$CKD) &sir.data$PatientID %in% crea.rep$PatientID,]
-
-a$Creatinine<-as.numeric(a$CodeValue)
-a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
+a<-crea.rep[crea.rep$CKDStage<1,]
 a<-a[!is.na(a$Creatinine)&!is.na(a$Ethnicity)&!is.na(a$Age),]
 a$o<-ifelse(a$Ethnicity==4,1.212,1)
 a$p<-ifelse(a$Gender=="F",0.742,1)
-a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*a$o*a$p
-a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
 attach(a)
 
 #Order creatinine values and find the max per day per patient
