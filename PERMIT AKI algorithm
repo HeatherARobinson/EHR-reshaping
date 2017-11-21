@@ -122,13 +122,15 @@ yearmedian[i]<-ave(as.numeric(yearvalue),PatientID==PatientID,FUN = function(x) 
 weekmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
 Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
 
+##########################################################################################################CHECKED
+
 mightyvalue[i]<-Creatinine[i]
 protagonistvalue[i]<-ave(mightyvalue,PatientID==PatientID,FUN = function(x) max(x, na.rm = TRUE))}
 #finds the index (investigated) creatinine of key interest, applies this value across all patient samples
 
 #END OF LOOP
 close(pb)
-##########################################################################################################CHECKED
+
 
 
 
