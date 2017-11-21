@@ -84,10 +84,19 @@ max(protagonist) #number of loop iterations needed.
 
 #LOOP for x values, where x = the highest number of tests a patient had in the index year (max(protagonist)) 
 mightydate<-NA
+mightyvalue<-NA
 protagonistdos<-NA
 yearmarker<-0
 weekmarker<-0
 Dmarker<-0
+yearmeedian<-0
+weekmin<-0
+Dmin<-0
+yearvalue<-0
+weekvalue<-0
+Dvalue<-0
+protagonistdos<-0
+protagonistvalue<-0
 
 
  if(Gender[i]=="M"){    
@@ -123,23 +132,24 @@ weekmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min
 Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
 
 ##########################################################################################################CHECKED
-
-mightyvalue[i]<-Creatinine[i]
-protagonistvalue[i]<-ave(mightyvalue,PatientID==PatientID,FUN = function(x) max(x, na.rm = TRUE))}
 #finds the index (investigated) creatinine of key interest, applies this value across all patient samples
+mightyvalue<-NA
+mightyvalue[i]<-Creatinine[i]
+protagonistvalue<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
+
+#Finds the 48 hour difference in 2 samples taken within a 48 hour window
+D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),NA)
+RV1<-NA
+RV2<-NA
+RV_ratio<-NA
+
+RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
+RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
+RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i]) }
 
 #END OF LOOP
 close(pb)
 
-
-
-
-D<-ifelse(as.numeric(Dmarker)>0,abs(Creatinine-as.numeric(Dvalue)),NA)
-#Finds the 48 hour difference in 2 samples taken within a 48 hour window
-
-RV1[i]<-mightyvalue[i]/weekmin
-RV2[i]<-mightyvalue[i]/yearmedian
-RV_ratio[i]<-ifelse(RV1>RV2,RV1,RV2) 
 
 
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
