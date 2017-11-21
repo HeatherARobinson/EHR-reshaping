@@ -143,23 +143,25 @@ RV1<-NA
 RV2<-NA
 RV_ratio<-NA
 
+##################################################################################################################### CHECKED
+
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
-RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i]) }
+RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i]) 
+
+
+AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
+AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)}
+AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
+AKIweek[i]<-ifelse(is.na(AKIweek[i]) & !is.na(weekmin[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])}
 
 #END OF LOOP
 close(pb)
 
 
 
-AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
-AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)}
-AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
-AKIweek[i]<-ifelse(is.na(AKIweek[i]) & !is.na(weekmin[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])
 
-
-
-######################################################################################################################### CHECKED
+####
 #Identify AKI here
 
 AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
