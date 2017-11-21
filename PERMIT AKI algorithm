@@ -98,23 +98,26 @@ Dmarker<-0
     ref.up=97}
    
 a <-a[order(PatientID, event.date),] 
+a<-a[c(1:200),]
 attach(a)
 
 ############################################################################################################# CHECKED
 pb<-tkProgressBar(title="Identifying AKI events",min=0,max=max(protagonist),width=300) #indicates progress through the loop
 for (i in 1:max(protagonist)) {
 setTkProgressBar(pb,i,label=paste(round(i/max(protagonist)*100, 0),"% done"))
-mightydate<-as.Date(ifelse(protagonist==protagonist[i],event.date,mightydate),origin="1970-01-01")
+mightydate<-as.Date(ifelse(protagonist==protagonist[i] & PatientID==PatientID[i],event.date[i],mightydate),origin="1970-01-01")
 protagonistdos<-ave(mightydate,PatientID,FUN=max)
 #Apply each test date to all other tests from the same patient to find the time difference
 
-yearmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=365 & (protagonistdos[i]-event.date[i]>90),1,yearmarker)
-weekmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=7 & (protagonistdos[i]-event.date)[i]>=0,1,weekmarker) 
-Dmarker[i]<-ifelse(as.Date(protagonistdos[i])-event.date[i]<=2 & (protagonistdos[i]-event.date)[i]>=0,1,Dmarker) 
+yearmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=365 & (protagonistdos-event.date[i]>90),1,yearmarker)
+weekmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=7 & (protagonistdos-event.date)[i]>=0,1,weekmarker) 
+Dmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=2 & (protagonistdos-event.date)[i]>=0,1,Dmarker) 
+##########################################################################################################CHECKED
 
-yearvalue[i]<-ifelse(yearmarker[i]>0,Creatinine[i],NA)
-weekvalue[i]<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
-Dvalue[i]<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
+yearvalue<-ifelse(yearmarker[i]>0,Creatinine[i],NA)
+weekvalue<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
+Dvalue<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
+
 
 yearmedian<-ave(as.numeric(yearvalue),PatientID,FUN = function(x) median(x, na.rm = TRUE))
 weekmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
@@ -128,28 +131,45 @@ protagonistvalue[i]<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = 
 
 D<-ifelse(as.numeric(Dmarker)>0,abs(Creatinine-as.numeric(Dvalue)),NA)
 #Finds the 48 hour difference in 2 samples taken within a 48 hour window
-}
+
+RV1[i]<-mightyvalue[i]/weekmin
+RV2[i]<-mightyvalue[i]/yearmedian
+RV_ratio[i]<-ifelse(RV1>RV2,RV1,RV2) 
+
+
+AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
+AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)}
+AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
+AKIweek[i]<-ifelse(is.na(AKIweek[i]) & !is.na(weekmin[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])
 
 #END OF LOOP
 close(pb)
 
-RV1<-Creatinine/weekmin
-RV2<-Creatinine/yearmedian
-RV_ratio<-ifelse(RV1>RV2,RV1,RV2) 
 ######################################################################################################################### CHECKED
 #Identify AKI here
 
-AKIyear<-ifelse((Creatinine/yearmedian)>=1.5 & !is.na(yearmedian) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
-AKIweek<-ifelse((Creatinine/weekmin)>=1.5 & !is.na(weekmin) & (Creatinine>(3*RV_ratio)|RV_ratio>=1.5),1,0)
-AKIyear<-ifelse(is.na(AKIyear) & !is.na(yearmedian) & RV_ratio<1.5 & D>26,1,AKIyear)
-AKIweek<-ifelse(is.na(AKIweek) & !is.na(weekmin) & RV_ratio<1.5 & D>26,1,AKIweek)
 AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
+
 ############################################################################################################################
 
 #DIVIDE AKI INTO 90 DAY SESSIONS
 #Assign an akicounter value of 1 to all AKI blood tests
 a <- a[order(PatientID,AKIcounter,event.date),]
 attach(a)
+
+
+
+require(dplyr)
+sort <- a %>% 
+          arrange(PatientID,akicounter) %>%
+          group_by(PatientID) %>%
+          mutate(countaki=row_number())
+a<-data.frame(sorted)
+attach(a)
+
+
+
+
 
 #Add +1 to aki counter if the date of the sample was >90 days after the first sample with an akicounter value of 1
 for(x in 1:110)){
