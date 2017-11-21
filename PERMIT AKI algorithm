@@ -112,16 +112,16 @@ protagonistdos<-ave(mightydate,PatientID,FUN=max)
 yearmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=365 & (protagonistdos-event.date[i]>90),1,yearmarker)
 weekmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=7 & (protagonistdos-event.date)[i]>=0,1,weekmarker) 
 Dmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=2 & (protagonistdos-event.date)[i]>=0,1,Dmarker) 
+
+yearvalue[i]<-ifelse(yearmarker[i]==1,Creatinine[i],NA)
+weekvalue[i]<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
+Dvalue[i]<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
+yearmedian[i]<-ave(as.numeric(yearvalue),PatientID==PatientID,FUN = function(x) median(x, na.rm = TRUE))
+weekmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
+Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))}
+#END OF LOOP
+close(pb)
 ##########################################################################################################CHECKED
-
-yearvalue<-ifelse(yearmarker[i]>0,Creatinine[i],NA)
-weekvalue<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
-Dvalue<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
-
-
-yearmedian<-ave(as.numeric(yearvalue),PatientID,FUN = function(x) median(x, na.rm = TRUE))
-weekmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
-Dmin<-ave(as.numeric(weekvalue),PatientID,FUN = function(x) min(x, na.rm = TRUE))
 
 #applies the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all patient samples
 
@@ -142,8 +142,7 @@ AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (migh
 AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
 AKIweek[i]<-ifelse(is.na(AKIweek[i]) & !is.na(weekmin[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])
 
-#END OF LOOP
-close(pb)
+
 
 ######################################################################################################################### CHECKED
 #Identify AKI here
