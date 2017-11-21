@@ -2,7 +2,7 @@ ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
 module load apps/gcc/R/3.3.3
 R
 
-load("crea.rep161117.rda")
+load("crea.rep201117.rda")
 load("sir.datahfonly.Rdata")
 
 library (taRifx)
@@ -17,7 +17,7 @@ require(dplyr)
 
 #SELECT ELIGIBLE PATIENTS
 attach(crea.rep)
-CKs<-crea.rep[crea.rep$CKD==0,]
+CKs<-crea.rep[crea.rep$CKDStage>0,]
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% CKs$PatientID,]
 #The dataset is cleaned again at the end to make sure that CKD patients are not classed as having an AKI
@@ -30,6 +30,15 @@ a<-a[index,]
 length(a$PatientID) #9723 potentially qualifying tests
 levels(a$Ethnicity)[c(2:4,11)]<-4
 levels(a$Ethnicity)[c(4)]<-4
+a$CodeValue<-ifelse(as.numeric(as.character(a$CodeUnits))>0 
+& as.numeric(as.character(a$CodeUnits))<1000  
+& is.na(a$CodeValue),a$CodeUnits,a$CodeValue)
+a$CodeUnits<-ifelse(!is.na(temp),paste(""),paste(a$CodeUnits))
+a$CodeValue<-as.numeric(as.character(a$CodeValue))
+a<a[!is.na(a$CodeValue),]
+summary(a$CodeValue)
+
+
 a$Creatinine<-as.numeric(a$CodeValue)
 #CALCULATING MDRD eGFR
 o<-ifelse(a$Ethnicity=="4",1.212,1)
@@ -51,7 +60,7 @@ a2<-a[duplicated(a[,1:2]),] #Remove same day duplicate entries
 a<-a[!rownames(a) %in% rownames(a2),]#drop other values
 a<-a[!is.na(a$Creatinine),]
 length(a$PatientID) #Remaining entries after removing missing values
-#7102
+#230159
 ########################################################################## CHECKED
 
 require(dplyr)
