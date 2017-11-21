@@ -116,18 +116,21 @@ Dmarker[i]<-ifelse(as.Date(protagonistdos)-event.date[i]<=2 & (protagonistdos-ev
 yearvalue[i]<-ifelse(yearmarker[i]==1,Creatinine[i],NA)
 weekvalue[i]<-ifelse(weekmarker[i]>0,Creatinine[i],NA)
 Dvalue[i]<-ifelse(Dmarker[i]>0,Creatinine[i],NA)
+
+#apply the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all of a patient's samples
 yearmedian[i]<-ave(as.numeric(yearvalue),PatientID==PatientID,FUN = function(x) median(x, na.rm = TRUE))
 weekmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
-Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))}
+Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
+
+mightyvalue[i]<-Creatinine[i]
+protagonistvalue[i]<-ave(mightyvalue,PatientID==PatientID,FUN = function(x) max(x, na.rm = TRUE))}
+#finds the index (investigated) creatinine of key interest, applies this value across all patient samples
+
 #END OF LOOP
 close(pb)
 ##########################################################################################################CHECKED
 
-#applies the optimal reference creatinine (which will later be chosen from yearmedian, weekmin or Dmin) across all patient samples
 
-mightyvalue[i]<-Creatinine[i]
-protagonistvalue[i]<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
-#finds the index (investigated) creatinine of key interest, applies this value across all patient samples
 
 D<-ifelse(as.numeric(Dmarker)>0,abs(Creatinine-as.numeric(Dvalue)),NA)
 #Finds the 48 hour difference in 2 samples taken within a 48 hour window
