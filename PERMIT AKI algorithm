@@ -10,6 +10,7 @@ library (dplyr)
 library(tcltk)
 library(lubridate)
 require(dplyr)
+library(survival)
 
 ##################################################################################
 #BASED ON THE NHS UK AKI ALGORITHM, OMITTING INDICATORS FROM URINE ALBUMIN
@@ -203,5 +204,10 @@ a$AKIcounter[x-1]+a$add[x],1)}
 summary(a$AKIcounter)
 names(a)
 a<-a[,c("PatientID","event.date","AKIcounter")]
-
-
+############################################################################################CHECKED
+###############################################ATTACH AKI COUNTER TO CREA.REP TABLE
+load("crea.rep201117.rda")
+indx1 <-neardate(crea.rep$PatientID, a$PatientID, crea.rep$event.date, a$event.date, 
+                   best="prior")
+crea.rep$NoAKIepisodes<-a[indx1, "AKIcounter"]
+crea.rep$NoAKIepisodes<-unlist(crea.rep$NoAKIepisodes)
