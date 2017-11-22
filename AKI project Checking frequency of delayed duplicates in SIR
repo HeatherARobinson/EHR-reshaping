@@ -1,0 +1,63 @@
+setwd("c:/Users/mqbpjhr4/Documents")
+Patients<-read.table("Patients.csv",header=TRUE, sep=",")
+tests<-read.table("tests.csv",header=TRUE,sep= ",")
+SIR<- merge(Patients,tests,all=TRUE, by='PatID')
+require(lubridate) 
+SIR$Age<-(as.numeric(year(strptime(SIR$EntryDate, format="%d/%m/%Y"))))-SIR$Year_Of_Birth
+attach(SIR)
+Over<-subset(SIR,SIR$Age>15 & as.numeric(year(strptime(SIR$EntryDate, format="%d/%m/%Y")))>=2009,)
+Over$location<- ifelse(Over$Source=="salfordt", c("Hospital"),("GP"))
+attach(Over)
+levels(ReadCode)
+#Group redundant read codes/rubrics
+levels(Over$ReadCode)[1:23] <- "dialysisorckd"
+levels(Over$ReadCode)[3:6] <- "eGFR"
+levels(Over$ReadCode)[4:7] <- "transplant"
+levels(Over$ReadCode)[2] <- "creatinine"
+levels(Over$ReadCode)[5:13] <- "dialysisorckd"
+table(Over$ReadCode)
+attach(Over)
+#Drop all records entered after commencement of dialysis/transplant
+Over$endpoint<-with(Over, ifelse(ReadCode=="dialysisorckd",paste(EntryDate), "NA"))
+Over$endpoint<-with(Over, ifelse(ReadCode=="transplant",paste(EntryDate), paste(endpoint)))
+table(Over$EntryDate)
+date_diff <- ifelse(!is.na(Over$endpoint), 
+(as.Date
+(as.character(Over$endpoint), format="%Y/%m/%d")-as.Date(as.character(Over$EntryDate), format="%d/%m/%Y")
+), print("NA"))
+drops<-Over[which(Over$date_diff <0), ]
+Over<-Over[!drops,]
+
+
+#This gives you ‘data’, a subset of records for patients before CKD, transplant or dialysis
+
+#Check which units have been used to measure Creatinine and convert #from mg/dL to umol/L if needed
+levels(Over$Units)
+levels(Over$Units)[15]<-"umolOL"
+levels(Over$Units)[18:27]<-“mLmin173m2”
+table(Over$ReadCode,Over$Units)
+Over$stcreat<- ifelse(Over$Units=="umolOL"| Over$Units=="None",Over$Value,(Over$Value/1000)) 
+Over$stcreat<- ifelse(Over$ReadCode=="creatinine",paste(Over$stcreat), paste("NA")) 
+
+levels(Over$Units)[1]<-"mLmin173m2"
+levels(Over$Units)[14]<-"mLmin173m2"
+levels(Over$Units)[17:26]<-"mLmin173m2"
+levels(Over$Units)[18]<-"mLmin173m2"
+levels(Over$Units)[19:20]<-"mLmin173m2"
+levels(Over$Units)[19:20]<-"mLmin173m2"
+levels(Over$Units)[15]<-"mLmin173m2"
+levels(Over$Units)[17]<-"mLmin173m2"
+Over$mdrd<- ifelse(Over$Units=="mLmin173m2",paste(Over$Value),paste(Over$value/1440)) 
+Over$mdrd<- ifelse(Over$ReadCode=="eGFR",paste(Over$mdrd), paste("NA"))
+class(EntryDate)
+Over$EntryDate<-as.Date(Over$EntryDate, format="%d/%m/%Y")
+
+library(lubridate)
+Over<-Over[!is.na(Over$stcreat),]
+a<-Over[duplicated(Over$stcreat)&duplicated(Over$PatID),],c())
+names(a)<-c("PatID","ReadCode","")
+merge(over,a,by.x=TRUE)
+over$delay<-datediff(EntryDate,DupDate)
+
+d<-Over[!(duplicated(Over$Value)&duplicated(Over$PatID)&duplicated(Over$EntryPeriod)),]
+df<-subset(d,d$Sex=="F"&d$ReadCode=="creatinine",)
