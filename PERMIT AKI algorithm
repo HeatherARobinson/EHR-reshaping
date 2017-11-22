@@ -167,8 +167,6 @@ AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,A
 
 
 
-##################################################################################################################### CHECKED
-
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
@@ -176,44 +174,34 @@ AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,A
 
 #END OF LOOP
 close(pb)
+##########################################################################################################CHECKED
 
-####
 #Split into AKI episodes
 #DIVIDE AKI INTO 90 DAY SESSIONS
 
-############################################################################################################################
-
 #DIVIDE AKI INTO 90 DAY SESSIONS
 #Assign an akicounter value of 1 to all AKI blood tests
-a <- a[order(PatientID,AKIcounter,event.date),]
-a$AKIcounter<-ifelse(AKIyear==1|AKIweek==1,1,0)
-for (i in seq_along(AKIcounter)){
-  if (datediff[i]>90){
-    AKIcounter[i] = AKIcounter[i] + 1
-  }
-head(a$AKIcounter)
+a<-a[AKIweek==1|AKIyear==1,]
+a<-a[order(PatientID,event.date),]
+a$AKIcounter<-1
+a$PatientID<-as.factor(a$PatientID)
+attach(a)
+library(data.table)
+a<-as.data.table(a)
+a[, lag.date := c(NA, event.date[-.N]), by = PatientID])
+a$add<-ifelse(as.numeric(event.date)-a$lag.date>90,1,0)
+attach(a)
 
 #Add +1 to aki counter if the date of the sample was >90 days after the first sample with an akicounter value of 1
-for(x in 1:110)){
-counterdate[x]<-min(event.date[AKIcounter==AKIcounter[x]&PatientID==PatientID[x]])}
-a$AKIcounter[x]<-ifelse(as.numeric(event.date[x])-90>(as.numeric(counterdate[x]))&AKIcounter==AKIcounter[x],AKIcounter[x-1]+1,AKIcounter[x-1])
-}
+a$add<-ifelse(is.na(a$add),0,a$add)
+a$AKIcounter==1
 
-#Repeat for up to 110 episodes (or 110 90 day AKI periods, which equates to 27 years- the span of our CPRD data)
-#MARK FIRST AKI AND ITS CONSTITUENT PARTS
+for(x in 2:length(a$AKIcounter)){
 
-a<-a[with(a, order(PatientID,AKIcounter,event.date)),]
-attach(a)
-a$AKIspellcounter<-ave(AKIcounter,PatientID,FUN = seq_along)#nth AKI blood test within each AKI episode
-
-
-a <- a[with(a,order(PatientID,newAKI,AKIspellcounter event.date)),]
-a$AKIcount<-AKIcounter
-attach(a)
-firstAKI<-ifelse(newAKI==1& AKIspellcounter==1& yr03==1&AKIspellcounter==min(AKIspellcounter),1,NA)
-#Marks the first qualifying test of each episode
-
-##############################################################################################################################
-
+a$AKIcounter[x]<-ifelse(PatientID[x]==PatientID[x-1],
+a$AKIcounter[x-1]+a$add[x],1)}
+summary(a$AKIcounter)
+names(a)
+a<-a[,c("PatientID","event.date","AKIcounter")]
 
 
