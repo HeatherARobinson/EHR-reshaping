@@ -17,29 +17,47 @@ require(dplyr)
 
 #SELECT ELIGIBLE PATIENTS
 attach(crea.rep)
-CKs<-crea.rep[crea.rep$CKDStage>0,]
-sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
-a<-sir.data[sir.data$ReadCode=="44J3."&sir.data$PatientID %in% CKs$PatientID,]
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+KD<-crea.rep[crea.rep$KDmark>0,]
+a<-crea.rep[crea.rep$PatientID %in% KD$PatientID,]
 #The dataset is cleaned again at the end to make sure that CKD patients are not classed as having an AKI
 na.omit(a)
-a<-a[!is.na(a$PatientID),]
+
+a$CKDate<-ifelse(a$CKDStage>0,a$EntryDate,NA) 
+smalltab<-a[!is.na(a$CKDate),c("PatientID","CKDate")]
+first<-smalltab %>%
+   group_by(PatientID) %>%  
+   arrange(CKDate) %>% 
+   slice(which.min(as.numeric(CKDate))) %>%
+as.data.frame    
+head(first)
+  
+a<-merge(a,as.data.frame(first),all.x=TRUE)
+a$event.date<-as.Date(as.character(a$EntryDate),format="%Y%m%d")
+a$CKDate<-as.Date(as.character(a$CKDate),format="%Y%m%d")
+
+a<-a[!is.na(a$PatientID) & (is.na(a$CKDate)|a$CKDate>a$EntryDate),]
 attach(a)
-index<-which(event.date>=as.Date(ymd("2007-01-01")))
+summary(a$CKDate,na.rm=TRUE)
+length(a$PatientID)
+#We only have 3178 tests to assess
+
+#index<-which(event.date>=as.Date(ymd("2007-01-01")))
 #The index start date should be 1 year prior to the first recorded creatinine test of the study window
-a<-a[index,]
-length(a$PatientID) #9723 potentially qualifying tests
-levels(a$Ethnicity)[c(2:4,11)]<-4
-levels(a$Ethnicity)[c(4)]<-4
-a$CodeValue<-ifelse(as.numeric(as.character(a$CodeUnits))>0 
-& as.numeric(as.character(a$CodeUnits))<1000  
-& is.na(a$CodeValue),a$CodeUnits,a$CodeValue)
-a$CodeUnits<-ifelse(!is.na(temp),paste(""),paste(a$CodeUnits))
-a$CodeValue<-as.numeric(as.character(a$CodeValue))
-a<a[!is.na(a$CodeValue),]
-summary(a$CodeValue)
+#a<-a[index,]
+length(a$PatientID) #458030 potentially qualifying tests
+levels(as.factor(a$Ethnicity)) #None are level 4
 
+#If going back to use sir data to capture older tests require the following lines:
+#a$CodeValue<-ifelse(as.numeric(as.character(a$CodeUnits))>0 
+#& as.numeric(as.character(a$CodeUnits))<1000  
+#& is.na(a$CodeValue),a$CodeUnits,a$CodeValue)
+#a$CodeUnits<-ifelse(!is.na(temp),paste(""),paste(a$CodeUnits))
+#a$CodeValue<-as.numeric(as.character(a$CodeValue))
+#a<a[!is.na(a$CodeValue),]
+#summary(a$CodeValue)
+#a$Creatinine<-as.numeric(a$CodeValue)
 
-a$Creatinine<-as.numeric(a$CodeValue)
 #CALCULATING MDRD eGFR
 o<-ifelse(a$Ethnicity=="4",1.212,1)
 o<-ifelse((is.na(a$Ethnicity)|a$Ethnicity==""),1,o)
@@ -60,7 +78,7 @@ a2<-a[duplicated(a[,1:2]),] #Remove same day duplicate entries
 a<-a[!rownames(a) %in% rownames(a2),]#drop other values
 a<-a[!is.na(a$Creatinine),]
 length(a$PatientID) #Remaining entries after removing missing values
-#230159
+#1526
 ########################################################################## CHECKED
 
 require(dplyr)
@@ -130,7 +148,6 @@ yearmedian[i]<-ave(as.numeric(yearvalue),PatientID==PatientID,FUN = function(x) 
 weekmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
 Dmin[i]<-ave(as.numeric(weekvalue),PatientID==PatientID,FUN = function(x) min(x, na.rm = TRUE))
 
-##########################################################################################################CHECKED
 #finds the index (investigated) creatinine of key interest, applies this value across all patient samples
 mightyvalue<-NA
 mightyvalue[i]<-Creatinine[i]
@@ -138,15 +155,19 @@ protagonistvalue<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRU
 
 #Finds the 48 hour difference in 2 samples taken within a 48 hour window
 D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),NA)
-RV1<-NA
-RV2<-NA
-RV_ratio<-NA
-
-##################################################################################################################### CHECKED
-
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
-RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i]) 
+RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i])
+##########################################################################################################CHECKED
+
+AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
+AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
+AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
+AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])}
+
+
+
+##################################################################################################################### CHECKED
 
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
