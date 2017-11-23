@@ -55,7 +55,7 @@ Over$EntryDate<-as.Date(Over$EntryDate, format="%d/%m/%Y")
 library(lubridate)
 Over<-Over[!is.na(Over$stcreat),]
 a<-Over[duplicated(Over$stcreat)&duplicated(Over$PatID),],c())
-names(a)<-c("PatID","ReadCode","")
+names(a)<-c("PatID","ReadCode","DupDate")
 merge(over,a,by.x=TRUE)
 over$delay<-datediff(EntryDate,DupDate)
 
