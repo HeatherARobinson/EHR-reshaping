@@ -53,44 +53,16 @@ head(a)
 Over<-merge(over,a,all.x=TRUE)
 attach(Over)
 Over$delay<-as.numeric(difftime(EntryDate,DupDate,units="days"))
-length(Over$delay[Over$delay>=0])
-#All creatinine duplicates 561623 of 738697
-length(Over$delay[Over$delay>=1])
-#317969
-length(Over$delay[Over$delay>=2])
-#310935
-length(Over$delay[Over$delay>=3])
-#307286
-length(Over$delay[Over$delay>=4])
-#304176
-length(Over$delay[Over$delay>=5])
-#301723
-length(Over$delay[Over$delay>=6])
-#299687
-length(Over$delay[Over$delay>=7])
-#297829
-length(Over$delay[Over$delay>=8])
-#296262
-length(Over$delay[Over$delay>=9])
-#295142
-length(Over$delay[Over$delay>=10])
-#294409
-length(Over$delay[Over$delay>=14])
-#291801
-length(Over$delay[Over$delay>=21])
-#288389
-length(Over$delay[Over$delay>=30])
-#285002
-length(Over$delay[Over$delay>=60])
-#277196
-length(Over$delay[Over$delay>=90])
-#270969
-length(Over$delay[Over$delay>=180])
-#255113
-length(Over$delay[Over$delay>=365])
-#230930
+length(Over$delay[Over$delay==0])
+#Same day creatinine duplicates 384562 of 738697
+length(Over$delay[Over$delay>=0 & Over$delay<=1])
+#147942
 
 
-
-d<-Over[Over$delay,]
-df<-subset(d,d$Sex=="F"&d$ReadCode=="creatinine",)
+b<-read.csv("DelayedtestsAKIProject.csv")
+library(ggplot2)
+ggplot(subset(b, Delay<200),
+       aes(x=Delay,
+           y=Percent))+
+  geom_line()+
+  xlab(Proportion of test results newly flagged as potential duplicates)
