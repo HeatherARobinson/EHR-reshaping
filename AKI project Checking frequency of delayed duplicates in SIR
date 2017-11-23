@@ -65,7 +65,7 @@ ggplot(subset(b, Delay<200),
        aes(x=Delay,
            y=Percent))+
   geom_line(size=1)+
-   ylab("Proportion of test records newly flagged as potential duplicate entries")+
+   ylab("Proportion of test records flagged as potential duplicate entries")+
   xlab("Days elapsed since test request first recorded")+
  theme( axis.line = element_line(colour = "darkblue", 
                       size = 1, linetype = "solid"), panel.background = element_rect(fill = "white",
