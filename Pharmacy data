@@ -1,15 +1,16 @@
 #MAKE A LARGE TABLE TO PARSE THROUGH RESEARCH MEDICATION EVENTS PERL SCRIPT
 
-load("crea.repongoing.rda")
+load("sir.datahfonly.rda")
+sir.data<-sir.data[sir.data$ReadCode %in% Codes1$ReadCode|sir.data$ReadCode %in% Codes2$ReadCode & sir.data$PatientID %in% crea.rep$PatientID,]
 inst<-read.csv("instructions_decoded.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
 
 gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
-gsub('[[:punct:]]','',crea.rep$CodeValue) #REMOVE PUNCTUATION
+gsub('[[:punct:]]','',sir.data$CodeValue) #REMOVE PUNCTUATION
 
-#LOWER CASE
-#LOWER CASE
+inst$DESCRIPTION<-tolower(inst$DESCRIPTION)#LOWER CASE
+sir.data$CodeValue<-tolower(sir.data$CodeValue)
 
 #REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data)
 list_gsub <- read.csv(text="
@@ -21,23 +22,22 @@ four,4
 five,5
 six,6")
 
-for(x in 1:nrow(crea.rep$CodeValue))
-  crea.rep$CodeValue <- gsub(list_gsub[x,"a"],list_gsub[x,"b"], crea.rep$CodeValue)
+for(x in 1:nrow(sir.data$CodeValue))
+  sir.data$CodeValue <- gsub(list_gsub[x,"a"],list_gsub[x,"b"], sir.data$CodeValue)
 
 #############################################################################################################
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
-crea.rep<-merge(crea.rep,inst,all.x=TRUE)
-head(crea.rep)
+sir.data<-merge(sir.data,inst,all.x=TRUE)
+head(sir.data)
 
 #SELECT MEDS DATA ONLY
-crea.sub<-crea.rep[crea.rep$ReadCode %in% Codes1$ReadCode|crea.rep$ReadCode %in% Codes2$ReadCode|,c("PatientID","ReadCode","CodeValue","CodeUnits"),]
+sub<-sir.data[sir.data$ReadCode %in% Codes1$ReadCode|sir.data$ReadCode %in% Codes2$ReadCode,c("PatientID","ReadCode","CodeValue","CodeUnits"),]
 
 #DRAW DRUGS INFORMATION FROM LOOKUP TABLES AND JOIN THIS ON TOO
-crea.sub<-merge(crea.sub,codes1,all.x=TRUE) #Add ReadCode dosage information
-crea.sub<-merge(crea.sub,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
-
+sub<-merge(sub,codes1,all.x=TRUE) #Add ReadCode dosage information
+sub<-merge(sub,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 
 #MAKE SURE WE ARE CAPTURING EVERYTHING CORRECTLY
-summary(crea.sub$Dosage)
-head(crea.rep[is.na(crea.rep$Dosage),])
+summary(sub$Dosage)
+head(sub[is.na(sub$Dosage),])
 
