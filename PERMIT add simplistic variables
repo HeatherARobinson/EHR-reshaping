@@ -1,0 +1,9 @@
+#FIND WHICH CLASSES DO NOT INCLUDE PROGRESSIVE DOSING OR SUGGEST STOPS IN OTHER CLASSES
+
+load("pharmtable.csv")
+load("crea.rep221117.csv")
+table(pharm$DRUG_FAMILY,pharm$THEN)
+table(pharm$DRUG_FAMILY,pharm$ALT_OTHER_MEDS)
+
+#ANTIMICROBIALS
+a<-pharm[pharm$DRUG_FAMILY=="Antimicrobials",]
