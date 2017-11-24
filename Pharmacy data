@@ -1,9 +1,43 @@
+#MAKE A LARGE TABLE TO PARSE THROUGH RESEARCH MEDICATION EVENTS PERL SCRIPT
+
 load("crea.repongoing.rda")
 inst<-read.csv("instructions_decoded.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
 
-crea.sub<-crea.rep[crea.rep$ReadCode %in% inst$ReadCode,c("PatientID","ReadCode","CodeValue","CodeUnits")
-crea.drugs<-merge(crea.sub,crea.drugs,all.x==TRUE)
-crea.drugs<-merge(crea.drugs,crea.codes1,all.x==TRUE) #Add ReadCode dosage information
-crea.drugs<-merge(crea.drugs,crea.codes2,all.x==TRUE) #Add EMIS/OXMIS dosage information
+gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
+gsub('[[:punct:]]','',crea.rep$CodeValue) #REMOVE PUNCTUATION
+
+#LOWER CASE
+#LOWER CASE
+
+#REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data)
+list_gsub <- read.csv(text="
+a,b
+one,1
+two,2
+three,3
+four,4
+five,5
+six,6")
+
+for(x in 1:nrow(crea.rep$CodeValue))
+  crea.rep$CodeValue <- gsub(list_gsub[x,"a"],list_gsub[x,"b"], crea.rep$CodeValue)
+
+#############################################################################################################
+#JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
+crea.rep<-merge(crea.rep,inst,all.x=TRUE)
+head(crea.rep)
+
+#SELECT MEDS DATA ONLY
+crea.sub<-crea.rep[crea.rep$ReadCode %in% Codes1$ReadCode|crea.rep$ReadCode %in% Codes2$ReadCode|,c("PatientID","ReadCode","CodeValue","CodeUnits"),]
+
+#DRAW DRUGS INFORMATION FROM LOOKUP TABLES AND JOIN THIS ON TOO
+crea.sub<-merge(crea.sub,codes1,all.x=TRUE) #Add ReadCode dosage information
+crea.sub<-merge(crea.sub,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
+
+
+#MAKE SURE WE ARE CAPTURING EVERYTHING CORRECTLY
+summary(crea.sub$Dosage)
+head(crea.rep[is.na(crea.rep$Dosage),])
+
