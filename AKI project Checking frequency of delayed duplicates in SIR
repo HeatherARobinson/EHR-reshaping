@@ -46,11 +46,14 @@ Over$EntryDate<-as.Date(Over$EntryDate, format="%d/%m/%Y")
 #Drop entries with dubious units.
 
 Over<-Over[!is.na(Over$stcreat),]
-a<-Over[duplicated(Over$Value)&duplicated(Over$PatID),c("PatID","ReadCode","stcreat","EntryDate")]
+#a<-Over[duplicated(Over$Value)&duplicated(Over$PatID),c("PatID","ReadCode","stcreat","EntryDate")]
+#a<-Over[duplicated(Over$Value)&duplicated(Over$PatID)&!duplicated(Over$Source),c("PatID","ReadCode","stcreat","EntryDate")]
+
+
 names(a)<-c("PatID","ReadCode","stcreat","DupDate")
 a<-a[a$ReadCode=="creatinine",]
 head(a)
-Over<-merge(over,a,all.x=TRUE)
+Over<-merge(Over,a,all.x=TRUE)
 attach(Over)
 Over$delay<-as.numeric(difftime(EntryDate,DupDate,units="days"))
 length(Over$delay[Over$delay==0])
@@ -61,14 +64,20 @@ length(Over$delay[Over$delay>=0 & Over$delay<=1])
 
 b<-read.csv("DelayedtestsAKIProject.csv")
 library(ggplot2)
-ggplot(subset(b, Delay<200),
+d<-ggplot(subset(b, Delay<200),
        aes(x=Delay,
-           y=Percent))+
+           y=Percent,group=Differentiation, linetype=Differentiation))+
   geom_line(size=1)+
    ylab("Proportion of test records flagged as potential duplicate entries")+
   xlab("Days elapsed since test request first recorded")+
  theme( axis.line = element_line(colour = "darkblue", 
                       size = 1, linetype = "solid"), panel.background = element_rect(fill = "white",
                                 colour = "white",
-                                size = 0.5),)
+                                size = 0.5))+
+                                ylim(0.42,0.65)+
+                                theme(legend.text=element_text(size=14))+
+                                theme(legend.position = c(0.15, 0.9))+
+                                theme(legend.title=element_blank())
+                                d
+                                
                       
