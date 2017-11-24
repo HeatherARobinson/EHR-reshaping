@@ -1,10 +1,12 @@
 #MAKE A LARGE TABLE TO PARSE THROUGH RESEARCH MEDICATION EVENTS PERL SCRIPT
 
 load("sir.datahfonly.rda")
-sir.data<-sir.data[sir.data$ReadCode %in% Codes1$ReadCode|sir.data$ReadCode %in% Codes2$ReadCode & sir.data$PatientID %in% crea.rep$PatientID,]
+load("crea.rep221117.rda")
 inst<-read.csv("instructions_decoded.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
+
+sir.data<-sir.data[sir.data$ReadCode %in% Codes1$ReadCode|sir.data$ReadCode %in% Codes2$ReadCode & sir.data$PatientID %in% crea.rep$PatientID,]
 
 gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
 gsub('[[:punct:]]','',sir.data$CodeValue) #REMOVE PUNCTUATION
