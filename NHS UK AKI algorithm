@@ -134,7 +134,7 @@ flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine<ref.low,"Low","NA")
 flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine>ref.up,"High","NA")
 AKIStage<-0
 AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,AKIStage)
-AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,AKIStage)
+AKIStage<-ifelse(RV_ratio>=1.5 & RV_ratio<2,1,AKIStage)
 AKIStage<-ifelse(RV_ratio>=1.5 & RV_ratio>=2&RV_ratio<3,2,AKIStage)
 AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=3,3,AKIStage)
 AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat>354,3,AKIStage)
