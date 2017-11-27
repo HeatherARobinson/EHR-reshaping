@@ -128,11 +128,16 @@ AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,A
 close(pb)
 ##########################################################################################################CHECKED
 
-#DEVELOP COMBINED GROUPS AND MARK FIRST AKI
+#AKI FLAGGING AND STAGING OF TESTS
 newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
 flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine<ref.low,"Low","NA")
 flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine>ref.up,"High","NA")
 AKIStage<-0
+AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,AKIStage)
+AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,AKIStage)
 AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & !stcreat>354 & RV_ratio>=2&RV_ratio<3,2,AKIStage)
+AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=3,3,AKIStage)
+AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat>354,3,AKIStage)
+AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & stcreat>354,3,AKIStage)
 AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & stcreat>354,3,AKIStage)
 
