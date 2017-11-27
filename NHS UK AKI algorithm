@@ -1,4 +1,5 @@
-load("x.rda") #load data 
+#Based on the NHS England patient safety alert:NHS/PSA/D/2014/010
+
 library(lubridate)
 library(dplyr)
 
