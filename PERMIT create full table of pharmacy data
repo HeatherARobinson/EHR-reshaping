@@ -36,16 +36,12 @@ inst<-inst[!duplicated(inst$DESCRIPTION),]
 
 colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub<-sub[,c("PatientID","DESCRIPTION","EntryDate","CodeValue")]
-sir.data<-merge(sub,inst,all.x=TRUE)
-head(sir.data)
+sub<-merge(sub,inst,all.x=TRUE)
+head(sub)
 
 #DRAW DRUGS INFORMATION FROM LOOKUP TABLES AND JOIN THIS ON TOO
-sub<-merge(sub,codes1,all.x=TRUE) #Add ReadCode dosage information
-sub<-merge(sub,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
-
-#MAKE SURE WE ARE CAPTURING EVERYTHING CORRECTLY
-summary(sub$Dosage)
-head(sub[is.na(sub$Dosage),])
+sub2<-merge(sub,codes1,all.x=TRUE) #Add ReadCode dosage information
+sub2<-merge(sub2,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 
 #The main algorithm requires a tab separated input file containing the following fields:
 #Patient id
@@ -55,3 +51,6 @@ head(sub[is.na(sub$Dosage),])
 #Tablets per day
 #Dose (mg)
 #Drug family
+
+colnames(sub2)[colnames(sub2) == 'EntryDate'] <- 'DATE'
+colnames(sub2)[colnames(sub2) == 'CodeValue'] <- 'TABLETS'
