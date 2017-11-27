@@ -8,38 +8,40 @@ codes2<-read.csv("emis.csv")
 
 sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
 
-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
+inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
+sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
 
 inst$DESCRIPTION<-tolower(inst$DESCRIPTION)#LOWER CASE
 sir.data$CodeUnits<-tolower(sir.data$CodeUnits)
 
 #SELECT MEDS DATA ONLY
-sub<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE,c("PatientID","ReadCode","CodeValue","CodeUnits"),]
+sub<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
 
 #REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data)
-list_gsub <- read.csv(text="
-a,b
-one,1
-two,2
-three,3
-four,4
-five,5
-six,6")
+sub<-sub[sub$EntryDate>=20070101&sub$EntryDate<=20170901,]
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("one"), "1")
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("two"), "2")
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("three"), "3")
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("four"), "4")
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("five"), "5")
+sub$CodeUnits<-str_replace(sub$CodeUnits, c("six"), "6")
 
-for(x in 1:length(sub$CodeUnits))
- sub$CodeUnits <- gsub(list_gsub[x,"a"],list_gsub[x,"b"], sub$CodeUnits)
+sub$CodeUnits<-str_replace_all(sub$CodeUnits, fixed(" "), "")
 
 inst<-inst[!duplicated(inst$DESCRIPTION),]
 #############################################################################################################
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
 
 colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
-sub<-sub[,c("PatientID","DESCRIPTION","EntryDate","CodeValue")]
+sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION) 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
-
+sub<-sub[sub$PatientID %in% crea.rep$PatientID,]
+#sub$TABLETS_PER_DAY<-ifelse(is.na(sub$DESCRIPTION)|sub$DESCRIPTION=="",1,sub$TABLETS_PER_DAY)#currently already addressed in table
+gsub('[[:punct:]]','',sub$DESCRIPTION) #REMOVE PUNCTUATION
 #DRAW DRUGS INFORMATION FROM LOOKUP TABLES AND JOIN THIS ON TOO
+
+colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'
 sub2<-merge(sub,codes1,all.x=TRUE) #Add ReadCode dosage information
 sub2<-merge(sub2,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 
