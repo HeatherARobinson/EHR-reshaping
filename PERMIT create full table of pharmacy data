@@ -73,5 +73,5 @@ table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
 names(subs)
 subs<-subs[,c(1:5,7,18:20)]
 
-write.csv(subs,file="perl_input.csv",ROW.NAMES=false)
+write.table(subs,file="perl_input.txt",row.names=FALSE,sep="\t")
 
