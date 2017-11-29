@@ -71,7 +71,7 @@ table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
 #Dose (mg)
 #Drug family
 names(subs)
-subs<-subs[,c(1:5,18:20)]
+subs<-subs[,c(1:5,7,18:20)]
 
 write.csv(subs,file="perl_input.csv")
 
