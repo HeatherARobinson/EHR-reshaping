@@ -2,7 +2,7 @@
 
 load("sir.datahfonly.Rdata")
 load("crea.rep221117.rda")
-inst<-read.csv("instructions_decoded.csv")
+inst<-read.csv("inst.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
 
