@@ -6,10 +6,13 @@ inst<-read.csv("inst.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
 
+library(stringr)
+library(lubridate)
+
 sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
 
-inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
-sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
+#inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
+#sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
 
 inst$DESCRIPTION<-tolower(inst$DESCRIPTION)#LOWER CASE
 sir.data$CodeUnits<-tolower(sir.data$CodeUnits)
@@ -36,17 +39,28 @@ colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
-sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
+#sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
-sub2<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
+sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
+subs<-rbind(sub2,sub3)
 
+levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE'.
+
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE*subs$TABLETS_PER_DAY,subs_DAILY_DOSE)
+
+######################################################################TITRATION DOSES
 #CREATE NEW ROWS AS IF THERE IS A NEW PRESCRIPTION WHERE THE DOSE CHANGES
-ifelse
+titre<-subs[subs$THEN==1,]
+#THERE ARE NO TITRATION DOSES ASSOCIATED WITH OUR MEDICATIONS
+#####################################################################STOP INSTRUCTIONS
+table(subs$ALT_OTHER_MEDS)
+table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
+#####################################################################
 
 #The main algorithm requires a tab separated input file containing the following fields (names can differ):
 #Patient id
@@ -56,6 +70,10 @@ ifelse
 #Tablets per day
 #Dose (mg)
 #Drug family
+names(subs)
+subs<-subs[,c(1:5,7,18,19)]
+
+write.csv(subs,file="perl_input.csv")
 
 colnames(sub2)[colnames(sub2) == 'EntryDate'] <- 'DATE'
 colnames(sub2)[colnames(sub2) == 'CodeValue'] <- 'TABLETS'
