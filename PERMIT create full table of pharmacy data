@@ -33,7 +33,11 @@ inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE 
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
 
 colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
-sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
+
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
