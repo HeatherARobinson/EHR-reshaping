@@ -17,7 +17,7 @@ sir.data$CodeUnits<-tolower(sir.data$CodeUnits)
 #SELECT MEDS DATA ONLY
 sub<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
 
-#REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data)
+#REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data lookup)
 sub<-sub[sub$EntryDate>=20070101&sub$EntryDate<=20170901,]
 sub$CodeUnits<-str_replace(sub$CodeUnits, c("one"), "1")
 sub$CodeUnits<-str_replace(sub$CodeUnits, c("two"), "2")
@@ -26,9 +26,9 @@ sub$CodeUnits<-str_replace(sub$CodeUnits, c("four"), "4")
 sub$CodeUnits<-str_replace(sub$CodeUnits, c("five"), "5")
 sub$CodeUnits<-str_replace(sub$CodeUnits, c("six"), "6")
 
-sub$CodeUnits<-str_replace_all(sub$CodeUnits, fixed(" "), "")
+sub$CodeUnits<-str_replace_all(sub$CodeUnits, fixed(" "), "") #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
 
-inst<-inst[!duplicated(inst$DESCRIPTION),]
+inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE LOOKUP TABLE THAT CAN LEAD TO NAs IN THE FINAL TABLE
 #############################################################################################################
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
 
@@ -36,20 +36,19 @@ colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION) 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
-sub<-sub[sub$PatientID %in% crea.rep$PatientID,]
-#sub$TABLETS_PER_DAY<-ifelse(is.na(sub$DESCRIPTION)|sub$DESCRIPTION=="",1,sub$TABLETS_PER_DAY)#currently already addressed in table
-gsub('[[:punct:]]','',sub$DESCRIPTION) #REMOVE PUNCTUATION
-#DRAW DRUGS INFORMATION FROM LOOKUP TABLES AND JOIN THIS ON TOO
 
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'
-sub2<-merge(sub,codes1,all.x=TRUE) #Add ReadCode dosage information
-sub2<-merge(sub2,codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
+sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
+sub2<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 
-#The main algorithm requires a tab separated input file containing the following fields:
+#CREATE NEW ROWS AS IF THERE IS A NEW PRESCRIPTION WHERE THE DOSE CHANGES
+ifelse
+
+#The main algorithm requires a tab separated input file containing the following fields (names can differ):
 #Patient id
 #Drug type
 #Date
-#Tablets
+#Tablets (number of tablets prescribed)
 #Tablets per day
 #Dose (mg)
 #Drug family
