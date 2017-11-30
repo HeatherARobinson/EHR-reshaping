@@ -40,8 +40,8 @@ colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(":", "", sub$DESCRIPTION) 
-#sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
-#sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("[.]", "", sub$DESCRIPTION) 
+
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
@@ -52,12 +52,29 @@ sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS d
 subs<-rbind(sub2,sub3)
 
 levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE'.
-
-subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE*subs$TABLETS_PER_DAY,subs$DAILY_DOSE)
+subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs$TABLETS_PER_DAY),subs$DAILY_DOSE)
 
 ######################################################################TITRATION DOSES
-#CREATE NEW ROWS AS IF THERE IS A NEW PRESCRIPTION WHERE THE DOSE CHANGES
-titre<-subs[subs$THEN==1,]
+#DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
+
+#THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
+
+library(splitstackshape)
+expandRows(subs, "THEN"+1) #Create a copied row for each changing dosage
+subs$DAILY_DOSE<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$DAILY_DOSE2,subs$DAILY_DOSE)
+subs$TABLETS_PER_DAY<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY2,subs$TABLETS_PER_DAY)
+
+subs$CodeValue<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$CodeValue-
+(subs$TABLETS_PER_DAY*subs$DAYS),subs$CodeValue)
+#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
+
+subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY*subs$DAYS,subs$CodeValue)
+#For the first entry, remove the unecessary tables
+
+subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
+subs$DAYS,subs$EntryDate)
+
 #THERE ARE NO TITRATION DOSES ASSOCIATED WITH OUR MEDICATIONS
 #####################################################################STOP INSTRUCTIONS
 table(subs$ALT_OTHER_MEDS)
@@ -73,7 +90,20 @@ table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
 #Dose (mg)
 #Drug family
 names(subs)
-subs<-subs[,c(1:5,7,18:20)]
+subs<-subs[,c(1:7,18:20)]
+
+subs$CodeValue<-ifelse(grepl("ml",subs$CodeValue)$!(grep("water",subs$CodeValue)),as.numeric(subs$CodeValue/5),as.numeric(subs$CodeValue))
 
 write.table(subs,file="perl_input.txt",row.names=FALSE,sep="\t")
+per<-read.table("perl_input.txt",header=TRUE)
+head(per)
+ per$DAILY_DOSE<-ifelse(per$LIQUID==1,per$DAILY_DOSE*5,per*DAILY_DOSE)
+per$TABLETS_PER_DAY<-as.character(per$TABLETS_PER_DAY)
+  per$TABLETS_PER_DAY<-as.numeric(per$TABLETS_PER_DAY)
+per$TABLETS_PER_DAY<-ifelse(!is.na(per$LIQUID),(per$TABLETS_PER_DAY*5),per$TABLETS_PER_DAY)
+per$DOSE<-ifelse(per$LIQUID>=1,per$DOSE/5,per*DOSE)
+ per$TABLETS_PER_DAY<-ifelse(is.na(per$TABLETS_PER_DAY)&!is.na(per$DOSE)&!is.na(per$DAILY_DOSE),(per$DAILY_DOSE/per$DOSE),per$TABLETS_PER_DAY)
+ per$TABLETS_PER_DAY<-ifelse(is.na(per$TABLETS_PER_DAY),1,per$TABLETS_PER_DAY)
+
+write.table(per,file="perl_input3011.txt",row.names=FALSE,sep="\t")
 
