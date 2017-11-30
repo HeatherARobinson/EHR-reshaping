@@ -39,6 +39,7 @@ inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE 
 colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub(":", "", sub$DESCRIPTION) 
 #sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
 #sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
 
