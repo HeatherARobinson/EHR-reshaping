@@ -59,14 +59,18 @@ subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
 
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
+#THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.
 
+)
 library(splitstackshape)
-expandRows(subs, "THEN"+1) #Create a copied row for each changing dosage
-subs$DAILY_DOSE<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$DAILY_DOSE2,subs$DAILY_DOSE)
-subs$TABLETS_PER_DAY<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY2,subs$TABLETS_PER_DAY)
+subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
+subs$THEN<-as.numeric(subs$THEN)
+expandRows(subs, "THEN") #Create a copied row for each changing dosage
+subs$DAILY_DOSE<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),subs$DOSE2,subs$DAILY_DOSE)
+subs$TABLETS_PER_DAY<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(as.character(subs$NUM2)),subs$TABLETS_PER_DAY)
 
-subs$CodeValue<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$CodeValue-
-(subs$TABLETS_PER_DAY*subs$DAYS),subs$CodeValue)
+subs$CodeValue<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$TYPE)),subs$CodeValue-
+(as.numeric(as.character(subs$TABLETS_PER_DAY)))*subs$DAYS),subs$CodeValue)
 #For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
 
 subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY*subs$DAYS,subs$CodeValue)
