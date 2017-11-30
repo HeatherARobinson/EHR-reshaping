@@ -18,7 +18,7 @@ inst$DESCRIPTION<-tolower(inst$DESCRIPTION)#LOWER CASE
 sir.data$CodeUnits<-tolower(sir.data$CodeUnits)
 
 #SELECT MEDS DATA ONLY
-sub<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
+sub<-sir.data[,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
 
 #REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data lookup)
 sub<-sub[sub$EntryDate>=20070101&sub$EntryDate<=20170901,]
@@ -30,6 +30,7 @@ sub$CodeUnits<-str_replace(sub$CodeUnits, c("five"), "5")
 sub$CodeUnits<-str_replace(sub$CodeUnits, c("six"), "6")
 
 sub$CodeUnits<-str_replace_all(sub$CodeUnits, fixed(" "), "") #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
+inst$CodeUnits<-str_replace_all(inst$CodeUnits, fixed(" "), "") #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
 
 inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE LOOKUP TABLE THAT CAN LEAD TO NAs IN THE FINAL TABLE
 #############################################################################################################
@@ -38,7 +39,7 @@ inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE 
 colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
-sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
+#sub$DESCRIPTION<-gsub(".", "", sub$DESCRIPTION) 
 #sub$DESCRIPTION<-gsub("\", "", sub$DESCRIPTION) 
 
 sub<-merge(sub,inst,all.x=TRUE)
@@ -51,7 +52,7 @@ subs<-rbind(sub2,sub3)
 
 levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE'.
 
-subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE*subs$TABLETS_PER_DAY,subs_DAILY_DOSE)
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE*subs$TABLETS_PER_DAY,subs$DAILY_DOSE)
 
 ######################################################################TITRATION DOSES
 #CREATE NEW ROWS AS IF THERE IS A NEW PRESCRIPTION WHERE THE DOSE CHANGES
