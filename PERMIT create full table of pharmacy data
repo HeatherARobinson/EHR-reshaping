@@ -20,31 +20,38 @@ sir.data$CodeUnits<-tolower(sir.data$CodeUnits)
 #SELECT MEDS DATA ONLY
 sub<-sir.data[,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
 
+#REMOVE RESIDUAL DUPLICATES
+sub <- unique(sub)
+colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
+crea.rep <- unique(crea.rep)
+
 #REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data lookup)
 sub<-sub[sub$EntryDate>=20070101&sub$EntryDate<=20170901,]
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("one"), "1")
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("two"), "2")
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("three"), "3")
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("four"), "4")
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("five"), "5")
-sub$CodeUnits<-str_replace(sub$CodeUnits, c("six"), "6")
+sub$DESCRIPTION<-gsub("one", "1", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("two", "2", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("three", "3", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("four", "4", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("five", "5", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("six", "6", sub$DESCRIPTION) 
 
-sub$CodeUnits<-str_replace_all(sub$CodeUnits, fixed(" "), "") #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
-inst$CodeUnits<-str_replace_all(inst$CodeUnits, fixed(" "), "") #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
-
+sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION, fixed = TRUE)  #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
 inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE LOOKUP TABLE THAT CAN LEAD TO NAs IN THE FINAL TABLE
 #############################################################################################################
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
 
-colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(",", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub(":", "", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub("[.]", "", sub$DESCRIPTION) 
-
+sub$DESCRIPTION<-gsub("(ip*)",")", a)
+head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
+
+summary(sub$DAYS2)# THERE ARE NO MULTIPLY PROGRESSIVE DOSES SO REMOVE THESE COLUMNS
+sub<-sub[,c("")]
+
 
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
