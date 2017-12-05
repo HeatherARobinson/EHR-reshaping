@@ -581,3 +581,7 @@ levels(as.factor(specheartpatients$PatientID))
 table(crea.rep$HeartFailureAll)
 #CODE BINARY CONDITIONS BASED ON COMMENCEMENT DATE ONWARDS
 
+#FINALLY, REMOVE THE SOURCE COLUMN TO AID THE FEATURE SELECTION AND REMOVE FULL DUPLICATE ROWS
+crea.rep<-crea.rep[,c(1:6,8:68)]
+crea.rep<-unique(crea.rep)
+
