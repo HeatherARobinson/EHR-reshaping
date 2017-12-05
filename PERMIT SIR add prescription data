@@ -11,6 +11,10 @@ library(lubridate)
 
 out<-read.csv("perloutput.csv")
 meds<-merge(perl_input.csv,out[,c()])
+
+#FOR EACH DRUG CREATE A FILE WITH THAT NAME AND START AND STOP DATES
+
+#
 cessationCodes <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/cessation.csv")
 smok <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/smoking.csv")
 load("crea.repongoing.rda")
