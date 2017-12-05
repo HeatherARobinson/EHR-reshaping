@@ -46,8 +46,12 @@ sub$DESCRIPTION<-gsub("[.]", "", sub$DESCRIPTION)
 library(stringr)
 sub$DESCRIPTION<-str_replace(sub$DESCRIPTION, "(ip.*)", "")
 sub$DESCRIPTION<-gsub("[(]", "", sub$DESCRIPTION) 
-> sub$DESCRIPTION<-gsub("[)]", "", sub$DESCRIPTION) 
+sub$DESCRIPTION<-gsub("[)]", "", sub$DESCRIPTION) 
+inst$DESCRIPTION<-gsub("[)]", "", inst$DESCRIPTION) 
+inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION) 
+
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
+
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
