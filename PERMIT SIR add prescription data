@@ -4,24 +4,16 @@ cd research-events-medication-htn
 npm install
 node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done > resources\codesh.txt.done.sorted
 ##################################################################################################################################
+
+#R COMMANDS
 library(stringr)
 library(lubridate)
 
 out<-read.csv("perloutput.csv")
-#select columns needed for table
 meds<-merge(perl_input.csv,out[,c()])
-
-
-#CHECK THE REGEX FILE FOR ANY DESCRIPTIONS THAT DID NOT PARSE, 
-#YOU WILL MANUALLY NEED TO TEACH THESE TO THE REGEX
-#ESPECIALLY IF YOUR MEDICATIONS ARE NOT ALL SOLID DOSE.
-
-
-setwd("~/Documents/PERMIT/smoking/")
 cessationCodes <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/cessation.csv")
 smok <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/smoking.csv")
 load("crea.repongoing.rda")
-crea <- crea.rep
 load("sir.smok.rda") 
 
 # sir.smok.rda data:
@@ -38,17 +30,20 @@ load("sir.smok.rda")
 ##- setkey-s for both data tables to PatientID and then event.date (grouos in the background)
 ##- for each data set, duplicate event date column and rename it specifically. eg crea_eventDate and smok_eventdate
     ## to notice which event date belongs to which data after matching
-
+crea <- crea.rep
 
 # select only columns we need for rolling:
 setDT(sir.smok)
 setDT(crea)
 sir.smok2 <- sir.smok[,c("PatientID", "event.date", "Smoker", "cessation")]
+
 # add smokeventdate column so that I know which event dates belong to smoking after rolling
 sir.smok2 <- sir.smok2[, smokeventdate:=event.date]
-# order data per patID, then per eventdate and then per ascending Smoker (i.e. so that rows with smoker==1 come first)
+
+# order data by patID then per eventdate and then by descending Smoking status (rows with smoker==1 come first)
 sir.smok_unique <- unique(sir.smok2) # to remove duplicated rows
 sir.smok_unique <- sir.smok_unique[order(PatientID, event.date, -Smoker)]
+
 #set the keys
 setkey(crea, PatientID, event.date)
 setkey(sir.smok_unique, PatientID, event.date)
