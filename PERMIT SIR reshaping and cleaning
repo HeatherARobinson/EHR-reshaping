@@ -212,16 +212,12 @@ save(sir.data, file = "sir.datahf2tests.Rdata")
 #sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
 
 ##########################################################################
-#CODE MODULES NOT CURRENTLY IN USE:
-#CHECK PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
-#(as.numeric(year(strptime(crea$EntryDate, format="%Y%m%d")))) -> year
-#(as.numeric(month(strptime(crea$EntryDate, format="%Y%m%d")))) -> month
-#(as.numeric(day(strptime(crea$EntryDate, format="%Y%m%d")))) -> day
-#as.Date.character(paste(year,month,day,sep="-")) -> crea$event.date
-#aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
-#ranges$x[,2] - ranges$x[,1] -> ranges$range
-#ranges[(which(ranges$range<1)),1] -> range_short_ids    # define exclusion range if time range restriction needed
-#crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+#FROM VERSIONS 061217 onwards:
+#SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
+aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
+ranges$x[,2] - ranges$x[,1] -> ranges$range
+ranges[(which(ranges$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
+crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
 
 #IF DELETING DELAYED PATHOLOGY DUPLICATES
 #names(sir.data)
