@@ -52,12 +52,7 @@ inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION)
 
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 ##################################################################################################################CHECKED
-#CAN WE FILL IN THE INSTRUCTIONS FROM A PAST PRESCRIPTION?
 
-
-
-
-##############################################################################
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
 AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
@@ -67,6 +62,13 @@ sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
+#IF INSTRUCTIONS ARE ABSENT, IF POSSIBLE FILL IN THE INSTRUCTIONS FROM THE LAST PRIOR PRESCRIPTION
+
+
+
+sub$DESCRIPTION<-ifelse 
+
+##############################################################################
 
 unique(subs$TYPE)#There are 79 different drugs
 length(sub$DESCRIPTION[sub$DESCRIPTION==""])
