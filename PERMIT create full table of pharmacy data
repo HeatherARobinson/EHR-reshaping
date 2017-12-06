@@ -68,9 +68,15 @@ sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,
 sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 subs<-rbind(sub2,sub3)
 
+########################################################################### CHECKED
+#CALCULATE MISSING DATA WHERE POSSIBLE
+
 levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE, and there are no prescription instructions.
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE)&!is.na(subs$TABLETS_PER_DAY),subs$TABLETS_PER_DAY*subs$DOSE_PER_TAB,subs$DAILY_DOSE)
+subs$TABLETS_PER_DAY<-as.numeric(subs$TABLETS_PER_DAY)
+subs$TABLETS_PER_DAY<-ifelse(is.na(subs$TABLETS_PER_DAY)&!is.na(subs$DAILY_DOSE)&!is.na(subs$DOSE_PER_TAB),subs$DAILY_DOSE/subs$DOSE_PER_TAB,subs$TABLETS_PER_DAY)
+summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complete after 2013 but not before.
 
 ######################################################################################CHECKED
 #ASSIGN DATE OF END OF PRESCRIPTION
@@ -131,7 +137,7 @@ per<-read.table("perl_input.txt",header=TRUE)
 head(per)
  per$DAILY_DOSE<-ifelse(per$LIQUID==1,per$DAILY_DOSE*5,per*DAILY_DOSE)
 per$TABLETS_PER_DAY<-as.character(per$TABLETS_PER_DAY)
-  per$TABLETS_PER_DAY<-as.numeric(per$TABLETS_PER_DAY)
+ per$TABLETS_PER_DAY<-as.numeric(per$TABLETS_PER_DAY)
 per$TABLETS_PER_DAY<-ifelse(!is.na(per$LIQUID),(per$TABLETS_PER_DAY*5),per$TABLETS_PER_DAY)
 per$DOSE<-ifelse(per$LIQUID>=1,per$DOSE/5,per*DOSE)
  per$TABLETS_PER_DAY<-ifelse(is.na(per$TABLETS_PER_DAY)&!is.na(per$DOSE)&!is.na(per$DAILY_DOSE),(per$DAILY_DOSE/per$DOSE),per$TABLETS_PER_DAY)
