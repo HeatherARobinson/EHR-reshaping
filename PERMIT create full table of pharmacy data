@@ -52,6 +52,11 @@ inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION)
 
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 
+
+#CAN WE FILL IN THE INSTRUCTIONS FROM A PAST PRESCRIPTION?
+EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
+AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
+sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
@@ -83,8 +88,7 @@ summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complet
 subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),as.Date(subs$EntryDate)+(subs$CodeValue/subs$TABLETS_PER_DAY),NA)
 #need to convert EntryDate back to a date
 #########################################################################NOT READY YET
-#CAN WE FILL IN GUIDANCE FROM PAST PRESCRIPTION?
-subs$DESCRIPTION<-ifelse
+
 ########################################################################################NOT READY YET
 #CAN WE FILL IN DOSE IF ABSENT FROM PAST PRESCRIPTION?
 subs$DAILY_DOSE<-ifelse
