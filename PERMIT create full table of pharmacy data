@@ -64,12 +64,6 @@ summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN 
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
 #########################################################################CHECKED
 
-
-#########################################################################NOT READY YET
-#CAN WE FILL IN GUIDANCE FROM PAST PRESCRIPTION?
-subs$DESCRIPTION<-ifelse
-########################################################################################
-
 #JOIN ON THE DOSAGE DATA
 
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
@@ -80,16 +74,22 @@ levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE 
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs$TABLETS_PER_DAY),subs$DAILY_DOSE)
 summary(subs)
-######################################################################################NOT READY YET
-#CAN WE FILL IN DOSE FROM PAST PRESCRIPTION?
+######################################################################################CHECKED
+
+
+#########################################################################NOT READY YET
+#CAN WE FILL IN GUIDANCE FROM PAST PRESCRIPTION?
+subs$DESCRIPTION<-ifelse
+########################################################################################NOT READY YET
+#CAN WE FILL IN DOSE IF ABSENT FROM PAST PRESCRIPTION?
 subs$DAILY_DOSE<-ifelse
 
 ######################################################################TITRATION DOSES
+#PROGRESSIVE DOSES
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
 
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
 #THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
-
 
 library(splitstackshape)
 subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
@@ -98,17 +98,17 @@ expandRows(subs, "THEN") #Create a copied row for each changing dosage
 subs$DAILY_DOSE<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),subs$DOSE2,subs$DAILY_DOSE)
 subs$TABLETS_PER_DAY<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(as.character(subs$NUM2)),subs$TABLETS_PER_DAY)
 
-subs$CodeValue<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$TYPE)),subs$CodeValue-
-(as.numeric(as.character(subs$TABLETS_PER_DAY)))*subs$DAYS),subs$CodeValue)
+ subs$CodeValue<-ifelse((subs$THEN>=1 &duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(subs$CodeValue)-
++ as.numeric(as.character(subs$TABLETS_PER_DAY))*as.numeric(subs$DAYS),subs$CodeValue)
 #For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
 
 subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY*subs$DAYS,subs$CodeValue)
 #For the first entry, remove the unecessary tables
 
-subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
+subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
 subs$DAYS,subs$EntryDate)
+#####################################################################################################################################
 
-#THERE ARE NO TITRATION DOSES ASSOCIATED WITH OUR MEDICATIONS
 #####################################################################STOP INSTRUCTIONS
 table(subs$ALT_OTHER_MEDS)
 table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
