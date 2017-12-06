@@ -8,6 +8,7 @@ codes2<-read.csv("emis.csv")
 
 library(stringr)
 library(lubridate)
+library(dplyr)
 sir.data<-sir.data[sir.data$EntryDate>=20070101&sir.data$EntryDate<=20170901,]
 sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
 sir.data$EntryDate<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
@@ -51,7 +52,7 @@ inst$DESCRIPTION<-gsub("[)]", "", inst$DESCRIPTION)
 inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION) 
 
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
-##################################################################################################################CHECKED
+##################################################################################CHECKED
 
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
@@ -62,18 +63,10 @@ sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
-#IF INSTRUCTIONS ARE ABSENT, IF POSSIBLE FILL IN THE INSTRUCTIONS FROM THE LAST PRIOR PRESCRIPTION
-
-
-
-sub$DESCRIPTION<-ifelse 
-
-##############################################################################
-
 unique(subs$TYPE)#There are 79 different drugs
 length(sub$DESCRIPTION[sub$DESCRIPTION==""])
 length(sub$DESCRIPTION)
-356/1093512*100
+#356/1093512*100
 #0.03% of prescription guidance is missing
 summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN THE DATASET
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
@@ -95,14 +88,8 @@ summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complet
 
 ######################################################################################CHECKED
 #ASSIGN DATE OF END OF PRESCRIPTION
-subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),as.Date(subs$EntryDate)+(subs$CodeValue/subs$TABLETS_PER_DAY),NA)
-#need to convert EntryDate back to a date
-#########################################################################NOT READY YET
 
-########################################################################################NOT READY YET
-#CAN WE FILL IN DOSE IF ABSENT FROM PAST PRESCRIPTION?
-subs$DAILY_DOSE<-ifelse
-
+subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
 ######################################################################TITRATION DOSES
 #PROGRESSIVE DOSES
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
@@ -130,8 +117,10 @@ subs$DAYS,subs$EntryDate)
 #####################################################################################################################################
 
 #####################################################################STOP INSTRUCTIONS
-table(subs$ALT_OTHER_MEDS)
-table(inst$ALT_OTHER_MEDS) #NONE OF OUR MEDS APPEAR TO INSTIGATE STOPS
+table(subs$ALT_OTHER_MEDS) #USING DUNJA'S SMOKING CODE HERE
+alts<-subs[subs$ALT_OTHER_MEDS=="Replace"|subs$ALT_OTHER_MEDS=="Stop",c("PatientID","EntryDate","REP","REP2")]
+indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
+
 #####################################################################
 
 #The main algorithm requires a tab separated input file containing the following fields (names can differ):
