@@ -8,9 +8,9 @@ codes2<-read.csv("emis.csv")
 
 library(stringr)
 library(lubridate)
-
+sir.data<-sir.data[sir.data$EntryDate>=20070101&sir.data$EntryDate<=20170901,]
 sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
-
+sir.data$EntryDate<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 #inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
 #sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
 
@@ -26,7 +26,7 @@ colnames(sub)[colnames(sub) == 'CodeUnits'] <- 'DESCRIPTION'
 crea.rep <- unique(crea.rep)
 
 #REPLACE WRITTEN NUMBERS WITH NUMBERS 1-6 IN PATIENT DATA (This step already taken in instruction data lookup)
-sub<-sub[sub$EntryDate>=20070101&sub$EntryDate<=20170901,]
+
 sub$DESCRIPTION<-gsub("one", "1", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub("two", "2", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub("three", "3", sub$DESCRIPTION) 
@@ -55,28 +55,23 @@ head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
-unique(subs$TYPE#There are 79 different drugs)
-
-
-
+unique(subs$TYPE)#There are 79 different drugs
 length(sub$DESCRIPTION[sub$DESCRIPTION==""])
 length(sub$DESCRIPTION)
 356/1093512*100
-#3.3% of prescription guidance is missing
+#0.03% of prescription guidance is missing
 summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN THE DATASET
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
 #########################################################################CHECKED
-
 #JOIN ON THE DOSAGE DATA
-
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
 sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 subs<-rbind(sub2,sub3)
 
 levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE, and there are no prescription instructions.
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
-subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs$TABLETS_PER_DAY),subs$DAILY_DOSE)
-summary(subs)
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE)&!is.na(subs$TABLETS_PER_DAY),subs$TABLETS_PER_DAY*subs$DOSE_PER_TAB,subs$DAILY_DOSE)
+
 ######################################################################################CHECKED
 #ASSIGN DATE OF END OF PRESCRIPTION
 subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),as.Date(subs$EntryDate)+(subs$CodeValue/subs$TABLETS_PER_DAY),NA)
