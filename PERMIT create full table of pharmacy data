@@ -2,7 +2,7 @@
 
 load("sir.datahfonly.Rdata")
 load("crea.rep221117.rda")
-inst<-read.csv("inst.csv")
+inst<-read.csv("inst051217.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
 
@@ -56,26 +56,41 @@ head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
-summary(sub$DAYS2)# THERE ARE NO MULTIPLY PROGRESSIVE DOSES SO REMOVE THESE COLUMNS
-sub<-sub[,c("")]
+length(sub$DESCRIPTION[sub$DESCRIPTION==""])
+length(sub$DESCRIPTION)
+356/1093512*100
+#3.3% of prescription guidance is missing
+summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN THE DATASET
+colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
+#########################################################################CHECKED
 
 
-colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'
+#########################################################################NOT READY YET
+#CAN WE FILL IN GUIDANCE FROM PAST PRESCRIPTION?
+subs$DESCRIPTION<-ifelse
+########################################################################################
+
+#JOIN ON THE DOSAGE DATA
+
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
 sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 subs<-rbind(sub2,sub3)
 
-levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE'.
+levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE, and there are no prescription instructions.
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs$TABLETS_PER_DAY),subs$DAILY_DOSE)
+summary(subs)
+######################################################################################NOT READY YET
+#CAN WE FILL IN DOSE FROM PAST PRESCRIPTION?
+subs$DAILY_DOSE<-ifelse
 
 ######################################################################TITRATION DOSES
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
 
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
-#THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.
+#THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
 
-)
+
 library(splitstackshape)
 subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
 subs$THEN<-as.numeric(subs$THEN)
