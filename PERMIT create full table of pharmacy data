@@ -52,7 +52,6 @@ inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION)
 
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 
-
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
@@ -75,8 +74,9 @@ subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$DOSE_PER_TAB*as.numeric(subs$TABLETS_PER_DAY),subs$DAILY_DOSE)
 summary(subs)
 ######################################################################################CHECKED
-
-
+#ASSIGN DATE OF END OF PRESCRIPTION
+subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),as.Date(subs$EntryDate)+(subs$CodeValue/subs$TABLETS_PER_DAY),NA)
+#need to convert EntryDate back to a date
 #########################################################################NOT READY YET
 #CAN WE FILL IN GUIDANCE FROM PAST PRESCRIPTION?
 subs$DESCRIPTION<-ifelse
