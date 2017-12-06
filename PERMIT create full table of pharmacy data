@@ -55,6 +55,10 @@ head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
+unique(subs$TYPE#There are 79 different drugs)
+
+
+
 length(sub$DESCRIPTION[sub$DESCRIPTION==""])
 length(sub$DESCRIPTION)
 356/1093512*100
