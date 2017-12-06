@@ -36,7 +36,7 @@ sub$DESCRIPTION<-gsub("six", "6", sub$DESCRIPTION)
 
 sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION, fixed = TRUE)  #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
 inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE LOOKUP TABLE THAT CAN LEAD TO NAs IN THE FINAL TABLE
-#############################################################################################################
+#############################################################################################################CHECKED
 #JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
 
 sub$DESCRIPTION<-gsub("#", "", sub$DESCRIPTION) 
@@ -51,12 +51,20 @@ inst$DESCRIPTION<-gsub("[)]", "", inst$DESCRIPTION)
 inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION) 
 
 head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
-
-
+##################################################################################################################CHECKED
 #CAN WE FILL IN THE INSTRUCTIONS FROM A PAST PRESCRIPTION?
+
+
+
+
+##############################################################################
+#MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
 AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
 sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
+
+############################################################################# CHECKED
+
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
 
@@ -100,6 +108,7 @@ subs$DAILY_DOSE<-ifelse
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
 #THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
 
+#DEFINE WHO BELONGS 1N THE LIBARY
 library(splitstackshape)
 subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
 subs$THEN<-as.numeric(subs$THEN)
