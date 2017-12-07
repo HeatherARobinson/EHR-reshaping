@@ -86,14 +86,14 @@ subs$TABLETS_PER_DAY<-as.numeric(subs$TABLETS_PER_DAY)
 subs$TABLETS_PER_DAY<-ifelse(is.na(subs$TABLETS_PER_DAY)&!is.na(subs$DAILY_DOSE)&!is.na(subs$DOSE_PER_TAB),subs$DAILY_DOSE/subs$DOSE_PER_TAB,subs$TABLETS_PER_DAY)
 summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complete after 2013 but not before.
 
-######################################################################################CHECKED
+############################################################################CHECKED
 #ASSIGN DATE OF END OF PRESCRIPTION
-
+m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))
 subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
-######################################################################TITRATION DOSES
-#PROGRESSIVE DOSES
+subs$END_DATE<-as.Date(as.character(subs$END_DATE),format="%Y%m%d")
+subs$END_Date<-as.Date(subs$END_DATE,origin="1968-09-07")
+############################################################################CHECKED
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
-
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
 #THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
 
@@ -114,10 +114,12 @@ subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(su
 
 subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
 subs$DAYS,subs$EntryDate)
-#####################################################################################################################################
+#####################################################################################################
 
 #####################################################################STOP INSTRUCTIONS
 table(subs$ALT_OTHER_MEDS) #USING DUNJA'S SMOKING CODE HERE
+
+
 alts<-subs[subs$ALT_OTHER_MEDS=="Replace"|subs$ALT_OTHER_MEDS=="Stop",c("PatientID","EntryDate","REP","REP2")]
 indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
@@ -131,10 +133,17 @@ indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$even
 #Tablets per day
 #Dose (mg)
 #Drug family
+
+
 names(subs)
 subs<-subs[,c(1:7,18:20)]
 
+#CONVERT VOLUME DOSAGES FOR LIQUID MEDS. OMIT WATER TO AVOID PICKING UP SOLID DOSE MEDS INSTRUCTED TO BE DISSOLVED IN WATER.
 subs$CodeValue<-ifelse(grepl("ml",subs$CodeValue)$!(grep("water",subs$CodeValue)),as.numeric(subs$CodeValue/5),as.numeric(subs$CodeValue))
+
+
+
+
 
 write.table(subs,file="perl_input.txt",row.names=FALSE,sep="\t")
 per<-read.table("perl_input.txt",header=TRUE)
