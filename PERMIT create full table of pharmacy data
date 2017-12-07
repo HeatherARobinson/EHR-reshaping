@@ -58,7 +58,8 @@ head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
 AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
 sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
-
+#COLUMN 'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
+#OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
 ############################################################################# CHECKED
 
 sub<-merge(sub,inst,all.x=TRUE)
@@ -111,28 +112,20 @@ subt$EntryDateb<-ifelse(subt$C1==1,subt$EntryDate+subt$DAYS,subt$EntryDate)
 subt$EntryDate<-as.Date(EntryDateb,origin=(subt$EntryDate[1]-subt$EntryDateb[1]))
 subt<-subt[,c(1:18)]
 subnt<-subnt[,c(1:18)]
-allmeddata<-rbind(subt,subnt)
-
-###################################################################################CHECKED
-
-#COLUMN 'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
-#OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
-
-#COLUMN 'ALT OTHER MEDS' REPRESENTS 
+meddata<-rbind(subt,subnt)
 
 ############################################################################
 #ASSIGN DATE OF END OF PRESCRIPTION
-m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))head)_
-subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
-subs$END_DATE<-as.Date(as.character(subs$END_DATE),format="%Y%m%d")
-subs$END_Date<-as.Date(subs$END_DATE,origin="1968-09-07")
 
+m<-(as.numeric(meddata$CodeValue)/as.numeric(meddata$TABLETS_PER_DAY))
+meddata$END_DATE<-ifelse(!is.na(meddata$TABLETS_PER_DAY)&!is.na(subs$CodeValue),meddata$EntryDate+as.difftime(m, unit="days"),NA)
+meddata$END_Date<-as.Date(meddata$END_DATE,origin="1970-01-01")
+head(meddata)
 ####################################################################################CHECKED
-#STOP INSTRUCTIONS
+#STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 #USING DUNJA'S SMOKING CODE HERE
 table(subs$REP)
 table(subs$REP2)
-
 for (i in levels(subs$REP)){
 build a dplyr table of drugs with that name and stop dates
 near date match the prior entry from that patient for DRUG_TYPE=i
@@ -145,7 +138,7 @@ indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$even
 
 #####################################################################
 
-#The main algorithm requires a tab separated input file containing the following fields (names can differ):
+#RW's main PERL implemented algorithm requires a tab separated input file containing the following fields (names can differ):
 #Patient id
 #Drug type
 #Date
@@ -153,10 +146,6 @@ indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$even
 #Tablets per day
 #Dose (mg)
 #Drug family
-
-
-names(subs)
-subs<-subs[,c(1:7,18:20)]
 
 #CONVERT VOLUME DOSAGES FOR LIQUID MEDS. OMIT WATER TO AVOID PICKING UP SOLID DOSE MEDS INSTRUCTED TO BE DISSOLVED IN WATER.
 subs$CodeValue<-ifelse(grepl("ml",subs$CodeValue)$!(grep("water",subs$CodeValue)),as.numeric(subs$CodeValue/5),as.numeric(subs$CodeValue))
