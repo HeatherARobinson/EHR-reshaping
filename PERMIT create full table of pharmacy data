@@ -119,20 +119,55 @@ meddata<-rbind(subt,subnt)
 
 m<-(as.numeric(meddata$CodeValue)/as.numeric(meddata$TABLETS_PER_DAY))
 meddata$END_DATE<-ifelse(!is.na(meddata$TABLETS_PER_DAY)&!is.na(subs$CodeValue),meddata$EntryDate+as.difftime(m, unit="days"),NA)
-meddata$END_Date<-as.Date(meddata$END_DATE,origin="1970-01-01")
+meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
+save(meddata,file="PERMITmeddata.rda")
 ####################################################################################CHECKED
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 #USING DUNJA'S SMOKING CODE HERE
-table(subs$REP)
-table(subs$REP2)
-for (i in levels(subs$REP)){
+load("PERMITmeddata.rda")
+table(meddata$REP)
+table(meddata$REP2)
+table(meddata$REP2,meddata$REP2 %in% meddata$TYPE)
+table(meddata$REP,meddata$REP %in% meddata$TYPE)
+meddata$REP<-ifelse(meddata$REP %in% meddata$TYPE,meddata$REP,NA)
+meddata$REP2<-ifelse(meddata$REP2 %in% meddata$TYPE,meddata$REP2,NA)
+table(meddata$REP)
+table(meddata$REP2)#NO STOPS REFER TO MORE THAN ONE MEDICATION
+meddata$ALT_OTHER_MEDS<-ifelse(is.na(meddata$REP),NA,meddata$ALT_OTHER_MEDS)
+
+#NEAREST DATE MATCH TO THE LAST PRIOR ENTRY OF THE DRUG BEING STOPPED
+stops<-meddata[meddata$TYPE %in% meddata$REP,c("PatientID","EntryDate","END_DATE","TYPE")]
+columns=names(stops[c(1,2,4)])
+dots<-lapply(columns, as.symbol)
+first <-stops %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
+
+library(survival)
+
+meddata$NEWENDDATE<-NA
+for (i in length(meddata$TYPE[meddata$TYPE %in% meddata$REP])){
+stops<-meddata[meddata$TYPE==meddata$TYPE[i],c("PatientID","EntryDate","END_DATE","TYPE")]
+columns=names(stops[c(1,2,4)])
+dots<-lapply(columns, as.symbol)
+first[i]<-stops %>% 
+group_by_(.dots=dots) %>%
+as.data.frame}
+
+for (i in length(meddata$TYPE[meddata$TYPE %in% meddata$REP])){
+
+indx<-neardate(meddata$PatientID[meddata$TYPE==meddata$TYPE[i]], first[i]$PatientID, meddata$EntryDate[meddata$TYPE==meddata$TYPE[i]],first[i]$EntryDate,best="prior")
+meddata$NEWENDDATE<-ifelse(is.na(meddata$NEWENDDATE),first[indx1, "EntryDate"],meddata$NEWENDDATE)
+}
+##################################################################THIS LOOP IS NOT FUNCTIONAL YET AND NEEDS MORE FIXING
+
+meddata$NEWENDDATE<-as.Date(meddata$NEWENDDATE,origin="1970-01-01")
 build a dplyr table of drugs with that name and stop dates
 near date match the prior entry from that patient for DRUG_TYPE=i
 rename columns if needed
 
 merge(subs, ,all.x=TRUE)
-
 alts<-subs[subs$ALT_OTHER_MEDS=="Replace"|subs$ALT_OTHER_MEDS=="Stop",c("PatientID","EntryDate","REP","REP2")]
 indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
 
