@@ -104,7 +104,6 @@ subnt<-subs[subs$THEN<1,]
 subt$DAILY_DOSE<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),subt$DOSE2,subt$DAILY_DOSE)
 subt$TABLETS_PER_DAY<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),as.numeric(as.character(subt$NUM2)),subt$TABLETS_PER_DAY)
 
-###############################################################################
 subt$n<-(subt$TABLETS_PER_DAY*as.numeric(subt$DAYS))
 subt$C1<-ifelse((duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE)),1,0)
 subt$CodeValue<-ifelse(subt$C1==1,as.integer(as.numeric(as.character(subt$CodeValue))-as.numeric(as.character(subt$n))),paste(subt$CodeValue))#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
@@ -113,6 +112,8 @@ subt$EntryDate<-as.Date(EntryDateb,origin=(subt$EntryDate[1]-subt$EntryDateb[1])
 subt<-subt[,c(1:18)]
 subnt<-subnt[,c(1:18)]
 allmeddata<-rbind(subt,subnt)
+
+###################################################################################CHECKED
 
 #COLUMN 'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
 #OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
