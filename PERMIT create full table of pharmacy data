@@ -87,12 +87,6 @@ subs$TABLETS_PER_DAY<-ifelse(is.na(subs$TABLETS_PER_DAY)&!is.na(subs$DAILY_DOSE)
 summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complete after 2013 but not before.
 
 ############################################################################CHECKED
-#ASSIGN DATE OF END OF PRESCRIPTION
-m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))
-subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
-subs$END_DATE<-as.Date(as.character(subs$END_DATE),format="%Y%m%d")
-subs$END_Date<-as.Date(subs$END_DATE,origin="1968-09-07")
-############################################################################CHECKED
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
 #THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
@@ -105,16 +99,24 @@ expandRows(subs, "THEN") #Create a copied row for each changing dosage
 subs$DAILY_DOSE<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),subs$DOSE2,subs$DAILY_DOSE)
 subs$TABLETS_PER_DAY<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(as.character(subs$NUM2)),subs$TABLETS_PER_DAY)
 
- subs$CodeValue<-ifelse((subs$THEN>=1 &duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(subs$CodeValue)-
-+ as.numeric(as.character(subs$TABLETS_PER_DAY))*as.numeric(subs$DAYS),subs$CodeValue)
-#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
+ subs$CodeValue<-ifelse((subs$THEN>=1 &duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),
+ as.numeric(subs$CodeValue)-(as.numeric(as.character(subs$TABLETS_PER_DAY))*as.numeric(subs$DAYS)),subs$CodeValue)
 
+#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
 subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY*subs$DAYS,subs$CodeValue)
 #For the first entry, remove the unecessary tables
 
 subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
 subs$DAYS,subs$EntryDate)
-#####################################################################################################
+
+############################################################################
+#ASSIGN DATE OF END OF PRESCRIPTION
+m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))
+subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
+subs$END_DATE<-as.Date(as.character(subs$END_DATE),format="%Y%m%d")
+subs$END_Date<-as.Date(subs$END_DATE,origin="1968-09-07")
+
+####################################################################################CHECKED
 
 #####################################################################STOP INSTRUCTIONS
 table(subs$ALT_OTHER_MEDS) #USING DUNJA'S SMOKING CODE HERE
