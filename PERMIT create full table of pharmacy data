@@ -91,36 +91,53 @@ summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complet
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
 #THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
 
-#DEFINE WHO BELONGS 1N THE LIBARY
+#DEFINE THOSE PRESCRIPTINS WITH PROGRESSIVE DOSING
 library(splitstackshape)
 subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
 subs$THEN<-as.numeric(subs$THEN)
 expandRows(subs, "THEN") #Create a copied row for each changing dosage
-subs$DAILY_DOSE<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),subs$DOSE2,subs$DAILY_DOSE)
-subs$TABLETS_PER_DAY<-ifelse(subs$THEN>0 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),as.numeric(as.character(subs$NUM2)),subs$TABLETS_PER_DAY)
+subt<-subs[subs$THEN>0,]
+head(subt)
+subnt<-subs[subs$THEN<1,]
 
- subs$CodeValue<-ifelse((subs$THEN>=1 &duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$TYPE)),
- as.numeric(subs$CodeValue)-(as.numeric(as.character(subs$TABLETS_PER_DAY))*as.numeric(subs$DAYS)),subs$CodeValue)
+#EDIT THE DOSES FOR THE REPLICATE ROWS (FOLLOWING DOSE CHANGE)
+subt$DAILY_DOSE<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),subt$DOSE2,subt$DAILY_DOSE)
+subt$TABLETS_PER_DAY<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),as.numeric(as.character(subt$NUM2)),subt$TABLETS_PER_DAY)
 
-#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
-subs$CodeValue<-ifelse(subs$THEN>=1 & !(duplicated(subs$PatientID)&duplicated(subs$EventDate)&duplicated(subs$DRUG_TYPE)),subs$TABLETS_PER_DAY*subs$DAYS,subs$CodeValue)
-#For the first entry, remove the unecessary tables
+###############################################################################
+subt$n<-(subt$TABLETS_PER_DAY*as.numeric(subt$DAYS))
+subt$C1<-ifelse((duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE)),1,0)
+subt$CodeValue<-ifelse(subt$C1==1,as.integer(as.numeric(as.character(subt$CodeValue))-as.numeric(as.character(subt$n))),paste(subt$CodeValue))#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
+subt$EntryDateb<-ifelse(subt$C1==1,subt$EntryDate+subt$DAYS,subt$EntryDate)
+subt$EntryDate<-as.Date(EntryDateb,origin=(subt$EntryDate[1]-subt$EntryDateb[1]))
+subt<-subt[,c(1:18)]
+subnt<-subnt[,c(1:18)]
+allmeddata<-rbind(subt,subnt)
 
-subs$EntryDate<-ifelse(subs$THEN>=1 & (duplicated(subs$PatientID)&duplicated(subs$EntryDate)&duplicated(subs$DRUG_TYPE)),subs$EntryDate+
-subs$DAYS,subs$EntryDate)
+#COLUMN 'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
+#OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
+
+#COLUMN 'ALT OTHER MEDS' REPRESENTS 
 
 ############################################################################
 #ASSIGN DATE OF END OF PRESCRIPTION
-m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))
+m<-(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY))head)_
 subs$END_DATE<-ifelse(!is.na(subs$TABLETS_PER_DAY)&!is.na(subs$CodeValue),subs$EntryDate+(as.numeric(subs$CodeValue)/as.numeric(subs$TABLETS_PER_DAY)),NA)
 subs$END_DATE<-as.Date(as.character(subs$END_DATE),format="%Y%m%d")
 subs$END_Date<-as.Date(subs$END_DATE,origin="1968-09-07")
 
 ####################################################################################CHECKED
+#STOP INSTRUCTIONS
+#USING DUNJA'S SMOKING CODE HERE
+table(subs$REP)
+table(subs$REP2)
 
-#####################################################################STOP INSTRUCTIONS
-table(subs$ALT_OTHER_MEDS) #USING DUNJA'S SMOKING CODE HERE
+for (i in levels(subs$REP)){
+build a dplyr table of drugs with that name and stop dates
+near date match the prior entry from that patient for DRUG_TYPE=i
+rename columns if needed
 
+merge(subs, ,all.x=TRUE)
 
 alts<-subs[subs$ALT_OTHER_MEDS=="Replace"|subs$ALT_OTHER_MEDS=="Stop",c("PatientID","EntryDate","REP","REP2")]
 indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
