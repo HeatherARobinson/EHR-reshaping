@@ -55,12 +55,14 @@ head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 ##################################################################################CHECKED
 
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
+
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
 AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
 sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
-#COLUMN 'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
+#'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
 #OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
 ############################################################################# CHECKED
+#CHECKS ON VARIETY OF PRESCRIPTION DATA
 
 sub<-merge(sub,inst,all.x=TRUE)
 head(sub)
@@ -71,12 +73,12 @@ length(sub$DESCRIPTION)
 #0.03% of prescription guidance is missing
 summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN THE DATASET
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
-#########################################################################CHECKED
+
 #JOIN ON THE DOSAGE DATA
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
 sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 subs<-rbind(sub2,sub3)
-
+UNPRES<-unique(paste("subs$TYPE","susb$DAILY_DOSE",sep=""))
 ########################################################################### CHECKED
 #CALCULATE MISSING DATA WHERE POSSIBLE
 
