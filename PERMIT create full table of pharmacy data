@@ -78,7 +78,6 @@ colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
 sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
 sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
 subs<-rbind(sub2,sub3)
-UNPRES<-unique(paste("subs$TYPE","susb$DAILY_DOSE",sep=""))
 ########################################################################### CHECKED
 #CALCULATE MISSING DATA WHERE POSSIBLE
 
@@ -125,6 +124,12 @@ meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
 save(meddata,file="PERMITmeddata.rda")
 ####################################################################################CHECKED
+#LIST ALL USED DOSE COMBINATIONS
+a<-subs[!is.na(subs$DAILY_DOSE),]
+UNPRES<-unique(paste(a$FAMILY,a$TYPE,a$DAILY_DOSE,sep=""))
+UNPRES
+write.csv(UNPRES,file="UNIQUE_PRESCRIPTIONS.csv",row.names=FALSE)
+###################################################################################
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 #USING DUNJA'S SMOKING CODE HERE
 load("PERMITmeddata.rda")
