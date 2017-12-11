@@ -79,3 +79,128 @@ save(crea.rep, file="../github/crearep.ongoing.rda")
 load("../github/crearep.ongoing.rda")
 head(crea.rep)
 
+####################################################################################CHECKED
+#LIST ALL SIMULTANEOUSLY USED DOSE NSAIDS
+a<-subs[!is.na(subs$DAILY_DOSE),]
+a <- a[order(a$TYPE,a$DAILY_DOSE),] 
+a<-unique(a[c("PatientID","FAMILY", "TYPE","DAILY_DOSE")])
+ns<- as.data.frame(data.table(a[a$FAMILY=="NSAID",]))
+ns$check<-paste(ns$TYPE,ns$DAILY_DOSE,sep="")
+ns<-(unique(ns[c("PatientID","check")]))
+ns<-data.table(ns)
+ns[ , Index := 1:.N , by = c("PatientID") ]
+ns_wide <- spread(ns, Index, check)
+cols<-as.character(ns_wide[,c(1:max(as.numeric(ns$Index)))])
+b<-ldply(apply(ns_wide, 1, function(x) data.frame(x = paste(x[2:length(ns_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_NSAIDS.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED ANGIOTENSIS RECEPTOR BLOCKERS
+ARB<- as.data.frame(data.table(a[a$FAMILY=="ARB",]))
+ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
+ARB<-(unique(ARB[c("PatientID","check")]))
+ARB<-data.table(ARB)
+ARB[ , Index := 1:.N , by = c("PatientID") ]
+ARB_wide <- spread(ARB, Index, check)
+cols<-as.character(ARB_wide[,c(1:max(as.numeric(ARB$Index)))])
+b<-ldply(apply(ARB_wide, 1, function(x) data.frame(x = paste(x[2:length(ARB_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ARBS.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED ALDOSTERONE ANTAGONISTS
+ALD_ANT<- as.data.frame(data.table(a[a$FAMILY=="ALD_ANT",]))
+ALD_ANT$check<-paste(ALD_ANT$TYPE,ALD_ANT$DAILY_DOSE,sep="")
+ALD_ANT<-(unique(ALD_ANT[c("PatientID","check")]))
+ALD_ANT<-data.table(ALD_ANT)
+ALD_ANT[ , Index := 1:.N , by = c("PatientID") ]
+ALD_ANT_wide <- spread(ALD_ANT, Index, check)
+cols<-as.character(ALD_ANT_wide[,c(1:max(as.numeric(ALD_ANT$Index)))])
+b<-ldply(apply(ALD_ANT_wide, 1, function(x) data.frame(x = paste(x[2:length(ALD_ANT_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ALD_ANT.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED ANTIMICROBIALS
+ANT_MIC<- as.data.frame(data.table(a[a$FAMILY=="ANT_MIC",]))
+ANT_MIC$check<-paste(ANT_MIC$TYPE,ANT_MIC$DAILY_DOSE,sep="")
+ANT_MIC<-(unique(ANT_MIC[c("PatientID","check")]))
+ANT_MIC<-data.table(ANT_MIC)
+ANT_MIC[ , Index := 1:.N , by = c("PatientID") ]
+ANT_MIC_wide <- spread(ANT_MIC, Index, check)
+cols<-as.character(ANT_MIC_wide[,c(1:max(as.numeric(ANT_MIC$Index)))])
+b<-ldply(apply(ANT_MIC_wide, 1, function(x) data.frame(x = paste(x[2:length(ANT_MIC_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ANT_MIC.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED THIAZIDE DIURETICS
+DIUR_THI<- as.data.frame(data.table(a[a$FAMILY=="DIUR_THI",]))
+DIUR_THI$check<-paste(DIUR_THI$TYPE,DIUR_THI$DAILY_DOSE,sep="")
+DIUR_THI<-(unique(DIUR_THI[c("PatientID","check")]))
+DIUR_THI<-data.table(DIUR_THI)
+DIUR_THI[ , Index := 1:.N , by = c("PatientID") ]
+DIUR_THI_wide <- spread(DIUR_THI, Index, check)
+cols<-as.character(DIUR_THI_wide[,c(1:max(as.numeric(DIUR_THI$Index)))])
+b<-ldply(apply(DIUR_THI_wide, 1, function(x) data.frame(x = paste(x[2:length(DIUR_THI_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="DIUR_THI.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED LOOP DIURETICS
+DIUR_LOOP<- as.data.frame(data.table(a[a$FAMILY=="DIUR_LOOP",]))
+DIUR_LOOP$check<-paste(DIUR_LOOP$TYPE,DIUR_LOOP$DAILY_DOSE,sep="")
+DIUR_LOOP<-(unique(DIUR_LOOP[c("PatientID","check")]))
+DIUR_LOOP<-data.table(DIUR_LOOP)
+DIUR_LOOP[ , Index := 1:.N , by = c("PatientID") ]
+DIUR_LOOP_wide <- spread(DIUR_LOOP, Index, check)
+cols<-as.character(DIUR_LOOP_wide[,c(1:max(as.numeric(DIUR_LOOP$Index)))])
+b<-ldply(apply(DIUR_LOOP_wide, 1, function(x) data.frame(x = paste(x[2:length(DIUR_LOOP_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="DIUR_LOOP.csv",row.names=FALSE)
+
+
+#LIST ALL SIMULTANEOUSLY USED ACE INHIBITORS
+ACEI<- as.data.frame(data.table(a[a$FAMILY=="ACEI",]))
+ACEI$check<-paste(ACEI$TYPE,ACEI$DAILY_DOSE,sep="")
+ACEI<-(unique(ACEI[c("PatientID","check")]))
+ACEI<-data.table(ACEI)
+ACEI[ , Index := 1:.N , by = c("PatientID") ]
+ACEI_wide <- spread(ACEI, Index, check)
+cols<-as.character(ACEI_wide[,c(1:max(as.numeric(ACEI$Index)))])
+b<-ldply(apply(ACEI_wide, 1, function(x) data.frame(x = paste(x[2:length(ACEI_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="ACEI.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED Immunosuppressants
+Immunosuppressant<- as.data.frame(data.table(a[a$FAMILY=="Immunosuppressant",]))
+Immunosuppressant$check<-paste(Immunosuppressant$TYPE,Immunosuppressant$DAILY_DOSE,sep="")
+Immunosuppressant<-(unique(Immunosuppressant[c("PatientID","check")]))
+Immunosuppressant<-data.table(Immunosuppressant)
+Immunosuppressant[ , Index := 1:.N , by = c("PatientID") ]
+Immunosuppressant_wide <- spread(Immunosuppressant, Index, check)
+cols<-as.character(Immunosuppressant_wide[,c(1:max(as.numeric(Immunosuppressant$Index)))])
+b<-ldply(apply(Immunosuppressant_wide, 1, function(x) data.frame(x = paste(x[2:length(Immunosuppressant_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="Immunosuppressant.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED Nephrotoxin
+Nephrotoxin<- as.data.frame(data.table(a[a$FAMILY=="Nephrotoxin",]))
+Nephrotoxin$check<-paste(Nephrotoxin$TYPE,Nephrotoxin$DAILY_DOSE,sep="")
+Nephrotoxin<-(unique(Nephrotoxin[c("PatientID","check")]))
+Nephrotoxin<-data.table(Nephrotoxin)
+Nephrotoxin[ , Index := 1:.N , by = c("PatientID") ]
+Nephrotoxin_wide <- spread(Nephrotoxin, Index, check)
+cols<-as.character(Nephrotoxin_wide[,c(1:max(as.numeric(Nephrotoxin$Index)))])
+b<-ldply(apply(Nephrotoxin_wide, 1, function(x) data.frame(x = paste(x[2:length(Nephrotoxin_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="Nephrotoxin.csv",row.names=FALSE)
+
+################################################################################### CHECKED
+
+#RECODE COLUMNS FOLLOWING AHMED'S INSTRUCTIONS FOR CODING (SEE PRE-PROCESSING PLAN)
