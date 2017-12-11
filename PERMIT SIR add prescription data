@@ -4,80 +4,16 @@ cd research-events-medication-htn
 npm install
 node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done > resources\codesh.txt.done.sorted
 ##################################################################################################################################
-
-#R COMMANDS
+#OR USE R COMMANDS
 library(stringr)
 library(lubridate)
 
-out<-read.csv("perloutput.csv")
-meds<-merge(perl_input.csv,out[,c()])
+load("crea.repongoing221117")
+load("PERMITmeddata.rda")
+load("Extra_Doses.")
 
-#FOR EACH DRUG CREATE A FILE WITH THAT NAME AND START AND STOP DATES
+#FOR EACH DATE, IDENTIFY ALL PRESCRIPTIONS ONGOING
 
-#
-cessationCodes <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/cessation.csv")
-smok <- read.csv("~/Documents/PERMIT/newVariable/Reviewed_code_lists/smoking.csv")
-load("crea.repongoing.rda")
-load("sir.smok.rda") 
-
-# sir.smok.rda data:
-  # all stop codes before Jan 1, 2008 were removed
-  # all rows with 0 in both Smoking and cessation column were removed 
-
-### FIND THE MATCH BETWEEN SMOKING DATA AND CREATININE DATA
-## USING DATA.TABLE FUNCTION ROLL
-## WHEN ROLL=T, THE FUNCTION WILL SEARCH FOR A SMOKING EVENT.DATE WHICH PRECEDED CREATININE EVENT.DATE 
-## and then add all the columns from selected smoking date to that creatinine date
-
-## PRIOR TO ROLLING IT IS IMPORTANT TO:
-##- set both data sets as data tables
-##- setkey-s for both data tables to PatientID and then event.date (grouos in the background)
-##- for each data set, duplicate event date column and rename it specifically. eg crea_eventDate and smok_eventdate
-    ## to notice which event date belongs to which data after matching
-crea <- crea.rep
-
-# select only columns we need for rolling:
-setDT(sir.smok)
-setDT(crea)
-sir.smok2 <- sir.smok[,c("PatientID", "event.date", "Smoker", "cessation")]
-
-# add smokeventdate column so that I know which event dates belong to smoking after rolling
-sir.smok2 <- sir.smok2[, smokeventdate:=event.date]
-
-# order data by patID then per eventdate and then by descending Smoking status (rows with smoker==1 come first)
-sir.smok_unique <- unique(sir.smok2) # to remove duplicated rows
-sir.smok_unique <- sir.smok_unique[order(PatientID, event.date, -Smoker)]
-
-#set the keys
-setkey(crea, PatientID, event.date)
-setkey(sir.smok_unique, PatientID, event.date)
-
-smokToMerge <- sir.smok_unique[,.SD[which.max(Smoker)], by=key(sir.smok_unique)]
-# one Smoking marker - e.g. Pat1, event.date 2008-09-23 has both 1 and 0 in the Smoker column. We want to keep the 1
-# duplicated function will keep the value which comes first, so it will keep the row with Pat 1, event date 2008-09-23, Smoker==1
-# only if we order the column in a descending order. Then the row with Pat 1, event date 2008-09-23, Smoker==0 
-# (that is why we orderd the data frame -Smoker) will be removed.
-
-#--OR--#
-see <- sir.smok2 %>% group_by(PatientID) %>% filter(!duplicated(event.date))
-dim(see)==dim(smokToMerge)
-#------#
-## roll it with roll=T, this will find event.date in 
-setkey(smokToMerge, PatientID, smokeventdate)
-
-finallymatched <- smokToMerge[crea, roll=T]
-save(finallymatched, file="finallymatched.rda")
-crea.rep <- finallymatched
-crea.rep$Smoker[is.na(crea.rep$Smoker)] <- 0
-
-crea.rep$smokeventdate <- NULL
-crea.rep$cessation <- NULL
-crea.rep$event.date <- NULL
-setnames(crea.rep, "dateToMatch", "event.date")
-crea.rep <- crea.rep[,c(1,58, 3:57, 2)]
-save(crea.rep, file="../github/crearep.ongoing.rda")
-load("../github/crearep.ongoing.rda")
-head(crea.rep)
 
 ####################################################################################CHECKED
 #LIST ALL SIMULTANEOUSLY USED DOSE NSAIDS
