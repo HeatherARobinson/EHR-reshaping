@@ -118,7 +118,7 @@ subt<-subt[,c(1:18)]
 subnt<-subnt[,c(1:18)]
 meddata<-rbind(subt,subnt)
 
-############################################################################
+############################################################################CHECKED
 #ASSIGN DATE OF END OF PRESCRIPTION
 
 m<-(as.numeric(meddata$CodeValue)/as.numeric(meddata$TABLETS_PER_DAY))
