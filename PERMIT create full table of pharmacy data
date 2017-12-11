@@ -129,8 +129,8 @@ save(meddata,file="PERMITmeddata.rda")
 ####################################################################################CHECKED
 #LIST ALL USED DOSE COMBINATIONS
 a<-subs[!is.na(subs$DAILY_DOSE),]
-UNPRES<-unique(paste(a$FAMILY,a$TYPE,a$DAILY_DOSE,sep=""))
-UNPRES
+
+a$UNPRES<-unique(paste(a$FAMILY,a$TYPE,a$DAILY_DOSE,sep=""))}
 write.csv(UNPRES,file="UNIQUE_PRESCRIPTIONS.csv",row.names=FALSE)
 ###################################################################################
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
