@@ -128,125 +128,42 @@ meddata$END_DATE<-ifelse(!is.na(meddata$TABLETS_PER_DAY)&!is.na(subs$CodeValue),
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
 save(meddata,file="PERMITmeddata.rda")
-####################################################################################CHECKED
-#LIST ALL SIMULTANEOUSLY USED DOSE NSAIDS
-a<-subs[!is.na(subs$DAILY_DOSE),]
-a <- a[order(a$TYPE,a$DAILY_DOSE),] 
-a<-unique(a[c("PatientID","FAMILY", "TYPE","DAILY_DOSE")])
-ns<- as.data.frame(data.table(a[a$FAMILY=="NSAID",]))
-ns$check<-paste(ns$TYPE,ns$DAILY_DOSE,sep="")
-ns<-(unique(ns[c("PatientID","check")]))
-ns<-data.table(ns)
-ns[ , Index := 1:.N , by = c("PatientID") ]
-ns_wide <- spread(ns, Index, check)
-cols<-as.character(ns_wide[,c(1:max(as.numeric(ns$Index)))])
-b<-ldply(apply(ns_wide, 1, function(x) data.frame(x = paste(x[2:length(ns_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="UNIQUE_NSAIDS.csv",row.names=FALSE)
 
-#LIST ALL SIMULTANEOUSLY USED ANGIOTENSIS RECEPTOR BLOCKERS
-ARB<- as.data.frame(data.table(a[a$FAMILY=="ARB",]))
-ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
-ARB<-(unique(ARB[c("PatientID","check")]))
-ARB<-data.table(ARB)
-ARB[ , Index := 1:.N , by = c("PatientID") ]
-ARB_wide <- spread(ARB, Index, check)
-cols<-as.character(ARB_wide[,c(1:max(as.numeric(ARB$Index)))])
-b<-ldply(apply(ARB_wide, 1, function(x) data.frame(x = paste(x[2:length(ARB_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="UNIQUE_ARBS.csv",row.names=FALSE)
-
-#LIST ALL SIMULTANEOUSLY USED ALDOSTERONE ANTAGONISTS
-ALD_ANT<- as.data.frame(data.table(a[a$FAMILY=="ALD_ANT",]))
-ALD_ANT$check<-paste(ALD_ANT$TYPE,ALD_ANT$DAILY_DOSE,sep="")
-ALD_ANT<-(unique(ALD_ANT[c("PatientID","check")]))
-ALD_ANT<-data.table(ALD_ANT)
-ALD_ANT[ , Index := 1:.N , by = c("PatientID") ]
-ALD_ANT_wide <- spread(ALD_ANT, Index, check)
-cols<-as.character(ALD_ANT_wide[,c(1:max(as.numeric(ALD_ANT$Index)))])
-b<-ldply(apply(ALD_ANT_wide, 1, function(x) data.frame(x = paste(x[2:length(ALD_ANT_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="UNIQUE_ALD_ANT.csv",row.names=FALSE)
-
-#LIST ALL SIMULTANEOUSLY USED ANTIMICROBIALS
-ANT_MIC<- as.data.frame(data.table(a[a$FAMILY=="ANT_MIC",]))
-ANT_MIC$check<-paste(ANT_MIC$TYPE,ANT_MIC$DAILY_DOSE,sep="")
-ANT_MIC<-(unique(ANT_MIC[c("PatientID","check")]))
-ANT_MIC<-data.table(ANT_MIC)
-ANT_MIC[ , Index := 1:.N , by = c("PatientID") ]
-ANT_MIC_wide <- spread(ANT_MIC, Index, check)
-cols<-as.character(ANT_MIC_wide[,c(1:max(as.numeric(ANT_MIC$Index)))])
-b<-ldply(apply(ANT_MIC_wide, 1, function(x) data.frame(x = paste(x[2:length(ANT_MIC_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="UNIQUE_ANT_MIC.csv",row.names=FALSE)
-
-#LIST ALL SIMULTANEOUSLY USED THIAZIDE DIURETICS
-DIUR_THI<- as.data.frame(data.table(a[a$FAMILY=="DIUR_THI",]))
-DIUR_THI$check<-paste(DIUR_THI$TYPE,DIUR_THI$DAILY_DOSE,sep="")
-DIUR_THI<-(unique(DIUR_THI[c("PatientID","check")]))
-DIUR_THI<-data.table(DIUR_THI)
-DIUR_THI[ , Index := 1:.N , by = c("PatientID") ]
-DIUR_THI_wide <- spread(DIUR_THI, Index, check)
-cols<-as.character(DIUR_THI_wide[,c(1:max(as.numeric(DIUR_THI$Index)))])
-b<-ldply(apply(DIUR_THI_wide, 1, function(x) data.frame(x = paste(x[2:length(DIUR_THI_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="DIUR_THI.csv",row.names=FALSE)
-
-#LIST ALL SIMULTANEOUSLY USED LOOP DIURETICS
-DIUR_LOOP<- as.data.frame(data.table(a[a$FAMILY=="DIUR_LOOP",]))
-DIUR_LOOP$check<-paste(DIUR_LOOP$TYPE,DIUR_LOOP$DAILY_DOSE,sep="")
-DIUR_LOOP<-(unique(DIUR_LOOP[c("PatientID","check")]))
-DIUR_LOOP<-data.table(DIUR_LOOP)
-DIUR_LOOP[ , Index := 1:.N , by = c("PatientID") ]
-DIUR_LOOP_wide <- spread(DIUR_LOOP, Index, check)
-cols<-as.character(DIUR_LOOP_wide[,c(1:max(as.numeric(DIUR_LOOP$Index)))])
-b<-ldply(apply(DIUR_LOOP_wide, 1, function(x) data.frame(x = paste(x[2:lengthDIUR_LOOP_wide)],sep="",collapse="-"))))
-head(b)
-b<-unique(b)
-write.csv(b,file="DIUR_LOOP.csv",row.names=FALSE)
 ################################################################################### CHECKED
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 #USING DUNJA'S SMOKING CODE HERE
 load("PERMITmeddata.rda")
+meddata$REP<-ifelse(meddata$REP=="Same",paste(meddata$TYPE),paste(meddata$REP))
+meddata$REP<-as.factor(meddata$REP)
+head(meddata$REP2[!meddata$REP2 %in% meddata$REP])#ALL THOSE IN REP2 ARE ALSO IN REP
+r<-paste(unique(meddata$REP))
+meddata$REP<-ifelse(meddata$REP %in% r & !is.na(meddata$REP),paste(meddata$REP),NA)
+meddata$REP2<-ifelse(meddata$REP2 %in% r& !is.na(meddata$REP2),paste(meddata$REP2),NA) #WE ARE NOT CONCERNED WITH STOP CODES FOR DRUGS NOT OF INTEREST TO US
 table(meddata$REP)
-table(meddata$REP2)
-table(meddata$REP2,meddata$REP2 %in% meddata$TYPE)
-table(meddata$REP,meddata$REP %in% meddata$TYPE)
-meddata$REP<-ifelse(meddata$REP %in% meddata$TYPE,meddata$REP,NA)
-meddata$REP2<-ifelse(meddata$REP2 %in% meddata$TYPE,meddata$REP2,NA)
-table(meddata$REP)
-table(meddata$REP2)#NO STOPS REFER TO MORE THAN ONE MEDICATION
+table(meddata$REP2)#SOME STOPS REFERRING TO MORE THAN ONE MEDICATION
 meddata$ALT_OTHER_MEDS<-ifelse(is.na(meddata$REP),NA,meddata$ALT_OTHER_MEDS)
 
+################################################################################### CHECKED
+
 #NEAREST DATE MATCH TO THE LAST PRIOR ENTRY OF THE DRUG BEING STOPPED
+coda<-meddata[!is.na(meddata$REP),]
 stops<-meddata[meddata$TYPE %in% meddata$REP,c("PatientID","EntryDate","END_DATE","TYPE")]
 columns=names(stops[c(1,2,4)])
 dots<-lapply(columns, as.symbol)
 first <-stops %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-
 library(survival)
 
-meddata$NEWENDDATE<-NA
-for (i in length(meddata$TYPE[meddata$TYPE %in% meddata$REP])){
-stops<-meddata[meddata$TYPE==meddata$TYPE[i],c("PatientID","EntryDate","END_DATE","TYPE")]
-columns=names(stops[c(1,2,4)])
-dots<-lapply(columns, as.symbol)
-first[i]<-stops %>% 
-group_by_(.dots=dots) %>%
-as.data.frame}
-
-for (i in length(meddata$TYPE[meddata$TYPE %in% meddata$REP])){
-
-indx<-neardate(meddata$PatientID[meddata$TYPE==meddata$TYPE[i]], first[i]$PatientID, meddata$EntryDate[meddata$TYPE==meddata$TYPE[i]],first[i]$EntryDate,best="prior")
-meddata$NEWENDDATE<-ifelse(is.na(meddata$NEWENDDATE),first[indx1, "EntryDate"],meddata$NEWENDDATE)
+first$NEWENDDATE<-NA
+for (i in 1:length(as.factor(first$TYPE))){
+codab<-coda[coda$TYPE==first$TYPE[i],]
+indx<-neardate(first$PatientID, codab$PatientID, first$EntryDate,codab$EntryDate,best="prior")
+first$NEWENDDATE<-ifelse(is.na(first$NEWENDDATE)&first[indx,"EntryDate"]>first$EntryDate & first[indx,"EntryDate"]<first$END_DATE,first[indx,"EntryDate"],first$NEWENDDATE)
 }
+head(first[!is.na(first$NEWENDDATE)])
+head(coda[coda$PatientID %in% first$PatientID[!is.na(first$NEWENDDATE)],])
+
 ##################################################################THIS LOOP IS NOT FUNCTIONAL YET AND NEEDS MORE FIXING
 
 meddata$NEWENDDATE<-as.Date(meddata$NEWENDDATE,origin="1970-01-01")
@@ -270,18 +187,15 @@ indx1 <-neardate(subs$PatientID, first$PatientID, crea.rep$event.date,first$even
 #Drug family
 
 #CONVERT VOLUME DOSAGES FOR LIQUID MEDS. OMIT WATER TO AVOID PICKING UP SOLID DOSE MEDS INSTRUCTED TO BE DISSOLVED IN WATER.
-subs$CodeValue<-ifelse(grepl("ml",subs$CodeValue)$!(grep("water",subs$CodeValue)),as.numeric(subs$CodeValue/5),as.numeric(subs$CodeValue))
+subs$CodeValue<-ifelse(grepl("ml",subs$CodeValueDAILY_DOSE)$!(grep("water",subs$CodeValue)),as.numeric(subs$CodeValue/5),as.numeric(subs$CodeValue))
 
-
-
-
-
-write.table(subs,file="perl_input.txt",row.names=FALSE,sep="\t")
-per<-read.table("perl_input.txt",header=TRUE)
-head(per)
- per$DAILY_DOSE<-ifelse(per$LIQUID==1,per$DAILY_DOSE*5,per*DAILY_DOSE)
+#WRITE PERL INPUT TABLE WHICH OVERLAPS CONTINUOUS PRESCRIPTIONS (IF YOU NEED TO DO THIS TO DETERMINE A START AND END DATE)
+#IN THIS CASE WE ARE JUST MATCHING BACK TO THE NEAREST PRIOR PRESCRIPTION DATE.
+#write.table(subs,file="perl_input.txt",row.names=FALSE,sep="\t")
+#per<-read.table("perl_input.txt",header=TRUE)
+per$DAILY_DOSE<-ifelse(per$LIQUID==1,per$DAILY_DOSE*5,per*DAILY_DOSE)
 per$TABLETS_PER_DAY<-as.character(per$TABLETS_PER_DAY)
- per$TABLETS_PER_DAY<-as.numeric(per$TABLETS_PER_DAY)
+per$TABLETS_PER_DAY<-as.numeric(per$TABLETS_PER_DAY)
 per$TABLETS_PER_DAY<-ifelse(!is.na(per$LIQUID),(per$TABLETS_PER_DAY*5),per$TABLETS_PER_DAY)
 per$DOSE<-ifelse(per$LIQUID>=1,per$DOSE/5,per*DOSE)
  per$TABLETS_PER_DAY<-ifelse(is.na(per$TABLETS_PER_DAY)&!is.na(per$DOSE)&!is.na(per$DAILY_DOSE),(per$DAILY_DOSE/per$DOSE),per$TABLETS_PER_DAY)
@@ -289,3 +203,4 @@ per$DOSE<-ifelse(per$LIQUID>=1,per$DOSE/5,per*DOSE)
 
 write.table(per,file="perl_input3011.txt",row.names=FALSE,sep="\t")
 
+#PROCESS THE OUTPUT TABLE FROM THE PERL PROCESSES USING THE ADDITIONAL GITHUB SCRIPT 'PERMIT adding prescription data'
