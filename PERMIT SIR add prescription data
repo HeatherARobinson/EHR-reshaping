@@ -12,11 +12,8 @@ load("crea.repongoing221117")
 load("PERMITmeddata.rda")
 load("Extra_Doses.rda")
 
-#NSAIDS
-
-#FOR EACH DATE, IDENTIFY ALL PRESCRIPTIONS ONGOING IN EACH CATEGORY
-
-NSAIDS<-meddata[meddata$DRUG_FAMILY=="NSAIDS",]
+NSAID<-meddata[meddata$DRUG_FAMILY=="NSAIDS",]
+NSAID$check<-paste(NSAID$TYPE,subtab$DAILY_DOSE,sep="")
 smalltab<-NSAIDS[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
 columns=names(smalltab[i,c(1:3)])
 dots<-lapply(columns, as.symbol)
@@ -24,9 +21,14 @@ NSAID <-smalltab %>%
 group_by_(.dots=dots) %>%
 as.data.frame
 NSAID<-order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
-NSAID$check<-paste(NSAID$TYPE,subtab$DAILY_DOSE,sep="")
-NSAID[ , Index := 1:.N , by = c("EntryDate") ]
-NSAID_wide<- spread(NSAID, Index, check)
+
+for i in length(unique(crea.rep$EntryDate)){
+for j in length(unique(crea.rep$PatientID)){
+p<-NSAID[crea.rep$EntryDate[i]>=NSAID$EntryDate&crea.rep$EntryDate[i]<=NSAID$END_DATE & NSAID$PatientID==crea.rep$PatientID[j],]
+p$check<-paste(p[i,j]$TYPE,p[i,j]$TYPE$DAILY_DOSE,sep="")
+p[ , Index := 1:.N , by = c("EntryDate") ]
+pwide[i,j]<- spread(p, Index, check)
+crea.rep[i,j]$pwide[i,j]$check
 
 crea.rep$NSAID<-NA
 for (1 in 1:length(crea.rep$EntryDate)){
