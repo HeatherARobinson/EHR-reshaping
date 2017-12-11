@@ -130,7 +130,7 @@ save(meddata,file="PERMITmeddata.rda")
 
 ################################################################################### CHECKED
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
-#USING DUNJA'S SMOKING CODE HERE
+
 load("PERMITmeddata.rda")
 meddata<-unique(meddata)
 meddata$REP<-ifelse(meddata$REP=="Same",paste(meddata$TYPE),paste(meddata$REP))
@@ -144,7 +144,7 @@ table(meddata$REP2)#SOME STOPS REFERRING TO MORE THAN ONE MEDICATION
 meddata$ALT_OTHER_MEDS<-ifelse(is.na(meddata$REP),NA,meddata$ALT_OTHER_MEDS)
 
 #FIND THE MEDIAN DOSE FOR EACH DRUG AND USE THIS IF MISSING
-c<-aggregate(meddata[, c<-aggregate(meddata[, "DAILY_DOSE"], list(meddata$TYPE, median)
+c<-aggregate(meddata[, "DAILY_DOSE"], list(meddata$TYPE), median)
 colnames(c)<-c("TYPE","MEDIAN_DOSE")
 meddata<-merge(meddata,c,all.x=TRUE)
 meddata$DAILY_DOSE<-ifelse(is.na(meddata$DAILY_DOSE),meddata$MEDIAN_DOSE,meddata$DAILY_DOSE)
@@ -158,7 +158,7 @@ columns=names(stops[c(1,2,4)])
 dots<-lapply(columns, as.symbol)
 first <-stops %>% 
 group_by_(.dots=dots) %>%
-as.data.frame
+as.data.frame 
 library(survival)
 
 first$NEWENDDATE<-NA
@@ -204,9 +204,6 @@ head(firstU[!is.na(firstU$AddDate),])
 firstU<-firstU[!is.na(firstU$AddDate)&firstU$AddDate>=firstU$EntryDate&firstU$AddDate<firstU$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","AddDate","AddDose")]
 length(firstU$PatientID)#1252 prescriptions are affected
 names(firstU)
-
-save(firstU, file="Extra_Doses.rda",row.names=FALSE,header=TRUE)
-#THIS TABLE WILL BE SAVED UNTIL LATER FOR MATCHING TO THE PERL PARSED TABLE
 
 ##################################################################### ONGOING
 
