@@ -3,34 +3,42 @@
 cd research-events-medication-htn
 npm install
 node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done > resources\codesh.txt.done.sorted
+#PERL NOT USED IN THIS INSTANCE DUE TO THE COMPLEXITY OF THE INSTRUCTIONS
 ##################################################################################################################################
-#OR USE R COMMANDS
+#R COMMANDS
 library(stringr)
 library(lubridate)
-
 load("crea.repongoing221117")
 load("PERMITmeddata.rda")
-load("Extra_Doses.")
+load("Extra_Doses.rda")
 
-#FOR EACH DATE, IDENTIFY ALL PRESCRIPTIONS ONGOING
+#NSAIDS
 
+#FOR EACH DATE, IDENTIFY ALL PRESCRIPTIONS ONGOING IN EACH CATEGORY
+NSAIDS<-meddata[meddata$DRUG_FAMILY=="NSAIDS",]
+for (i in 1:levels(as.factor(NSAIDS$TYPE))){
+smalltab[i]<-NSAIDS[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+columns=names(smalltab[i,c(1:3)])
+dots<-lapply(columns, as.symbol)
+firstU[i] <-smalltab[i] %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
 
-####################################################################################CHECKED
-#LIST ALL SIMULTANEOUSLY USED DOSE NSAIDS
-a<-subs[!is.na(subs$DAILY_DOSE),]
-a <- a[order(a$TYPE,a$DAILY_DOSE),] 
-a<-unique(a[c("PatientID","FAMILY", "TYPE","DAILY_DOSE")])
-ns<- as.data.frame(data.table(a[a$FAMILY=="NSAID",]))
+ns<- firstU[order(firstU$TYPE,firstU$DAILY_DOSE),] 
 ns$check<-paste(ns$TYPE,ns$DAILY_DOSE,sep="")
-ns<-(unique(ns[c("PatientID","check")]))
-ns<-data.table(ns)
 ns[ , Index := 1:.N , by = c("PatientID") ]
 ns_wide <- spread(ns, Index, check)
 cols<-as.character(ns_wide[,c(1:max(as.numeric(ns$Index)))])
 b<-ldply(apply(ns_wide, 1, function(x) data.frame(x = paste(x[2:length(ns_wide)],sep="",collapse="-"))))
+
+ns<-(unique(b[c("PatientID","check")]))
+b<-data.table(b)
+write.csv(b,file="UNIQUE_NSAIDS.csv",row.names=FALSE)#ALL UNIQUE PRESCRIPTIONS ARE LATER TO BE CODED
+
 head(b)
-b<-unique(b)
-write.csv(b,file="UNIQUE_NSAIDS.csv",row.names=FALSE)
+crea.rep<-merge(crea.rep,b[,c],all.x=TRUE
+
+####################################################################################CHECKED
 
 #LIST ALL SIMULTANEOUSLY USED ANGIOTENSIS RECEPTOR BLOCKERS
 ARB<- as.data.frame(data.table(a[a$FAMILY=="ARB",]))
