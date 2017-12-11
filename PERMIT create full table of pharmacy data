@@ -8,7 +8,9 @@ codes2<-read.csv("emis.csv")
 
 library(stringr)
 library(lubridate)
+library(plyr)
 library(dplyr)
+library(tidyr)
 sir.data<-sir.data[sir.data$EntryDate>=20070101&sir.data$EntryDate<=20170901,]
 sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
 sir.data$EntryDate<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
@@ -51,7 +53,7 @@ sub$DESCRIPTION<-gsub("[)]", "", sub$DESCRIPTION)
 inst$DESCRIPTION<-gsub("[)]", "", inst$DESCRIPTION) 
 inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION) 
 
-head(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
+unique(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 ##################################################################################CHECKED
 
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
@@ -127,12 +129,87 @@ meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
 save(meddata,file="PERMITmeddata.rda")
 ####################################################################################CHECKED
-#LIST ALL USED DOSE COMBINATIONS
+#LIST ALL SIMULTANEOUSLY USED DOSE NSAIDS
 a<-subs[!is.na(subs$DAILY_DOSE),]
+a <- a[order(a$TYPE,a$DAILY_DOSE),] 
+a<-unique(a[c("PatientID","FAMILY", "TYPE","DAILY_DOSE")])
+ns<- as.data.frame(data.table(a[a$FAMILY=="NSAID",]))
+ns$check<-paste(ns$TYPE,ns$DAILY_DOSE,sep="")
+ns<-(unique(ns[c("PatientID","check")]))
+ns<-data.table(ns)
+ns[ , Index := 1:.N , by = c("PatientID") ]
+ns_wide <- spread(ns, Index, check)
+cols<-as.character(ns_wide[,c(1:max(as.numeric(ns$Index)))])
+b<-ldply(apply(ns_wide, 1, function(x) data.frame(x = paste(x[2:length(ns_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_NSAIDS.csv",row.names=FALSE)
 
-a$UNPRES<-unique(paste(a$FAMILY,a$TYPE,a$DAILY_DOSE,sep=""))}
-write.csv(UNPRES,file="UNIQUE_PRESCRIPTIONS.csv",row.names=FALSE)
-###################################################################################
+#LIST ALL SIMULTANEOUSLY USED ANGIOTENSIS RECEPTOR BLOCKERS
+ARB<- as.data.frame(data.table(a[a$FAMILY=="ARB",]))
+ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
+ARB<-(unique(ARB[c("PatientID","check")]))
+ARB<-data.table(ARB)
+ARB[ , Index := 1:.N , by = c("PatientID") ]
+ARB_wide <- spread(ARB, Index, check)
+cols<-as.character(ARB_wide[,c(1:max(as.numeric(ARB$Index)))])
+b<-ldply(apply(ARB_wide, 1, function(x) data.frame(x = paste(x[2:length(ARB_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ARBS.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED ALDOSTERONE ANTAGONISTS
+ALD_ANT<- as.data.frame(data.table(a[a$FAMILY=="ALD_ANT",]))
+ALD_ANT$check<-paste(ALD_ANT$TYPE,ALD_ANT$DAILY_DOSE,sep="")
+ALD_ANT<-(unique(ALD_ANT[c("PatientID","check")]))
+ALD_ANT<-data.table(ALD_ANT)
+ALD_ANT[ , Index := 1:.N , by = c("PatientID") ]
+ALD_ANT_wide <- spread(ALD_ANT, Index, check)
+cols<-as.character(ALD_ANT_wide[,c(1:max(as.numeric(ALD_ANT$Index)))])
+b<-ldply(apply(ALD_ANT_wide, 1, function(x) data.frame(x = paste(x[2:length(ALD_ANT_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ALD_ANT.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED ANTIMICROBIALS
+ANT_MIC<- as.data.frame(data.table(a[a$FAMILY=="ANT_MIC",]))
+ANT_MIC$check<-paste(ANT_MIC$TYPE,ANT_MIC$DAILY_DOSE,sep="")
+ANT_MIC<-(unique(ANT_MIC[c("PatientID","check")]))
+ANT_MIC<-data.table(ANT_MIC)
+ANT_MIC[ , Index := 1:.N , by = c("PatientID") ]
+ANT_MIC_wide <- spread(ANT_MIC, Index, check)
+cols<-as.character(ANT_MIC_wide[,c(1:max(as.numeric(ANT_MIC$Index)))])
+b<-ldply(apply(ANT_MIC_wide, 1, function(x) data.frame(x = paste(x[2:length(ANT_MIC_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="UNIQUE_ANT_MIC.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED THIAZIDE DIURETICS
+DIUR_THI<- as.data.frame(data.table(a[a$FAMILY=="DIUR_THI",]))
+DIUR_THI$check<-paste(DIUR_THI$TYPE,DIUR_THI$DAILY_DOSE,sep="")
+DIUR_THI<-(unique(DIUR_THI[c("PatientID","check")]))
+DIUR_THI<-data.table(DIUR_THI)
+DIUR_THI[ , Index := 1:.N , by = c("PatientID") ]
+DIUR_THI_wide <- spread(DIUR_THI, Index, check)
+cols<-as.character(DIUR_THI_wide[,c(1:max(as.numeric(DIUR_THI$Index)))])
+b<-ldply(apply(DIUR_THI_wide, 1, function(x) data.frame(x = paste(x[2:length(DIUR_THI_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="DIUR_THI.csv",row.names=FALSE)
+
+#LIST ALL SIMULTANEOUSLY USED LOOP DIURETICS
+DIUR_LOOP<- as.data.frame(data.table(a[a$FAMILY=="DIUR_LOOP",]))
+DIUR_LOOP$check<-paste(DIUR_LOOP$TYPE,DIUR_LOOP$DAILY_DOSE,sep="")
+DIUR_LOOP<-(unique(DIUR_LOOP[c("PatientID","check")]))
+DIUR_LOOP<-data.table(DIUR_LOOP)
+DIUR_LOOP[ , Index := 1:.N , by = c("PatientID") ]
+DIUR_LOOP_wide <- spread(DIUR_LOOP, Index, check)
+cols<-as.character(DIUR_LOOP_wide[,c(1:max(as.numeric(DIUR_LOOP$Index)))])
+b<-ldply(apply(DIUR_LOOP_wide, 1, function(x) data.frame(x = paste(x[2:lengthDIUR_LOOP_wide)],sep="",collapse="-"))))
+head(b)
+b<-unique(b)
+write.csv(b,file="DIUR_LOOP.csv",row.names=FALSE)
+################################################################################### CHECKED
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 #USING DUNJA'S SMOKING CODE HERE
 load("PERMITmeddata.rda")
