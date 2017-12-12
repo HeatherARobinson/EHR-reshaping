@@ -8,27 +8,65 @@ node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done 
 #R COMMANDS
 library(stringr)
 library(lubridate)
-load("crea.repongoing221117")
-load("PERMITmeddata.rda")
-load("Extra_Doses.rda")
-
-NSAID<-meddata[meddata$DRUG_FAMILY=="NSAIDS",]
-NSAID$check<-paste(NSAID$TYPE,subtab$DAILY_DOSE,sep="")
-smalltab<-NSAIDS[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+load("crea.rep221117.rda")
+load("perl_input.rda")
+meddata<-unique(meddata)
+NSAID<-meddata[meddata$FAMILY=="NSAID",]
+smalltab<-NSAID[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
 columns=names(smalltab[i,c(1:3)])
 dots<-lapply(columns, as.symbol)
 NSAID <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-NSAID<-order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
+NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
+NSAIDlist<-unique(NSAID$check)
+NSAID<-NSAID[order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
 
-for i in length(unique(crea.rep$EntryDate)){
-for j in length(unique(crea.rep$PatientID)){
-p<-NSAID[crea.rep$EntryDate[i]>=NSAID$EntryDate&crea.rep$EntryDate[i]<=NSAID$END_DATE & NSAID$PatientID==crea.rep$PatientID[j],]
-p$check<-paste(p[i,j]$TYPE,p[i,j]$TYPE$DAILY_DOSE,sep="")
-p[ , Index := 1:.N , by = c("EntryDate") ]
-pwide[i,j]<- spread(p, Index, check)
-crea.rep[i,j]$pwide[i,j]$check
+#################################################################################################CHECKED
+
+#CODE FOR IF MORE THAN ONE OF THE SAME TYPE- NEAREST DATE MATCH WITHIN LOOP?
+
+smalltab<-crea.rep[,c("PatientID","EntryDate")]
+columns=names(smalltab[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+as.data.frame
+
+for (i in length(unique(smalltab$EntryDate))){
+for (j in length(unique(smalltab$PatientID))){
+K<-NSAID[NSAID$PatientID==NSAID$PatientID[j]&NSAID$EntryDate[i]<=smalltab$EntryDate[i]&NSAID$END_DATE>=smalltab$EntryDate[i],]
+NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K,na.action=na.omit,na.action=NULL)
+}}
+
+#########################################################################################CHECKED
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+                   best="prior")
+crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
+crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
+table(crea.rep$SerSodDateFlag) #652
+a<-crea.rep[!is.na(crea.rep$SerumSodium),]
+length(a$PatientID) #284225
+crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
+
+
+
+for (i in length(unique(crea.rep$EntryDate))){
+for (i in length(unique(crea.rep$EntryDate))){
+NSAID2<-NSAID[NSAID$PatientID==NSAID$PatientID[i],]
+for (i in length(unique(NSAID$PatientID))){
+NSAID2<-spread(NSAID2,c(TYPE))}
+
+
+NB<-aggregate(NSAID$check ~ NSAID$PatientID+NSAID$EntryDate, FUN = paste, collapse = ";", data = NSAID)
+
+
+
+for (i in length(unique(crea.rep$EntryDate))){
+for (j in length(unique(crea.rep$PatientID))){
+NSAID2<-spread(NSAID,EntryDate,check)}}
+
 
 crea.rep$NSAID<-NA
 for (1 in 1:length(crea.rep$EntryDate)){
