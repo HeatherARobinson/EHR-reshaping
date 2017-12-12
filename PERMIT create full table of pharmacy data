@@ -59,7 +59,7 @@ unique(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
 
 EX<-sub$DESCRIPTION[grep("extra",sub$DESCRIPTION)]
-AD<-sub$DESCRIPTION[grep("addition",sub$DESCRIPTION)]
+AD<-sub$DESCRIPTION[grep("additionto",sub$DESCRIPTION)]
 sub$EXTRA<-ifelse(sub$DESCRIPTION %in% AD | sub$DESCRIPTION %in% EX,1,0)
 #'EXTRA' MARKS PRESCRIPTIONS THAT ARE ADDITIONS OF MORE TO THE SAME DRUG, 
 #OFTEN SUPPLEMENTING BOXED MEDICATION (E.G. 'TAKE AN EXTRA TABLET EVERY MORNING WITH THE ONE IN YOUR VENALINK').
@@ -162,8 +162,8 @@ as.data.frame
 library(survival)
 
 first$NEWENDDATE<-NA
-for (i in 1:length(as.factor(first$TYPE))){
-codab<-coda[coda$TYPE==first$TYPE[i],]
+for (i in 1:length(unique(first$TYPE))){
+codab<-coda[coda$REP==first$TYPE[i],]
 indx<-neardate(first$PatientID, codab$PatientID, first$EntryDate,codab$EntryDate,best="after")
 first$NEWENDDATE<-(ifelse(first$TYPE==first$TYPE[i],codab[indx,"EntryDate"],first$NEWENDDATE))
 }
@@ -171,7 +171,7 @@ first$NEWENDDATE<-as.Date(first$NEWENDDATE,origin="1970-01-01")
 head(first[!is.na(first$NEWENDDATE),])
 
 first<-first[!is.na(first$NEWENDDATE)&first$NEWENDDATE>first$EntryDate&first$NEWENDDATE<first$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","NEWENDDATE")]
-length(first$PatientID)#only 24 prescriptions are affected
+length(first$PatientID)#only 7 prescriptions are affected
 meddata<-merge(meddata,first,all.x=TRUE)
 meddata$END_DATE<-ifelse(!is.na(meddata$NEWENDDATE)&meddata$END_DATE>meddata$NEWENDDATE&meddata$EntryDate<meddata$NEWENDDATE,meddata$NEWENDDATE,meddata$END_DATE)
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
@@ -180,30 +180,31 @@ save(meddata,file="PERMITmeddata.rda")
 ####################################################################################CHECKED
 #DEAL WITH 'EXTRAS'
 ex<-meddata[meddata$EXTRA==1,]
-head(ex)
 subx<-meddata[meddata$EXTRA==0,]
-head(subx)
+ex<-ex[ex$TYPE %in% subx$TYPE & ex$PatientID %in% subx$PatientID & ex$EntryDate>=subx$EntryDate & ex$END_DATE<subx$END_DATE,]
+ex[!is.na(ex$TYPE),] #No specific entries are impacted- many will be additions to other types of drugs in the dosette.
 
-smalltab<-ex[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-columns=names(smalltab[c(1:3)])
-dots<-lapply(columns, as.symbol)
-firstU <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
+#head(subx)
+#smalltab<-ex[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+#columns=names(smalltab[c(1:3)])
+#dots<-lapply(columns, as.symbol)
+#firstU <-smalltab %>% 
+#group_by_(.dots=dots) %>%
+#as.data.frame
 
-firstU$AddDate<-NA
-firstU$AddDose<-NA
-for (i in 1:length(as.factor(firstU$TYPE))){
-exb<-ex[ex$TYPE==firstU$TYPE[i],]
-indx<-neardate(firstU$PatientID, subx$PatientID, firstU$EntryDate,subx$EntryDate,best="after")
-firstU$AddDate<-(ifelse(firstU$TYPE==firstU$TYPE[i],subx[indx,"EntryDate"],firstU$AddDate))
-firstU$AddDose<-(ifelse(firstU$TYPE==firstU$TYPE[i],subx[indx,"DAILY_DOSE"],firstU$AddDose))
-}
-firstU$AddDate<-as.Date(firstU$AddDate,origin="1970-01-01")
-head(firstU[!is.na(firstU$AddDate),])
-firstU<-firstU[!is.na(firstU$AddDate)&firstU$AddDate>=firstU$EntryDate&firstU$AddDate<firstU$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","AddDate","AddDose")]
-length(firstU$PatientID)#1252 prescriptions are affected
-names(firstU)
+#firstU$AddDate<-NA
+#firstU$AddDose<-NA
+#for (i in 1:unique(as.factor(firstU$TYPE))){
+#exb<-ex[ex$TYPE==firstU$TYPE[i],]
+#indx<-neardate(firstU$PatientID, subx$PatientID, firstU$EntryDate,subx$EntryDate,best="after")
+#firstU$AddDate<-(ifelse(firstU$TYPE==firstU$TYPE[i],subx[indx,"EntryDate"],firstU$AddDate))
+#firstU$AddDose<-(ifelse(firstU$TYPE==firstU$TYPE[i],subx[indx,"DAILY_DOSE"],firstU$AddDose))
+#}
+#firstU$AddDate<-as.Date(firstU$AddDate,origin="1970-01-01")
+#head(firstU[!is.na(firstU$AddDate),])
+#firstU<-firstU[!is.na(firstU$AddDate)&firstU$AddDate>=firstU$EntryDate&firstU$AddDate<firstU$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","AddDate","AddDose")]
+#length(firstU$PatientID)#1252 prescriptions are affected
+#names(firstU)
 
 ##################################################################### ONGOING
 
