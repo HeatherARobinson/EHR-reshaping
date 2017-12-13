@@ -7,84 +7,59 @@ node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done 
 ##################################################################################################################################
 #R COMMANDS
 library(stringr)
+library(plyr)
 library(lubridate)
 library(dplyr)
+library(tidyr)
 load("crea.rep221117.rda")
 meddata<-read.csv("perl_input.csv")
 meddata<-unique(meddata)
+
+################################################################################################
+#MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
+smalltab<-crea.rep[,c("PatientID","event.date")]
+
+#CREATE A TABLE OF NSAID MEDICATIONS BY DATE
+
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
-smalltab<-NSAID[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-columns=names(smalltab[c(1:3)])
-dots<-lapply(columns, as.symbol)
-NSAID <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
+NSAID<-NSAID[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
 NSAID<-NSAID[order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
+NSAID$EntryDate<-as.Date(NSAID$EntryDate,format="%d/%m/%Y")
+NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
+
+#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
+smalltab$NSAID<-NA
+for (i in length(unique(smalltab$event.date))){
+for (j in length(unique(smalltab$PatientID))){
+K<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],]
+K<-K[order(rev(K$EntryDate)),]
+K<-K[!duplicated(K$TYPE),]
+K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
+NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
+NB<-rename(NB,c("K$EntryDate"="date", "K$check"="check"))
+smalltab$NSAID<-ifelse(is.na(smalltab$NSAID),paste(NB$check),smalltab$NSAID)
+}}
 
 #################################################################################################CHECKED
 
-#CODE FOR IF MORE THAN ONE OF THE SAME TYPE- NEAREST DATE MATCH WITHIN LOOP?
+ARB<-meddata[meddata$FAMILY=="ARB",]
+ARB<-ARB[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+ARB<-ARB[order(ARB$PatientID,ARB$TYPE,ARB$DAILY_DOSE),] 
+ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/%m/%Y")
+ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 
-smalltab<-crea.rep[,c("PatientID","EntryDate")]
-columns=names(smalltab[c(1,2)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
-NSAID$EntryDate<-as.Date(NSAID$EntryDate,origin="1970-01-01")
-NSAID$END_DATE<-as.Date(NSAID$END_DATE,origin="1970-01-01")
-
-for (i in length(unique(smalltab$EntryDate))){
+#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
+smalltab$ARB<-NA
+for (i in length(unique(smalltab$event.date))){
 for (j in length(unique(smalltab$PatientID))){
-K<-NSAID[NSAID$PatientID==NSAID$PatientID[j]&NSAID$EntryDate[i]<=smalltab$EntryDate[i]&NSAID$END_DATE>=smalltab$EntryDate[i],]
-
-
-K$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
-Klist<-unique(K$check)
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K,na.action=na.omit,na.action=NULL)
+K<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],]
+K<-K[order(rev(K$EntryDate)),]
+K<-K[!duplicated(K$TYPE),]
+K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
+NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
+NB<-rename(NB,c("K$EntryDate"="date", "K$check"="check"))
+smalltab$ARB<-ifelse(is.na(smalltab$ARB),paste(NB$check),smalltab$ARB)
 }}
-#IF YOU ARE ADDING ON EXTRA DOSES, THAT CAN BE DONE HERE USING AGGREGATE BEFORE PROCEEDING
-
-DRUGOPTIONS<-unique(crea.rep$check)
-#########################################################################################CHECKED
-
-indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
-                   best="prior")
-crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
-crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >30, 1, NA)
-table(crea.rep$SerSodDateFlag) #652
-a<-crea.rep[!is.na(crea.rep$SerumSodium),]
-length(a$PatientID) #284225
-crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
-
-
-
-for (i in length(unique(crea.rep$EntryDate))){
-for (i in length(unique(crea.rep$EntryDate))){
-NSAID2<-NSAID[NSAID$PatientID==NSAID$PatientID[i],]
-for (i in length(unique(NSAID$PatientID))){
-NSAID2<-spread(NSAID2,c(TYPE))}
-
-
-NB<-aggregate(NSAID$check ~ NSAID$PatientID+NSAID$EntryDate, FUN = paste, collapse = ";", data = NSAID)
-
-
-
-for (i in length(unique(crea.rep$EntryDate))){
-for (j in length(unique(crea.rep$PatientID))){
-NSAID2<-spread(NSAID,EntryDate,check)}}
-
-
-crea.rep$NSAID<-NA
-for (1 in 1:length(crea.rep$EntryDate)){
-s[i]<-NSAID_wide[NSAID_wide$EntryDate<=crea.rep$EntryDate[i]&NSAID_wide$END_DATE>=crea.rep$EntryDate[i],]
-crea.rep$NSAID<-ifelse(is.na(crea.rep$NSAID),(paste(s[i]$check),collapse=','),crea.rep$NSAID)}
-#date match crea.rep to ongoing prescriptions
-
-cols<-as.charactern(NSAID_wide[,c(1:max(as.numeric(NSAID_wide$Index)))])
-nsb<-ldply(apply(NSAID_wide, 1, function(x) data.frame(x = paste(x[2:length(NSAID_wide)],sep="",collapse=""))))
-nsb<-data.table(unique(nsb[c("PatientID","check")]))
-write.csv(nsb,file="UNIQUE_NSAIDS.csv",row.names=FALSE)#ALL UNIQUE PRESCRIPTIONS ARE LATER TO BE CODED
 
 
 ####################################################################################CHECKED
