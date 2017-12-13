@@ -8,18 +8,17 @@ node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done 
 #R COMMANDS
 library(stringr)
 library(lubridate)
+library(dplyr)
 load("crea.rep221117.rda")
-load("perl_input.rda")
+meddata<-read.csv("perl_input.csv")
 meddata<-unique(meddata)
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
 smalltab<-NSAID[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-columns=names(smalltab[i,c(1:3)])
+columns=names(smalltab[c(1:3)])
 dots<-lapply(columns, as.symbol)
 NSAID <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
-NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
-NSAIDlist<-unique(NSAID$check)
 NSAID<-NSAID[order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
 
 #################################################################################################CHECKED
@@ -32,13 +31,21 @@ dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
 group_by_(.dots=dots) %>%
 as.data.frame
+NSAID$EntryDate<-as.Date(NSAID$EntryDate,origin="1970-01-01")
+NSAID$END_DATE<-as.Date(NSAID$END_DATE,origin="1970-01-01")
 
 for (i in length(unique(smalltab$EntryDate))){
 for (j in length(unique(smalltab$PatientID))){
 K<-NSAID[NSAID$PatientID==NSAID$PatientID[j]&NSAID$EntryDate[i]<=smalltab$EntryDate[i]&NSAID$END_DATE>=smalltab$EntryDate[i],]
+
+
+K$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
+Klist<-unique(K$check)
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K,na.action=na.omit,na.action=NULL)
 }}
+#IF YOU ARE ADDING ON EXTRA DOSES, THAT CAN BE DONE HERE USING AGGREGATE BEFORE PROCEEDING
 
+DRUGOPTIONS<-unique(crea.rep$check)
 #########################################################################################CHECKED
 
 indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
