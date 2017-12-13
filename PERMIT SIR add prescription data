@@ -221,3 +221,6 @@ unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
 write.csv(unique_ACEIs,file="uniqueACEIs.csv")
 unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
 write.csv(unique_ACEIs,file="uniqueACEIs.csv")
+
+#########################################################################################
+births.long1<-reshape(smalltab, varying=c(“ARCs″,”NSAIDs″, idvar=”PatientID”, direction="long",sep=”_”)
