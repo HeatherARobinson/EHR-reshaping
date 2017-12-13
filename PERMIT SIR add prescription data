@@ -36,7 +36,7 @@ K<-K[order(rev(K$EntryDate)),]
 K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-rename(NB,c("K$EntryDate"="date", "K$check"="check"))
+NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
 smalltab$NSAID<-ifelse(is.na(smalltab$NSAID),paste(NB$check),smalltab$NSAID)
 }}
 
@@ -57,7 +57,7 @@ K<-K[order(rev(K$EntryDate)),]
 K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-rename(NB,c("K$EntryDate"="date", "K$check"="check"))
+NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
 smalltab$ARB<-ifelse(is.na(smalltab$ARB),paste(NB$check),smalltab$ARB)
 }}
 
@@ -74,14 +74,35 @@ ALD_ANT$END_DATE<-as.Date(ALD_ANT$END_DATE,format="%d/%m/%Y")
 smalltab$ALD_ANT<-NA
 for (i in length(unique(smalltab$event.date))){
 for (j in length(unique(smalltab$PatientID))){
-K<-ALD_ANT[ALD_ANT$EntryDate<=smalltab$event.date[i]&ARALD_ANTB$END_DATE>=smalltab$event.date[i],]
+K<-ALD_ANT[ALD_ANT$EntryDate<=smalltab$event.date[i]&ALD_ANT$END_DATE>=smalltab$event.date[i],]
 K<-K[order(rev(K$EntryDate)),]
 K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-rename(NB,c("K$EntryDate"="date", "K$check"="check"))
+NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
 smalltab$ALD_ANT<-ifelse(is.na(smalltab$ALD_ANT),paste(NB$check),smalltab$ALD_ANT)
 }}
+
+#################################################################################################CHECKED
+Anti<-meddata[meddata$FAMILY=="ANT_MIC",]
+Anti<-Anti[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+Anti<-Anti[order(Anti$PatientID,Anti$TYPE,Anti$DAILY_DOSE),] 
+Anti$EntryDate<-as.Date(Anti$EntryDate,format="%d/%m/%Y")
+Anti$END_DATE<-as.Date(Anti$END_DATE,format="%d/%m/%Y")
+
+#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
+smalltab$Anti<-NA
+for (i in length(unique(smalltab$event.date))){
+for (j in length(unique(smalltab$PatientID))){
+K<-Anti[Anti$EntryDate<=smalltab$event.date[i]&Anti$END_DATE>=smalltab$event.date[i],]
+K<-K[order(rev(K$EntryDate)),]
+K<-K[!duplicated(K$TYPE),]
+K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
+NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
+NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
+smalltab$Anti<-ifelse(is.na(smalltab$Anti),paste(NB$check),smalltab$Anti)
+}}
+
 
 ################################################################################### CHECKED
 
