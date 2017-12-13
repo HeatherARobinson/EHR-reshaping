@@ -37,7 +37,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$NSAIDs<-ifelse(is.na(smalltab$NSAID),paste(NB$check),smalltab$NSAID)
+smalltab$NSAIDs<-ifelse(is.na(smalltab$NSAIDs),paste(NB$check),smalltab$NSAIDs)
 }}
 
 #################################################################################################CHECKED
@@ -58,7 +58,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$ARBs<-ifelse(is.na(smalltab$ARB),paste(NB$check),smalltab$ARB)
+smalltab$ARBs<-ifelse(is.na(smalltab$ARBs),paste(NB$check),smalltab$ARBs)
 }}
 
 
@@ -80,7 +80,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Aldosterone_Antagonists<-ifelse(is.na(smalltab$ALD_ANT),paste(NB$check),smalltab$ALD_ANT)
+smalltab$Aldosterone_Antagonists<-ifelse(is.na(smalltab$Aldosterone_Antagonists),paste(NB$check),smalltab$Aldosterone_Antagonists)
 }}
 
 #################################################################################################CHECKED
@@ -100,7 +100,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Antimicrobials<-ifelse(is.na(smalltab$Anti),paste(NB$check),smalltab$Anti)
+smalltab$Antimicrobials<-ifelse(is.na(smalltab$Antimicrobials),paste(NB$check),smalltab$Antimicrobials)
 }}
 ##############################################################################################
 
@@ -120,7 +120,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Thiazide_Diuretics<-ifelse(is.na(smalltab$THI),paste(NB$check),smalltab$THI)
+smalltab$Thiazide_Diuretics<-ifelse(is.na(smalltab$Thiazide_Diuretics),paste(NB$check),smalltab$Thiazide_Diuretics)
 }}
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
@@ -139,7 +139,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Loop_Diuretics<-ifelse(is.na(smalltab$LOOP),paste(NB$check),smalltab$LOOP)
+smalltab$Loop_Diuretics<-ifelse(is.na(smalltab$Loop_Diuretics),paste(NB$check),smalltab$Loop_Diuretics)
 }}
 ################################################################################### CHECKED
 IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
@@ -149,7 +149,7 @@ IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
 IMM$END_DATE<-as.Date(IMM$END_DATE,format="%d/%m/%Y")
 
 #MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$Immunosuppressanta<-NA
+smalltab$Immunosuppressants<-NA
 for (i in length(unique(smalltab$event.date))){
 for (j in length(unique(smalltab$PatientID))){
 K<-IMM[IMM$EntryDate<=smalltab$event.date[i]&IMM$END_DATE>=smalltab$event.date[i],]
@@ -158,7 +158,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Immunosuppressants<-ifelse(is.na(smalltab$IMM),paste(NB$check),smalltab$IMM)
+smalltab$Immunosuppressants<-ifelse(is.na(smalltab$Immunosuppressants),paste(NB$check),smalltab$Immunosuppressants)
 }}
 
 ########################################################################################
@@ -178,7 +178,7 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$ACE_Inhibitors<-ifelse(is.na(smalltab$ACEI),paste(NB$check),smalltab$ACEI)
+smalltab$ACE_Inhibitors<-ifelse(is.na(smalltab$ACE_Inhibitors),paste(NB$check),smalltab$ACE_Inhibitors)
 }}
 
 ########################################################################################
@@ -198,6 +198,26 @@ K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
 NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Nephrotoxins<-ifelse(is.na(smalltab$N),paste(NB$check),smalltab$N)
+smalltab$Nephrotoxins<-ifelse(is.na(smalltab$Nephrotoxins),paste(NB$check),smalltab$Nephrotoxins)
 }}
 #RECODE COLUMNS FOLLOWING AHMED'S INSTRUCTIONS FOR CODING (SEE PRE-PROCESSING PLAN)
+
+#######################################################################################
+unique_NSAIDs<-unique(smalltab$NSAIDs)
+write.csv(unique_NSAIDs,file="uniqueNSAIDs.csv")
+unique_LOOPs<-unique(smalltab$Loop_Diuretics)
+write.csv(unique_LOOPs,file="uniqueLoops.csv")
+unique_ARBs<-unique(smalltab$ARBs)
+write.csv(unique_ARBs,file="uniqueARBs.csv")
+unique_ALDs<-unique(smalltab$Aldosterone_Antagonists)
+write.csv(unique_ALDs,file="uniqueALDs.csv")
+unique_ANTIs<-unique(smalltab$Antimicrobials)
+write.csv(unique_ANTIs,file="uniqueANTIs.csv")
+unique_THIs<-unique(smalltab$Thiazide_Diuretics)
+write.csv(unique_THIs,file="uniqueTHIs.csv")
+unique_IMMs<-unique(smalltab$Immunosuppressants)
+write.csv(unique_IMMs,file="uniqueIMMs.csv")
+unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
+write.csv(unique_ACEIs,file="uniqueACEIs.csv")
+unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
+write.csv(unique_ACEIs,file="uniqueACEIs.csv")
