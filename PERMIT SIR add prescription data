@@ -18,26 +18,21 @@ meddata<-unique(meddata)
 ################################################################################################
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
 smalltab<-crea.rep[,c("PatientID","event.date")]
-
-#CREATE A TABLE OF NSAID MEDICATIONS BY DATE
-
+smalltab$NSAIDs<-NA
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
-NSAID<-NSAID[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-NSAID<-NSAID[order(NSAID$PatientID,NSAID$TYPE,NSAID$DAILY_DOSE),] 
+NSAID<-NSAID[order(rev(NSAID$EntryDate),NSAID$TYPE,NSAID$DAILY_DOSE),]
 NSAID$EntryDate<-as.Date(NSAID$EntryDate,format="%d/%m/%Y")
 NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
-
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$NSAIDs<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
+#################################################################################################
+#CREATE A TABLE OF NSAID MEDICATIONS BY DATE
+for (j in 1:length(unique(smalltab$PatientID))){
+N<-NSAID[NSAID$PatientID==smalltab$PatientID[j],c("TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+for (i in 1:length(unique(smalltab$event.date))){
+K<-NSAID[NSAID$PatientID==smalltab$PatientID[j]&NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],]
+K<-K[unique(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$NSAIDs<-ifelse(is.na(smalltab$NSAIDs),paste(NB$check),smalltab$NSAIDs)
+check<-toString(K$check)
+smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[i],paste(check),smalltab$NSAIDs)
 }}
 
 #################################################################################################CHECKED
@@ -52,7 +47,7 @@ ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 smalltab$ARBs<-NA
 for (i in length(unique(smalltab$event.date))){
 for (j in length(unique(smalltab$PatientID))){
-K<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],]
+K<-ARB[ARB$PatientID==smalltab$PatientID[j]&ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],]
 K<-K[order(rev(K$EntryDate)),]
 K<-K[!duplicated(K$TYPE),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
@@ -223,4 +218,6 @@ unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
 write.csv(unique_ACEIs,file="uniqueACEIs.csv")
 
 #########################################################################################
-smalltab<-merge(smalltab,unique_NSAIDs,by.x="NSAIDs",by.y="x")
+NS<-read.csv("uniqueNSAIDs.csv",header=TRUE)
+smalltab<-merge(smalltab,NS,all.x=TRUE)
+
