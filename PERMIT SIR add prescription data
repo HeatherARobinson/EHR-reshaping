@@ -27,10 +27,16 @@ smalltab<-crea.rep[crea.rep$PatientID%in%NSAID$PatientID,c("PatientID","event.da
 smalltab$NSAIDs<-NA
 
 #CREATE A TABLE OF NSAID MEDICATIONS BY PATIENT
-for i in 1:length(smalltab$event.date)
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","DAILY_DOSE")]
+for (i in 1:length(smalltab$event.date)){
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-N[!duplicated(N$TYPE),]
-check<-toString(paste(N$TYPE,N$DAILY_DOSE,sep=""))
+N %>%
+     group_by(PatientID) %>% 
+     mutate(NSAIDs = paste0(check, collapse = "")) 
+}
+
+
+
 crea.reps$NSAIDs<-ifelse(crea.reps$event.date==smalltab$event.date[i]&crea.reps$PatientID==smalltab$PatientID[j],paste(check),crea.reps$NSAIDs)
 }}
 crea.reps$NSAIDs<-ifelse(nchar(crea.reps$NSAIDs)<5,NA,crea.reps$NSAIDs)
