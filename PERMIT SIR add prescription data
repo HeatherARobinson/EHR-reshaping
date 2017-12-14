@@ -23,16 +23,12 @@ NSAID$EntryDate<-as.Date(NSAID$EntryDate,format="%d/%m/%Y")
 NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
 
-crea.reps<-crea.rep[,c("PatientID","event.date")]
 smalltab<-crea.rep[crea.rep$PatientID%in%NSAID$PatientID,c("PatientID","event.date")]
 smalltab$NSAIDs<-NA
 
-#################################################################################################
 #CREATE A TABLE OF NSAID MEDICATIONS BY PATIENT
-crea.reps$NSAIDs<-NA
-for (j in 1:length(unique(smalltab$PatientID))){
-for (i in 1:length(unique(smalltab$event.date))){
-N<-NSAID[NSAID$PatientID==NSAID$PatientID[j]&NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],]
+for i in 1:length(smalltab$event.date)
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","DAILY_DOSE")]
 N<-N[!duplicated(N$TYPE),]
 check<-toString(paste(N$TYPE,N$DAILY_DOSE,sep=""))
 crea.reps$NSAIDs<-ifelse(crea.reps$event.date==smalltab$event.date[i]&crea.reps$PatientID==smalltab$PatientID[j],paste(check),crea.reps$NSAIDs)
