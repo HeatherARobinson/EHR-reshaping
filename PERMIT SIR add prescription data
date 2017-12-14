@@ -31,14 +31,13 @@ smalltab$NSAIDs<-NA
 #CREATE A TABLE OF NSAID MEDICATIONS BY PATIENT
 crea.reps$NSAIDs<-NA
 for (j in 1:length(unique(smalltab$PatientID))){
-N<-NSAID[NSAID$PatientID==NSAID$PatientID[j],]
 for (i in 1:length(unique(smalltab$event.date))){
-P<-N[N$EntryDate<=smalltab$event.date[i]&N$EntryDate>=smalltab$event.date[i],]
-P<-P[!duplicated(P$TYPE),]
-check<-toString(paste(P$TYPE,P$DAILY_DOSE,sep=""))
+N<-NSAID[NSAID$PatientID==NSAID$PatientID[j]&NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],]
+N<-N[!duplicated(N$TYPE),]
+check<-toString(paste(N$TYPE,N$DAILY_DOSE,sep=""))
 crea.reps$NSAIDs<-ifelse(crea.reps$event.date==smalltab$event.date[i]&crea.reps$PatientID==smalltab$PatientID[j],paste(check),crea.reps$NSAIDs)
 }}
-
+crea.reps$NSAIDs<-ifelse(nchar(crea.reps$NSAIDs)<5,NA,crea.reps$NSAIDs)
 #################################################################################################CHECKED
 smalltab<-crea.rep[,c("PatientID","event.date")]
 ARB<-meddata[meddata$FAMILY=="ARB",]
@@ -105,7 +104,7 @@ smalltab$Antimicrobials<-ifelse(is.na(smalltab$Antimicrobials),paste(NB$check),s
 
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
 THI<-THI[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-THI<-ALD_ANT[order(THI$PatientID,THI$TYPE,THI$DAILY_DOSE),] 
+THI<-THI[order(rev(THI$EntryDate),THI$TYPE,THI$DAILY_DOSE),] 
 THI$EntryDate<-as.Date(THI$EntryDate,format="%d/%m/%Y")
 THI$END_DATE<-as.Date(THI$END_DATE,format="%d/%m/%Y")
 
@@ -113,13 +112,11 @@ THI$END_DATE<-as.Date(THI$END_DATE,format="%d/%m/%Y")
 smalltab$Thiazide_Diuretics<-NA
 for (i in length(unique(smalltab$event.date))){
 for (j in length(unique(smalltab$PatientID))){
-K<-THI[THI$EntryDate<=smalltab$event.date[i]&THI$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
+K<-THI[THI$PatientID==smalltab$PatientID[j]&THI$EntryDate<=smalltab$event.date[i]&THI$END_DATE>=smalltab$event.date[i],]
+K<-K[!duplicated(c(K$PatientID,K$EntryDate,K$TYPE)),]
 K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Thiazide_Diuretics<-ifelse(is.na(smalltab$Thiazide_Diuretics),paste(NB$check),smalltab$Thiazide_Diuretics)
+smalltab$Thiazide_Diuretics<-ifelse(is.na(smalltab$Thiazide_Diuretics)&smalltab$PatientID==smalltab$PatientID[j],paste(NB$"K$check"),smalltab$Thiazide_Diuretics)
 }}
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
