@@ -33,13 +33,9 @@ N<-N[!duplicated(N$TYPE),]
 N %>%
      group_by(PatientID) %>% 
      mutate(NSAIDs = paste0(check, collapse = "")) 
+smalltab$NSAIDs<-ifelse(smalltab$event.date %in% N$EntryDate &smalltab$PatientID %in% N$PatientID,paste(N$check),smalltab$NSAIDs)
 }
-
-
-
-crea.reps$NSAIDs<-ifelse(crea.reps$event.date==smalltab$event.date[i]&crea.reps$PatientID==smalltab$PatientID[j],paste(check),crea.reps$NSAIDs)
-}}
-crea.reps$NSAIDs<-ifelse(nchar(crea.reps$NSAIDs)<5,NA,crea.reps$NSAIDs)
+smalltab$NSAIDs<-ifelse(nchar(smalltab$NSAIDs)<5,NA,smalltab$NSAIDs)
 #################################################################################################CHECKED
 smalltab<-crea.rep[,c("PatientID","event.date")]
 ARB<-meddata[meddata$FAMILY=="ARB",]
