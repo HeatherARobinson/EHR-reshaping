@@ -17,22 +17,25 @@ meddata<-unique(meddata)
 
 ################################################################################################
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
-smalltab<-crea.rep[,c("PatientID","event.date")]
-smalltab$NSAIDs<-NA
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
 NSAID<-NSAID[order(rev(NSAID$EntryDate),NSAID$TYPE,NSAID$DAILY_DOSE),]
 NSAID$EntryDate<-as.Date(NSAID$EntryDate,format="%d/%m/%Y")
 NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
+NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
+
+crea.reps<-crea.rep[,c("PatientID","event.date")]
+smalltab<-crea.rep[crea.rep$PatientID%in%NSAID$PatientID,c("PatientID","event.date")]
+smalltab$NSAIDs<-NA
+
 #################################################################################################
 #CREATE A TABLE OF NSAID MEDICATIONS BY DATE
-for (j in 1:length(unique(smalltab$PatientID))){
-N<-NSAID[NSAID$PatientID==smalltab$PatientID[j],c("TYPE","EntryDate","END_DATE","DAILY_DOSE")]
+for (j in 1:length(unique(smalltabD$PatientID))){
+N<-NSAID[NSAID$PatientID==NSAID$PatientID[j],]
 for (i in 1:length(unique(smalltab$event.date))){
-K<-NSAID[NSAID$PatientID==smalltab$PatientID[j]&NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],]
+K<-N[N$EntryDate<=smalltab$event.date[i]&N$END_DATE>=smalltab$event.date[i],]
 K<-K[unique(K$TYPE),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
 check<-toString(K$check)
-smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[i],paste(check),smalltab$NSAIDs)
+crea.reps$NSAIDs<-ifelse(crea.reps$event.date==smalltab$event.date[i]&crea.reps$PatientID==smalltab$PatientID[j],paste(check),crea.reps$NSAIDs)
 }}
 
 #################################################################################################CHECKED
