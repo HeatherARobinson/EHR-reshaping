@@ -123,22 +123,29 @@ as.data.frame
 smalltab$ANTs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$ANTs)) 
 }}
 ##############################################################################################
-
+#THIAZIDE DIURETICS
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
-THI<-THI[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-THI<-THI[order(rev(THI$EntryDate),THI$TYPE,THI$DAILY_DOSE),] 
 THI$EntryDate<-as.Date(THI$EntryDate,format="%d/%m/%Y")
 THI$END_DATE<-as.Date(THI$END_DATE,format="%d/%m/%Y")
+THI$check<-paste(THI$TYPE,THI$DAILY_DOSE,sep="")
 
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$Thiazide_Diuretics<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-THI[THI$PatientID==smalltab$PatientID[j]&THI$EntryDate<=smalltab$event.date[i]&THI$END_DATE>=smalltab$event.date[i],]
-K<-K[!duplicated(c(K$PatientID,K$EntryDate,K$TYPE)),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-smalltab$Thiazide_Diuretics<-ifelse(is.na(smalltab$Thiazide_Diuretics)&smalltab$PatientID==smalltab$PatientID[j],paste(NB$"K$check"),smalltab$Thiazide_Diuretics)
+smalltab<-crea.rep[crea.rep$PatientID %in% THI$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
+smalltab$THIs<-NA
+
+for (i in 1:length(unique(smalltab$event.date))){
+for (i in 1:length(unique(smalltab$PatientID))){
+THI<-THI[THI$PatientID==smalltab$PatientID[j],]
+N<-THI[THI$EntryDate<=smalltab$event.date[i]&THI$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-N[!duplicated(N$PatientID,N$TYPE),]
+N<-na.omit(N)
+
+P<-N %>%
+summarise(outs=paste(na.omit(N$check),collapse="")) %>%
+as.data.frame
+
+smalltab$THIs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$THIs)) 
 }}
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
