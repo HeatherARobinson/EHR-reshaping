@@ -30,11 +30,11 @@ smalltab$NSAIDs<-NA
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
 for (i in 1:length(unique(smalltab$event.date))){
 for (i in 1:length(unique(smalltab$PatientID))){
-NSAID<-NSAID[NSAID$PatientID==smalltab$PatientID[j],]
 N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-N[order(N$EntryDate,decreasing = TRUE), ]
 N<-N[!duplicated(N$PatientID,N$TYPE),]
 N<-na.omit(N)
+N<-N[N$PatientID==smalltab$PatientID[j],]
 
 P<-N %>%
 summarise(outs=paste(na.omit(N$check),collapse="")) %>%
