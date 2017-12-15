@@ -32,17 +32,17 @@ smalltab$NSAIDs<-NA
 library (dplyr)
 for (i in 1:length(unique(smalltab$event.date))){
 for (j in 1:length(unique(smalltab$PatientID[smalltab$event.date==smalltab$event.date[i]]))){
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
-N<-N[order(N$EntryDate,decreasing = TRUE), ]
-N<-na.omit(N)
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N[i,j]<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
+N[i,j]<-N[i,j][order(N$EntryDate,decreasing = TRUE), ]
+N[i,j]<-na.omit(N[i,j])
+N[i,j]<-N[i,j][!duplicated(N[i,j][c("PatientID","TYPE")]),]
 
-P<-N %>%
+P[i,j]<-N[i,j] %>%
 group_by(PatientID,EntryDate) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 
-smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$out),paste(smalltab$NSAIDs)) 
+NSAIDs[i,j]<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs[i,j]),paste(smalltab$NSAIDs)) 
 }}
 write.csv(smalltab,file="NSAIDS.csv")
 #################################################################################################CHECKED
