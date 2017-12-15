@@ -33,7 +33,7 @@ N<-N[!duplicated(N$TYPE),]
 N %>%
      group_by(PatientID) %>% 
      mutate(NSAIDs = paste0(check, collapse = "")) 
-smalltab$NSAIDs<-ifelse(smalltab$event.date %in% N$EntryDate &smalltab$PatientID %in% N$PatientID,paste(N$check),smalltab$NSAIDs)
+smalltab$NSAIDs<-ifelse(smalltab$event.date %in% N$EntryDate &smalltab$PatientID %in% N$PatientID,paste(N$NSAIDs),smalltab$NSAIDs)
 }
 smalltab$NSAIDs<-ifelse(nchar(smalltab$NSAIDs)<5,NA,smalltab$NSAIDs)
 #################################################################################################CHECKED
