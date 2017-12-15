@@ -24,16 +24,18 @@ NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
 
 smalltab<-crea.rep[crea.rep$PatientID%in%NSAID$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
 smalltab$NSAIDs<-NA
 
 #CREATE A TABLE OF NSAID MEDICATIONS BY PATIENT
 for (i in 1:length(smalltab$event.date)){
 N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
-N<-N[!duplicated(N$TYPE),]
+N<-N[!duplicated(c(N$TYPE,N$PatientID)),]
 N %>%
-     group_by(PatientID) %>% 
-     mutate(NSAIDs = paste0(check, collapse = "")) 
-smalltab$NSAIDs<-ifelse(smalltab$event.date %in% N$EntryDate &smalltab$PatientID %in% N$PatientID,paste(N$NSAIDs),smalltab$NSAIDs)
+group_by(PatientID,EntryDate) %>%
+summarise(years=paste(na.omit(N$check[N$PatientID==N$PatientID&N$EntryDate==smalltab$event.date[i]]),collapse=" ")) %>%
+as.data.frame
+smalltab$NSAIDs<-ifelse(smalltab$event.date %in% N$EntryDate &smalltab$PatientID %in% N$PatientID,paste(N$years),smalltab$NSAIDs) 
 }
 smalltab$NSAIDs<-ifelse(nchar(smalltab$NSAIDs)<5,NA,smalltab$NSAIDs)
 #################################################################################################CHECKED
