@@ -31,15 +31,13 @@ smalltab$NSAIDs<-NA
 
 for (i in 1:length(smalltab$event.date)){
 for (j in 1:length(smalltab$PatientID)){
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i]&NSAID$PatientID<=smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
-N<-N[!duplicated(c(N$PatientID, N$TYPE)),]
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$EntryDate>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
+N<-N[!duplicated(N$TYPE),]
 N<-na.omit(N)
-#N<-ifelse(nrow(N)>0,
-N %>%
-group_by(PatientID,EntryDate) %>%
+N<-N %>%
 summarise(outs=paste(na.omit(N$check),collapse="")) %>%
 as.data.frame
-smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(N$outs),smalltab$NSAIDs) 
+smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(N$outs),paste(smalltab$NSAIDs)) 
 }}
 
 head(smalltab[!is.na(smalltab$NSAIDs),])
