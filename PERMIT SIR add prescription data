@@ -29,23 +29,21 @@ smalltab$NSAIDs<-NA
 ###############################################################################################checked
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
 
-library (taRifx)
 library (dplyr)
-library(tcltk)
-for (i in 1:length(unique(smalltab$event.date))){
-for (i in 1:length(unique(smalltab$PatientID))){
 N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-N[order(N$EntryDate,decreasing = TRUE), ]
-N<-N[!duplicated(N$PatientID,N$TYPE),]
 N<-na.omit(N)
-N<-N[N$PatientID==smalltab$PatientID[j],]
+N<-N[!duplicated(N[c("PatientID","TYPE")]),]
 
 P<-N %>%
-summarise(outs=paste(na.omit(N$check),collapse="")) %>%
-as.data.frame
+group_by(EntryDate, PatientID) %>%
+summarise(outs=paste(na.omit(check),collapse="")) %>%
+data.frame()
 
-smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$NSAIDs)) 
-}}
+
+
+smalltab$NSAIDs<-ifelse(smalltab$event.date==N$EntryDate&smalltab$PatientID==N$PatientID,paste(outs),paste(smalltab$NSAIDs)) 
+}
 
 head(smalltab[!is.na(smalltab$NSAIDs),])
 smalltab$NSAIDs2<-ifelse(nchar(smalltab$NSAIDs)<5,NA,smalltab$NSAIDs)
