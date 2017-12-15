@@ -28,6 +28,10 @@ smalltab<-unique(smalltab)
 smalltab$NSAIDs<-NA
 ###############################################################################################checked
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
+
+library (taRifx)
+library (dplyr)
+library(tcltk)
 for (i in 1:length(unique(smalltab$event.date))){
 for (i in 1:length(unique(smalltab$PatientID))){
 N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
