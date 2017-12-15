@@ -30,23 +30,21 @@ smalltab$NSAIDs<-NA
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
 
 library (dplyr)
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+for (i in 1:length(unique(smalltab$event.date))){
+for (j in 1:length(unique(smalltab$PatientID[smalltab$event.date==smalltab$event.date[i]]))){
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
 N<-N[order(N$EntryDate,decreasing = TRUE), ]
 N<-na.omit(N)
 N<-N[!duplicated(N[c("PatientID","TYPE")]),]
 
 P<-N %>%
-group_by(EntryDate, PatientID) %>%
+group_by(PatientID,EntryDate) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 
-
-
-smalltab$NSAIDs<-ifelse(smalltab$event.date==N$EntryDate&smalltab$PatientID==N$PatientID,paste(outs),paste(smalltab$NSAIDs)) 
-}
-
-head(smalltab[!is.na(smalltab$NSAIDs),])
-smalltab$NSAIDs2<-ifelse(nchar(smalltab$NSAIDs)<5,NA,smalltab$NSAIDs)
+smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$out),paste(smalltab$NSAIDs)) 
+}}
+write.csv(smalltab,file="NSAIDS.csv")
 #################################################################################################CHECKED
 
 #ARBS
