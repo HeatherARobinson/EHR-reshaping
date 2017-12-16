@@ -43,9 +43,10 @@ P$event.date<-smalltab$event.date[i]
 
 smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==P$PatientID,paste(P$outs),paste(smalltab$NSAIDs)) 
 smalltabx<-smalltab[!smalltab$NSAIDs=="NA",]
-write.table(smalltabx,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE) }
-NS<-read.table("NSAIDs.txt",header=TRUE,sep=",")
+write.table(smalltabx,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+NS<-read.table("NSAIDs.txt",header=FALSE,sep=",")
 NS<-unique(NS)
+colnames(NS) <- c("PatientID","event.date","NSAIDs")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 #####################################################################################################CHECKED
 ARB<-meddata[meddata$FAMILY=="ARB",]
