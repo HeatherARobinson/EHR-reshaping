@@ -32,23 +32,22 @@ smalltab$NSAIDs<-NA
 library (dplyr)
 for (i in 1:length(unique(smalltab$event.date))){
 for (j in 1:length(unique(smalltab$PatientID[smalltab$event.date==smalltab$event.date[i]]))){
-N[i,j]<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
-N[i,j]<-N[i,j][order(N$EntryDate,decreasing = TRUE), ]
-N[i,j]<-na.omit(N[i,j])
-N[i,j]<-N[i,j][!duplicated(N[i,j][c("PatientID","TYPE")]),]
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&NSAID$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-na.omit(N)
+N<-N[!duplicated(N[c("PatientID","TYPE")]),]
 
-P[i,j]<-N[i,j] %>%
+P<-N %>%
 group_by(PatientID,EntryDate) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 
-NSAIDs[i,j]<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs[i,j]),paste(smalltab$NSAIDs)) 
-}}
-write.csv(smalltab,file="NSAIDS.csv")
-#################################################################################################CHECKED
+smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$NSAIDs)) 
+smalltabx<-smalltab[!smalltab$NSAIDs=="NA",]
+write.table(smalltabx,file="NSAIDS.txt",append=TRUE)}}
 
-#ARBS
-ARB<-meddata[meddata$FAMILY=="ARBs",]
+#####################################################################################################CHECKED
+ARB<-meddata[meddata$FAMILY=="ARB",]
 ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/%m/%Y")
 ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
@@ -58,34 +57,37 @@ smalltab<-unique(smalltab)
 smalltab$ARBs<-NA
 
 for (i in 1:length(unique(smalltab$event.date))){
-for (i in 1:length(unique(smalltab$PatientID))){
-ARB<-ARB[ARB$PatientID==smalltab$PatientID[j],]
-N<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+for (j in 1:length(unique(smalltab$PatientID[smalltab$event.date==smalltab$event.date[i]]))){
+N<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i]&ARB$PatientID==smalltab$PatientID[j],c("EntryDate","PatientID","TYPE","check")]
 N<-N[order(N$EntryDate,decreasing = TRUE), ]
-N<-N[!duplicated(N$PatientID,N$TYPE),]
 N<-na.omit(N)
+N<-N[!duplicated(N[c("PatientID","TYPE")]),]
 
 P<-N %>%
-summarise(outs=paste(na.omit(N$check),collapse="")) %>%
-as.data.frame
+group_by(PatientID,EntryDate) %>%
+summarise(outs=paste(na.omit(check),collapse="")) %>%
+data.frame()
 
 smalltab$ARBs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$ARBs)) 
-}}
-#################################################################################################CHECKED
-#ALDOSTERONE ANTAGONISTS
-ALD<-meddata[meddata$FAMILY=="ALD_ANT",]
-ALD$EntryDate<-as.Date(ALD$EntryDate,format="%d/%m/%Y")
-ALD$END_DATE<-as.Date(ALD$END_DATE,format="%d/%m/%Y")
-ALD$check<-paste(ALD$TYPE,ALD$DAILY_DOSE,sep="")
+smalltabx<-smalltab[!smalltab$ARBs=="NA",]
+write.table(smalltabx,file="ARBS.txt",append=TRUE)}}
 
-smalltab<-crea.rep[crea.rep$PatientID %in% ALD$PatientID,c("PatientID","event.date")]
+#################################################################################################CHECKED
+
+#ALDOSTERONE ANTAGONISTS
+AA<-meddata[meddata$FAMILY=="ALD_ANT",]
+AA$EntryDate<-as.Date(AA$EntryDate,format="%d/%m/%Y")
+AAT$END_DATE<-as.Date(AA$END_DATE,format="%d/%m/%Y")
+AA$check<-paste(AA$TYPE,AA$DAILY_DOSE,sep="")
+
+smalltab<-crea.rep[crea.rep$PatientID %in% AA$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-smalltab$ALDs<-NA
+smalltab$AAs<-NA
 
 for (i in 1:length(unique(smalltab$event.date))){
 for (i in 1:length(unique(smalltab$PatientID))){
-ALD<-ALD[ALD$PatientID==smalltab$PatientID[j],]
-N<-ALD[ALD$EntryDate<=smalltab$event.date[i]&ALD$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+AA<-AA[AA$PatientID==smalltab$PatientID[j],]
+N<-AA[AA$EntryDate<=smalltab$event.date[i]&AA$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-N[order(N$EntryDate,decreasing = TRUE), ]
 N<-N[!duplicated(N$PatientID,N$TYPE),]
 N<-na.omit(N)
@@ -94,33 +96,7 @@ P<-N %>%
 summarise(outs=paste(na.omit(N$check),collapse="")) %>%
 as.data.frame
 
-smalltab$ALDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$ALDs)) 
-}}
-
-#################################################################################################CHECKED
-#ALDOSTERONE ANTAGONISTS
-ANT<-meddata[meddata$FAMILY=="ANT_MIC",]
-ANT$EntryDate<-as.Date(ANT$EntryDate,format="%d/%m/%Y")
-ANT$END_DATE<-as.Date(ANT$END_DATE,format="%d/%m/%Y")
-ANT$check<-paste(ANT$TYPE,ANT$DAILY_DOSE,sep="")
-
-smalltab<-crea.rep[crea.rep$PatientID %in% ANT$PatientID,c("PatientID","event.date")]
-smalltab<-unique(smalltab)
-smalltab$ANTs<-NA
-
-for (i in 1:length(unique(smalltab$event.date))){
-for (i in 1:length(unique(smalltab$PatientID))){
-ANT<-ANT[ANT$PatientID==smalltab$PatientID[j],]
-N<-ANT[ANT$EntryDate<=smalltab$event.date[i]&ANT$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
-N<-N[order(N$EntryDate,decreasing = TRUE), ]
-N<-N[!duplicated(N$PatientID,N$TYPE),]
-N<-na.omit(N)
-
-P<-N %>%
-summarise(outs=paste(na.omit(N$check),collapse="")) %>%
-as.data.frame
-
-smalltab$ANTs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$ANTs)) 
+smalltab$AAs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$AAs)) 
 }}
 ##############################################################################################
 #THIAZIDE DIURETICS
@@ -149,81 +125,100 @@ smalltab$THIs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$Patie
 }}
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
-LOOP<-LOOP[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-LOOP<-LOOP[order(LOOP$PatientID,LOOP$TYPE,LOOP$DAILY_DOSE),] 
 LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
 LOOP$END_DATE<-as.Date(LOOP$END_DATE,format="%d/%m/%Y")
+LOOP$check<-paste(LOOP$TYPE,LOOP$DAILY_DOSE,sep="")
 
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
+smalltab<-crea.rep[crea.rep$PatientID %in% LOOP$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
 smalltab$Loop_Diuretics<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-LOOP[LOOP$EntryDate<=smalltab$event.date[i]&LOOP$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Loop_Diuretics<-ifelse(is.na(smalltab$Loop_Diuretics),paste(NB$check),smalltab$Loop_Diuretics)
+
+for (i in 1:length(unique(smalltab$event.date))){
+for (i in 1:length(unique(smalltab$PatientID))){
+LOOP<-LOOP[LOOP$PatientID==smalltab$PatientID[j],]
+N<-LOOP[LOOP$EntryDate<=smalltab$event.date[i]&LOOP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-N[!duplicated(N$PatientID,N$TYPE),]
+N<-na.omit(N)
+
+P<-N %>%
+summarise(outs=paste(na.omit(N$check),collapse="")) %>%
+as.data.frame
+
+smalltab$Loop_Diuretics<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$LOOPs)) 
 }}
 ################################################################################### CHECKED
 IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
-IMM<-IMM[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-IMM<-IMM[order(IMM$PatientID,IMM$TYPE,IMM$DAILY_DOSE),] 
 IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
 IMM$END_DATE<-as.Date(IMM$END_DATE,format="%d/%m/%Y")
+IMM$check<-paste(IMM$TYPE,IMM$DAILY_DOSE,sep="")
 
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$Immunosuppressants<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-IMM[IMM$EntryDate<=smalltab$event.date[i]&IMM$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Immunosuppressants<-ifelse(is.na(smalltab$Immunosuppressants),paste(NB$check),smalltab$Immunosuppressants)
+smalltab<-crea.rep[crea.rep$PatientID %in% IMM$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
+smalltab$IMMs<-NA
+
+for (i in 1:length(unique(smalltab$event.date))){
+for (i in 1:length(unique(smalltab$PatientID))){
+IMM<-IMM[IMM$PatientID==smalltab$PatientID[j],]
+N<-IMM[IMM$EntryDate<=smalltab$event.date[i]&IMM$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-N[!duplicated(N$PatientID,N$TYPE),]
+N<-na.omit(N)
+
+P<-N %>%
+summarise(outs=paste(na.omit(N$check),collapse="")) %>%
+as.data.frame
+
+smalltab$IMMs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$IMMs)) 
 }}
 
 ########################################################################################
 ACEI<-meddata[meddata$FAMILY=="ACEI",]
-ACEI<-ACEI[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-ACEI<-ACEI[order(ACEI$PatientID,ACEI$TYPE,ACEI$DAILY_DOSE),] 
 ACEI$EntryDate<-as.Date(ACEI$EntryDate,format="%d/%m/%Y")
 ACEI$END_DATE<-as.Date(ACEI$END_DATE,format="%d/%m/%Y")
+ACEI$check<-paste(ACEI$TYPE,IMM$DAILY_DOSE,sep="")
 
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$ACE_Inhibitors<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-ACEI[ACEI$EntryDate<=smalltab$event.date[i]&ACEI$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$ACE_Inhibitors<-ifelse(is.na(smalltab$ACE_Inhibitors),paste(NB$check),smalltab$ACE_Inhibitors)
+smalltab<-crea.rep[crea.rep$PatientID %in% ACEI$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
+smalltab$ACEIs<-NA
+
+for (i in 1:length(unique(smalltab$event.date))){
+for (i in 1:length(unique(smalltab$PatientID))){
+ACEI<-ACEI[ACEI$PatientID==smalltab$PatientID[j],]
+N<-ACEI[ACEI$EntryDate<=smalltab$event.date[i]&ACEI$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-N[!duplicated(N$PatientID,N$TYPE),]
+N<-na.omit(N)
+
+P<-N %>%
+summarise(outs=paste(na.omit(N$check),collapse="")) %>%
+as.data.frame
+
+smalltab$ACEIs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$ACEIs)) 
 }}
-
 ########################################################################################
-N<-meddata[meddata$FAMILY=="Nephrotoxin",]
-N<-N[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
-N<-N[order(N$PatientID,N$TYPE,N$DAILY_DOSE),] 
-N$EntryDate<-as.Date(N$EntryDate,format="%d/%m/%Y")
-N$END_DATE<-as.Date(N$END_DATE,format="%d/%m/%Y")
+NEP<-meddata[meddata$FAMILY=="Nephrotoxin",]
+NEP$EntryDate<-as.Date(NEP$EntryDate,format="%d/%m/%Y")
+NEP$END_DATE<-as.Date(NEP$END_DATE,format="%d/%m/%Y")
+NEP$check<-paste(NEP$TYPE,NEP$DAILY_DOSE,sep="")
 
-#MATCH EACH CREATININE TEST DATE TO ALL ONGOING NSAID MEDICATIONS
-smalltab$Nephrotoxins<-NA
-for (i in length(unique(smalltab$event.date))){
-for (j in length(unique(smalltab$PatientID))){
-K<-N[N$EntryDate<=smalltab$event.date[i]&N$END_DATE>=smalltab$event.date[i],]
-K<-K[order(rev(K$EntryDate)),]
-K<-K[!duplicated(K$TYPE),]
-K$check<-paste(K$TYPE,K$DAILY_DOSE,sep="")
-NB<-aggregate(K$check~K$EntryDate, FUN = paste, collapse = ";", data = K)
-NB<-plyr::rename(NB, c("K$EntryDate"="Date", "K$check"="check"))
-smalltab$Nephrotoxins<-ifelse(is.na(smalltab$Nephrotoxins),paste(NB$check),smalltab$Nephrotoxins)
+smalltab<-crea.rep[crea.rep$PatientID %in% NEP$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
+smalltab$NEPs<-NA
+
+for (i in 1:length(unique(smalltab$event.date))){
+for (i in 1:length(unique(smalltab$PatientID))){
+NEP<-NEP[NEP$PatientID==smalltab$PatientID[j],]
+N<-NEP[NEP$EntryDate<=smalltab$event.date[i]&NEP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-N[order(N$EntryDate,decreasing = TRUE), ]
+N<-N[!duplicated(N$PatientID,N$TYPE),]
+N<-na.omit(N)
+
+P<-N %>%
+summarise(outs=paste(na.omit(N$check),collapse="")) %>%
+as.data.frame
+
+smalltab$NEPs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==smalltab$PatientID[j],paste(P$outs),paste(smalltab$NEPs)) 
 }}
 #RECODE COLUMNS FOLLOWING AHMED'S INSTRUCTIONS FOR CODING (SEE PRE-PROCESSING PLAN)
 
@@ -244,7 +239,7 @@ unique_IMMs<-unique(smalltab$Immunosuppressants)
 write.csv(unique_IMMs,file="uniqueIMMs.csv")
 unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
 write.csv(unique_ACEIs,file="uniqueACEIs.csv")
-unique_ACEIs<-unique(smalltab$ACE_Inhibitors)
+unique_NEPs<-unique(smalltab$ACE_Nephrotoxins)
 write.csv(unique_ACEIs,file="uniqueACEIs.csv")
 
 #########################################################################################
