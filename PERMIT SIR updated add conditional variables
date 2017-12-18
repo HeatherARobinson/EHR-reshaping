@@ -128,10 +128,10 @@ crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
 
 ##################################################################
 #MEAN DAILY BLOOD UREA NITROGEN #30 DAYS
+
+table(droplevels(sir.data$CodeUnits[sir.data$ReadCode %in% BUN1.csv$ReadCode]))
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>=1,as.numeric(sir.data$CodeUnits),sir.data$temp)
-sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode & (sir.data$CodeUnits=="%"|sir.data$CodeUnits=="h"),NA,sir.data$temp)
-
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=50,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -399,7 +399,7 @@ crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
 ##########################################################
 load("sirdatahfonly.rda")
 
-head(sir.data[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode,]))# CHECK THERE ARE VALUES TO MATCH
+head(sir.data[sir.data$ReadCode %in% Nephrectomy1.csv$ReadCode,])# CHECK THERE ARE VALUES TO MATCH
 #NEPHRECTOMY
 sir.data$NephDate<-sir.data$EntryDate 
 sir.data$NephDate<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephDate) 
@@ -439,6 +439,8 @@ crea.rep$DiabDate<-as.Date(as.character(crea.rep$DiabDate),format="%Y%m%d")
 crea.rep$DaysSinceDiabetic<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$DiabDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic)
 crea.rep$Diabetes<-ifelse(is.na(crea.rep$DaysSinceDiabetic),0,1)
+
+
 save(crea.rep, file = "crea.repongoing.rda")
 
 #ATRIAL FIBRILLATION
@@ -472,7 +474,6 @@ as.data.frame
     head(first)
    
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")FDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
 crea.rep$IHDDate<-as.Date(as.character(crea.rep$IHDDate),format="%Y%m%d")
 crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$IHDDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
@@ -491,7 +492,6 @@ as.data.frame
     head(first)
     
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
 crea.rep$PVDDate<-as.Date(as.character(crea.rep$PVDDate),format="%Y%m%d")
 crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$PVDDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
