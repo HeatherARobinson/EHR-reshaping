@@ -91,7 +91,7 @@ write.csv(ARBlist,file="ARBlist.csv",row.names=FALSE)
 
 NS2<-read.csv("ARBlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("ARBs","PatientID","event.date")]
+NS<-NS[,c("Angiotensin_Receptor_Blockers","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
