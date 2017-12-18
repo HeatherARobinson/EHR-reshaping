@@ -208,7 +208,7 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
 IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
 IMM$END_DATE<-as.Date(IMM$END_DATE,format="%d/%m/%Y")
-IMM$check<-pasteIMM$TYPE,IMM$DAILY_DOSE,sep="")
+IMM$check<-paste(IMM$TYPE,IMM$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% IMM$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
 IMM<-IMM[order(IMM$EntryDate,decreasing = TRUE), ]
@@ -245,7 +245,7 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 ACEI<-meddata[meddata$FAMILY=="ACEI",]
 ACEI$EntryDate<-as.Date(ACEI$EntryDate,format="%d/%m/%Y")
 ACEI$END_DATE<-as.Date(ACEI$END_DATE,format="%d/%m/%Y")
-ACEI$check<-pasteACEI$TYPE,ACEI$DAILY_DOSE,sep="")
+ACEI$check<-paste(ACEI$TYPE,ACEI$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ACEI$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
 ACEI<-ACEI[order(ACEI$EntryDate,decreasing = TRUE), ]
@@ -265,17 +265,51 @@ data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="ACEI.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("IMM.txt",header=FALSE,sep=",")
+NS<-read.table("ACEI.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","ACEIstartDate","IMMdesc","event.date")
+colnames(NS) <- c("PatientID","ACEIstartDate","ACEIdesc","event.date")
 ACEIlist<-NS[!duplicated(NS$ACEIdesc),c("ACEIdesc")]
 
-write.csv(IMMlist,file="IMMlist.csv",row.names=FALSE) 
+write.csv(ACEIlist,file="ACEIlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("IMMlist.csv")
+NS2<-read.csv("ACEIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Immunosuppressants","PatientID","event.date")]
+NS<-NS[,c("ACE_Inhibitors","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 ###########################################################################
 NEP<-meddata[meddata$FAMILY=="Nephrotoxin",]
+NEP$EntryDate<-as.Date(NEP$EntryDate,format="%d/%m/%Y")
+NEP$END_DATE<-as.Date(NEP$END_DATE,format="%d/%m/%Y")
+NEP$check<-paste(NEP$TYPE,NEP$DAILY_DOSE,sep="")
+smalltab<-crea.rep[crea.rep$PatientID %in% NEP$PatientID,c("PatientID","event.date")]
+smalltab<-unique(smalltab)
+NEP<-NEP[order(NEP$EntryDate,decreasing = TRUE), ]
+
+for (i in 1:length(unique(smalltab$event.date))){
+N<-NEP[NEP$EntryDate<=smalltab$event.date[i]&NEP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+N<-na.omit(N)
+N<-N[order(N$PatientID,N$TYPE), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+
+P<-N %>%
+group_by(PatientID,EntryDate) %>%
+summarise(outs=paste(na.omit(check),collapse="")) %>%
+data.frame()
+P$event.date<-smalltab$event.date[i]
+data.frame()
+P<-P[order(P$PatientID,P$event.date) , ]
+write.table(P,file="NEP.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+
+NS<-read.table("NEP.txt",header=FALSE,sep=",")
+NS<-unique(NS)
+colnames(NS) <- c("PatientID","NEPstartDate","NEPdesc","event.date")
+NEPlist<-NS[!duplicated(NS$NEPdesc),c("NEPdesc")]
+
+write.csv(NEPlist,file="NEPlist.csv",row.names=FALSE) 
+#ADDED NEW CODE NOTATION MANUALLY
+
+NS2<-read.csv("NEPlist.csv")
+NS<-merge(NS,NS2,all.x=TRUE)
+NS<-NS[,c("Other_Nephrotoxins","PatientID","event.date")]
+crea.rep<-merge(crea.rep,NS,all.x=TRUE)
