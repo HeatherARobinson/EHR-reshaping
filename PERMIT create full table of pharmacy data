@@ -1,7 +1,7 @@
 #MAKE A LARGE TABLE TO PARSE THROUGH RESEARCH MEDICATION EVENTS PERL SCRIPT
 
 load("sir.datahfonly.Rdata")
-load("crea.rep221117.rda")
+load("crea.rep051217.rda")
 inst<-read.csv("inst051217.csv")
 codes1<-read.csv("reads.csv")
 codes2<-read.csv("emis.csv")
@@ -86,9 +86,17 @@ subs<-rbind(sub2,sub3)
 levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE, and there are no prescription instructions.
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE)&!is.na(subs$TABLETS_PER_DAY),subs$TABLETS_PER_DAY*subs$DOSE_PER_TAB,subs$DAILY_DOSE)
-subs$TABLETS_PER_DAY<-as.numeric(subs$TABLETS_PER_DAY)
+
 subs$TABLETS_PER_DAY<-ifelse(is.na(subs$TABLETS_PER_DAY)&!is.na(subs$DAILY_DOSE)&!is.na(subs$DOSE_PER_TAB),subs$DAILY_DOSE/subs$DOSE_PER_TAB,subs$TABLETS_PER_DAY)
 summary(subs$EntryDate[is.na(subs$DAILY_DOSE)]) #All dose information is complete after 2013 but not before.
+#FIND THE MEDIAN DOSE FOR EACH DRUG AND USE THIS IF MISSING
+b<-subs[,c("DAILY_DOSE","TYPE")]
+b<-na.omit(b)
+b$DAILY_DOSE<-as.numeric(b$DAILY_DOSE)
+b2<-b %>% group_by(TYPE) %>% summarise(MEDIAN_DOSE = median(DAILY_DOSE, na.rm = TRUE)) %>% as.data.frame
+
+subs<-merge(subs,b2,all.x=TRUE)
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$MEDIAN_DOSE,subs$DAILY_DOSE)
 
 ############################################################################CHECKED
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
@@ -142,12 +150,6 @@ meddata$REP2<-ifelse(meddata$REP2 %in% r& !is.na(meddata$REP2),paste(meddata$REP
 table(meddata$REP)
 table(meddata$REP2)#SOME STOPS REFERRING TO MORE THAN ONE MEDICATION
 meddata$ALT_OTHER_MEDS<-ifelse(is.na(meddata$REP),NA,meddata$ALT_OTHER_MEDS)
-
-#FIND THE MEDIAN DOSE FOR EACH DRUG AND USE THIS IF MISSING
-c<-aggregate(meddata[, "DAILY_DOSE"], list(meddata$TYPE), median)
-colnames(c)<-c("TYPE","MEDIAN_DOSE")
-meddata<-merge(meddata,c,all.x=TRUE)
-meddata$DAILY_DOSE<-ifelse(is.na(meddata$DAILY_DOSE),meddata$MEDIAN_DOSE,meddata$DAILY_DOSE)
 
 ################################################################################### CHECKED
 
@@ -218,8 +220,9 @@ ex[!is.na(ex$TYPE),] #No specific entries are impacted- many will be additions t
 #Drug family
 
 #CONVERT VOLUME DOSAGES FOR LIQUID MEDS. OMIT WATER TO AVOID PICKING UP SOLID DOSE MEDS INSTRUCTED TO BE DISSOLVED IN WATER.
-meddata$CodeValue<-ifelse(grepl("ml",meddata$DESCRIPTION)&!grepl("water",meddata$DESCRIPTION),as.numeric(meddata$CodeValue/5),as.numeric(meddata$CodeValue))
-write.table(meddata,file="perl_input.txt",row.names=FALSE,sep="\t")
+meddata$CodeValue<-ifelse(grepl("ml",meddata$DESCRIPTION)&!grepl("water",meddata$DESCRIPTION),as.numeric(meddata$CodeValue)/5,as.numeric(meddata$CodeValue))
+save(meddata,file="PERMITmeddata.rda")
+write.table(meddata,file="perl_input1812.txt",row.names=FALSE,sep="\t")
 
 #WRITE PERL INPUT TABLE WHICH OVERLAPS CONTINUOUS PRESCRIPTIONS (IF YOU NEED TO DO THIS TO DETERMINE A START AND END DATE)
 #IN THIS CASE WE ARE JUST MATCHING BACK TO THE NEAREST PRIOR PRESCRIPTION DATE.
