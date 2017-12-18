@@ -11,7 +11,7 @@ library(plyr)
 library(lubridate)
 library(dplyr)
 library(tidyr)
-load("crea.rep221117.rda")
+load("crea.rep051217.rda")
 meddata<-read.csv("perl_input.csv")
 meddata<-unique(meddata)
 
@@ -32,22 +32,23 @@ NSAID<-NSAID[order(NSAID$EntryDate,decreasing = TRUE), ]
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
 
 for (i in 1:length(unique(smalltab$event.date))){
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i]&!duplicated(NSAID[c("PatientID","TYPE")]),c("EntryDate","PatientID","TYPE","check")]
+N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-
+N<-N[order(N$TYPE) , ]
 P<-N %>%
 group_by(PatientID,EntryDate) %>%
+distinct(PatientID,TYPE,.keep_all = TRUE) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 
-smalltab$NSAIDs<-ifelse(smalltab$event.date==smalltab$event.date[i]&smalltab$PatientID==P$PatientID,paste(P$outs),paste(smalltab$NSAIDs)) 
-smalltabx<-smalltab[!smalltab$NSAIDs=="NA",]
-write.table(smalltabx,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 NS<-read.table("NSAIDs.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","event.date","NSAIDs")
-crea.rep<-merge(crea.rep,NS,all.x=TRUE)
+colnames(NS) <- c("PatientID","NSAIDstartDate","NSAIDs","event.date")
+crea.rep<-merge(crea.rep,NS[,c(1,3,4)],all.x=TRUE)
+NSAIDlist<-NS[unique(NS$NSAIDs),]
+write.csv(NSAIDlist,file="NSAIDlist.csv") 
 #####################################################################################################CHECKED
 ARB<-meddata[meddata$FAMILY=="ARB",]
 ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/%m/%Y")
