@@ -214,12 +214,15 @@ save(sir.data, file = "sir.datahf2tests.Rdata")
 ##########################################################################
 #FROM VERSIONS 061217 onwards:
 #SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
-aggregate(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))), list(crea.rep$PatientID), range) -> ranges
+library(lubridate)
+sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+
+aggregate(as.numeric(year(strptime(sir.data$event.date, format="%Y-%m-%d"))), list(sir.data$PatientID), range) -> ranges
 ranges$x[,2] - ranges$x[,1] -> ranges$range
 ranges[(which(ranges$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
-unique(crea.rep$PatientID)#6589
 crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
 unique(crea.rep$PatientID)#5950
+save(crea.rep,file="crea.rep2yrsall.rda")
 
 #IF DELETING DELAYED PATHOLOGY DUPLICATES
 #names(sir.data)
