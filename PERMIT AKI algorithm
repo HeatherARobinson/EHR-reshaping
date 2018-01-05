@@ -211,3 +211,4 @@ indx1 <-neardate(crea.rep$PatientID, a$PatientID, crea.rep$event.date, a$event.d
                    best="prior")
 crea.rep$NoAKIepisodes<-a[indx1, "AKIcounter"]
 crea.rep$NoAKIepisodes<-unlist(crea.rep$NoAKIepisodes)
+crea.rep$NoAKIepisodes<-ifelse(is.na(crea.rep$NoAKIepisodes),0,crea.rep$NoAKIepisodes)
