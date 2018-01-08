@@ -2,10 +2,18 @@
 
 library(lubridate)
 library(dplyr)
+library (taRifx)
+library (dplyr)
+library(tcltk)
+library(survival)
+
 
 ##################################################################################
 
-#SELECT ELIGIBLE PATIENTS (EXCLUDE TESTS AFTER DATE OF DIAGNOSIS WITH CKD (USE CKD ALGORITHM CODE TO ADD CKD DATE VARIABLES))
+#SELECT ELIGIBLE PATIENTS
+#USE CKD ALGORITHM CODE TO ADD CKD DATE VARIABLES
+#EXCLUDE TESTS AFTER DATE OF DIAGNOSIS WITH CKD 
+
 attach(x)
 x$KDmark<-ifelse(!is.na(x$MDRDeGFR)&x$MDRDeGFR<60,1,0)
 KD<-x[x$KDmark>0,]
@@ -28,17 +36,23 @@ a$CKDate<-as.Date(as.character(a$CKDate),format="%Y%m%d")
 a<-a[!is.na(a$PatientID) & (is.na(a$CKDate)|a$CKDate>a$EntryDate),]
 attach(a)
 
-#################################################################################
-#Order creatinine values and find the max per day per patient
-destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
-a <- a[order(-Creatinine),] #Creatinine is a summary value- the highest serum creatinine per day
-table(duplicated(a[,1:2]))
-a2<-a[duplicated(a[,1:2]),] #Remove any additional same day entries
-a<-a[!rownames(a) %in% rownames(a2),]#drop other values
-a<-a[!is.na(a$Creatinine),]
-length(a$PatientID)
+################################################################################
+#CALCULATE MDRD eGFR IF ABSENT
+o<-ifelse(a$Ethnicity=="4",1.212,1)
+o<-ifelse((is.na(a$Ethnicity)|a$Ethnicity==""),1,o)
+p<-ifelse(a$Gender=="F",0.742,1)
+a$Age<-(as.numeric(year(strptime(a$EntryDate, format="%Y%m%d"))))-a$BirthYear
+a$MDRDeGFR<-(175*((a$Creatinine/88.42)^-1.154))*(a$Age^-0.203)*o*p
+a<-a[,c("PatientID","event.date","Creatinine","Age", "Gender","MDRDeGFR")]
+attach(a)
 
-require(dplyr)
+#################################################################################
+#Select the maximum creatinine value per day per patient
+destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
+a <- a[order(-Creatinine),] #'Creatinine' refers to the summary value- the highest serum creatinine per day
+a2<-a[duplicated(a[,1:2]),] #Remove any additional same day entries
+a<-a[!rownames(a) %in% rownames(a2) & !is.na(a$Creatinine),]#drop other values
+
 sorted <- a %>% 
           arrange(PatientID,event.date) %>%
           group_by(PatientID) %>%
@@ -113,7 +127,6 @@ D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),NA)
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
 RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i])
-##########################################################################################################CHECKED
 
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
@@ -130,15 +143,24 @@ close(pb)
 ##########################################################################################################CHECKED
 
 #AKI FLAGGING AND STAGING OF TESTS
-newAKI<-ifelse(AKIyear==1|AKIweek==1,1,0)
-flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine<ref.low,"Low","NA")
-flag<-ifelse(AKIyear==0&AKIweek==0&Creatinine>ref.up,"High","NA")
-AKIStage<-0
-AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & RV_ratio<2,1,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & RV_ratio>=2&RV_ratio<3,2,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=3,3,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat>354,3,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & (stcreat/ref.up)>3,3,AKIStage)
-AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & (stcreat/ref.up)<=3,3& RV_ratio>=3,3,AKIStage)
+a$AKIflag<-ifelse(AKIyear==0&AKIweek==0&Creatinine<ref.low,"Low","NA") #Flag low values from more than 1 year ago
+a$AKIflag<-ifelse(AKIyear==0&AKIweek==0&Creatinine>ref.up,"High",paste(AKIflag)) #Flag high values from more than 1 year ago
+a$AKIStage<-0
+a$AKIflag<-ifelse(RV_ratio<1.5 & D<=26,"Report without alert. Send to authorisation Q. Consider requesting repeat If CKD unlikely.",paste(a$AKIflag))
+a$AKIStage<-ifelse(RV_ratio<1.5 & D>26,1,a$AKIStage))
 
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & (3*ref.up)<Creatinine,3,a$AKIStage))
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & !(3*ref.up)<Creatinine& RV_ratio>=3,3,a$AKIStage))
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & !(3*ref.up)<Creatinine& RV_ratio>=2&RV_ratio<3,2,a$AKIStage))
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & !(3*ref.up)<Creatinine& RV_ratio>=1.5&RV_ratio<2,1,a$AKIStage))
+
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age>=18 & Creatinine>354,3,a$AKIStage))
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=3,3,a$AKIStage)
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=2&RV_ratio<3,2,a$AKIStage)
+a$AKIStage<-ifelse(RV_ratio>=1.5 & Age<18 & stcreat<354 & RV_ratio>=1.5&RV_ratio<2,1,a$AKIStage)
+a$AKIflag<-if(is.na(a$AKIflag),"No Flag",paste(a$AKIflag))
+
+###############################################ATTACH FLAGS AND STAGING TO ORIGINAL TABLE
+a<-a[,c("PatientID","event.date","AKIStage","AKIflag")]
+a <-merge(a,x,all.x=TRUE)
+a$AKIStage<-ifelse(is.na(a$AKIStage),0,a$AKIStage)
