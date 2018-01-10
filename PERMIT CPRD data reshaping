@@ -1,14 +1,29 @@
+Open MobaXTerm
+ssh username@incline256.itservices.manchester.ac.uk
+(enter password this does not print on screen!)
+module load apps/binapps/stata/14-iph
+stata
+
 module load apps/gcc/R/3.3.3
 module load apps/binapps/rstudio/0.98.983-any-r
 rstudio
 
-#R code to prepare CPRD data
-require(haven)
-require(lubridate)
-require(gtools)
-
 #Windows specific
 #memory.size (100000)
+
+#R code to prepare CPRD data
+require(haven)
+require(gtools)
+library(zoo)
+library(plyr)
+library(tidyverse)
+library(data.table)
+library(survival)
+library(lubridate)
+
+#READ CONDITION CODE FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
+temp = list.files(pattern="*1.csv")
+for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 # hf_cases_clinical contains patid, adid and medcode
 # hf_cases_additional contains adid and patid
@@ -18,15 +33,14 @@ CPRD<-read_dta("hf_cases_clinical.dta")
 CPRD2<-read_dta("hf_cases_additional.dta")
 CPRD3<-read_dta("hf_cases_test.dta") 
 CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
-CPRD4$mob<-ifelse(CPRD4$mob==0,paste("01"),CPRD4$mob) # 283006 patients- no mob, infer as Jan
-CPRD4$dob <- as.Date(paste(CPRD4$yob,CPRD4$mob,"01",sep="-")) # default dob 01/01ta
 CPRDref<-CPRD[CPRD$medcode=="5",] #Only 2312 #References some dates of creatinine measures
 CPRD3ref<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the values in
 CPRDref<-CPRDref[,c(1,2)]
 CPRD3ref<-CPRD3ref[,c(1,2)]
-CPRDref<-rbind(CPRDref,CPRD3ref)
+CPRDref<-rbind(CPRDref,CPRD3ref) 
+save(CPRDref, file = "CPRDref.Rdata") #this is a list of patients and Creatinine dates to be used as a reference
 
-  save(CPRDref, file = "CPRDref.Rdata")
+#DONE
 
 #Join list of patients with creatinine tests from test and clinical tables
 CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
@@ -34,29 +48,25 @@ CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per pa
 length(levels(as.factor(CPRDref$patid)))
 #121836 patients
 
-#LIMIT TO PATIENTS WITH POST 2008 CREATININE TEST VALUES
-data<-CPRDref[as.numeric(year(strptime(CPRDref$eventdate, format="%Y-%m-%d")))>=2008,] #x all are post 2008
-table(data$patid)<1->rare  
-rownames(rare)-> ids
-rare[ids]
-CPRDref[!CPRDref$patid %in% rare[ids==TRUE],]->crea.rep	#Contains only people with a post 2008 entry
-
 #CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND SPECIFIC NUMBER OF TESTS
-aggregate(as.numeric(year(strptime(crea.rep$eventdate, format="%Y-%m-%d"))), list(crea.rep$patid), range) -> ranges
-ranges$x[,2] - ranges$x[,1] -> ranges$range
-ranges[(which(!ranges$range>=7)),1] -> range_short_ids    # define exclusion range
-crea.rep[-which(crea.rep$patid %in% range_short_ids),]->crea.rep2 
-df1<-crea.rep2[ crea.rep2$patid %in%  names(table(crea.rep2$patid))[table(crea.rep2$patid)==2] , ]
-levels(unique(as.factor(df1$patid)))
+post2008<-CPRDref[as.numeric(year(strptime(CPRDref$eventdate, format="%Y-%m-%d")))>=2008,]
+table(post2008$patid) < 2 -> rare  
+rownames(as.matrix(rare)) -> ids
+table(rare)
+CPRDref[!(CPRDref$patid %n% ids[rare]),] -> crea.rep
+levels(unique(as.factor(crea.rep$patid)) # 6589 patients have 2 or more post-2008 creatinine tests
+length(crea.rep$patid) #1454358 remaining
+
 CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
 CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
 CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
 CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
-CPRD.data1<-CPRD.data1[,c(1:2,6,11)]
-CPRD.data2<-CPRD.data2[,c(1,3:6)]
-CPRD.data3<-CPRD.data3[,c(1:2,6,10:12)]
-CPRD.data4<-CPRD.data4[,c(1:8,19)]
+CPRD.data1<-CPRD.data1[,c(1:2,6,8:11)]
+CPRD.data3<-CPRD.data3[,c(1:2,6,8:17)]
 
+#CPRD.data4 contains patient demographic information- add on date of birth
+CPRD4$mob<-ifelse(CPRD4$mob==0,paste("01"),CPRD4$mob) # 283006 patients- no mob, infer as Jan
+CPRD4$dob <- as.Date(paste(CPRD4$yob,CPRD4$mob,"01",sep="-")) # default dob 01/01
 ############################################################################################
 CPRDref<-merge(CPRD.data1,CPRD.data2,by=c("patid","adid"),all=FALSE)
 CPRD.data3$adid<-NA
@@ -76,45 +86,219 @@ CPRD.data4<-CPRD.data4[,c(1:3,5:6,9:12)]
 CPRD.data4$adid<-NA
 CPRD.data4<-CPRD.data4[ , order(names(CPRD.data4))]
 CPRD.data<-rbind(CPRD.data,CPRD.data4)
+CPRD.data$Age<-(as.numeric(year(strptime(CPRD.data$eventdate, format="")))-as.numeric(year(strptime(CPRD.data$dob, format="%Y-%m-%d"))))
 save(CPRD.data, file = "CPRD.data.Rdata")
 
-#REMOVE DUPLICATE ENTRIES
+#REMOVE FULL DUPLICATE ENTRIES
 CPRD.data<-unique(CPRD.data)
 save(CPRD.data, file = "CPRD.data.Rdata")
 
-#CHECK IF LOG EGFR NORMALLY DIST.
-GF$l<-log(GF$data2)
-qqnorm(log(GF$l));qqline(log(GF$l), col = 2)
+#######################################################################################
+#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
+hf<-CPRD.data[CPRD.data$medcode %in% HeartFailure1.csv$medcode,]
+length(unique(as.factor(hf$patid))) #x total heart failure patients identified with confirmed medcodes (V2)
+hf$hfage<-hf$Age
+smalltab<-hf[,c("patid","hfage")]
 
-#SELECT PATIENTS WITH A POST 18 HEART FAILURE DIAGNOSIS
-CPRDdob<-aggregate(CPRD.data$dob, list(CPRD.data$patid), max,na.rm=TRUE)
-CPRD.data3<-merge(CPRD.data,CPRDdob,by.x="patid",by.y="Group.1",all=FALSE)
-CPRD.data3$dob<-CPRD.data3$x
-CPRD.data3$Age<-floor((as.numeric(CPRD.data3$eventdate)-CPRD.data3$dob)/365)
+first<-smalltab %>% group_by(patid) %>%
+summarize(hfage = min(as.numeric(hfage)))
+ungroup(first)
+head(first)
 
-for i in 1:length(patid)
-CPRD.data3$HFAge<-min(Age[])
-#THIS PART OF THE CODE IS NOT READY YET
-
-CPRD.data4<-CPRD.data3[CPRD.data3$HFAge>=18,]
-length(levels(as.factor(CPRD.data4$patid)))
-
-
-#leaves data from x patients 
+CPRD.data<-merge(CPRD.data[CPRD.data$patid %in% hf$patid,],as.data.frame(first),all.x=TRUE)
+CPRD.data<-CPRD.data[CPRD.data$hfage>=18,]
+length(unique(CPRD.data$patid)) #7208  hf patients who were 18 or over at first diagnosis
+save(CPRD.data,file="CPRD.datahfonly.rda") #full patient records from all adult hf patients from all years
 
 CPRDgen<-aggregate(CPRD.data4$gender, list(CPRD.data4$patid), max,na.rm=TRUE)
-CPRD.data5<-merge(CPRD.data4,CPRDgen,by.x="patid",by.y="Group.1",all=FALSE)
-CPRD.data5$gender<-CPRD.data5$x.y
-CPRD.data5$DataSource<-3
-CPRD.data5$Source<-"CPRD"
+CPRD.data<-merge(CPRD.data,CPRDgen,by.x="patid",by.y="Group.1",all=FALSE)
+CPRD.data$gender<-CPRD.data5$x.y #THIS FINDS MISSING GENDER FROM OTHER PATIENT RECORDS.
 
+####################################################################################
+#COHORT SELECTION
+#REMOVE DIALYSIS PATIENTS
+dialysis<-CPRD.data[CPRD.data$medcode %in% Dialysis1.csv$medcode,]
+levels(as.factor(dialysis$PatientID)) #x dialysis patients will be removed
+
+#SELECT PATIENTS WITH CREATININE DATA
+CPRD.data[CPRD.data$ReadCode=="5",]->crea 
+crea <- droplevels(crea)
+crea<-crea[!crea$patid %in% dialysis$PatientID,]
+length(unique(as.factor(crea$PatientID))) #x hf patients over 18 at diagnosis minus dialysis patients and with creatinine data
+crea$Creatinine<-ifelse(crea$medcode=="5",data2,NA)
+crea$Units<-data3
+###################################################################################
+
+#SENSITIVITY TESTS
+#HOW MANY ZERO CR VALUES AND HOW MANY CR VALUES UNDER 20
+lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] 
+length(lowcr$patid)
+#ARE THESE FROM OLD ASSAY?
+levels(as.factor(lowcr$patid)) #x patients are affected
+table(lowcr$CodeValue)
+#x are zero values
+
+crea<-crea[crea$CodeValue>0,]
+lowcr<-crea[crea$CodeValue<18,] 
+length(lowcr$patid) 
+#ARE THESE FROM OLD ASSAY?
+lowcr <- droplevels(lowcr)
+head(lowcr)
+table(lowcr$CodeUnits)
+#             %      g/L    g/mol        L micmol/l     mmol   mmol/L 
+#   4400        1        1        1        1     6099        1      766 
+
+#  umol/l   umol/L        h    mol/L 
+#       5   891607        1        1 
+summary(lowcr$EventDate)
+#MOST SEEM TO BE IN RECENT UNITS AND RECENT VALUES
+####################################################################################ADD ETHNICITY DATA
+
+#In the first iteration X records were retained. 
+#Some units may ahve been incorrectly selected from the pulldown menu
+#Others may may result from recent assay change.
+
+crea$CodeUnits<-as.factor(crea$CodeUnits)
+levels(crea$CodeUnits)
+#[1] ""         "%"        "g/L"      "g/mol"    "L"        "micmol/l"
+ #[7] "mmol"     "mmol/L"   "umol/l"   "None"  "umol/L"  
+ 
+levels(crea$CodeUnits)[c(1,6,9)]<-"umol/L"
+levels(crea$CodeUnits)[c(6)]<-"mmol/L"
+levels(crea$CodeUnits)[c(2:5)]<-"NA"
+crea<-crea[!is.na(crea$CodeUnits),]
+crea$CodeValue<-ifelse(crea$CodeUnits=="mmol/L" & as.numeric(crea$CodeValue)<50,(as.numeric(crea$CodeValue)*1000),as.numeric(crea$CodeValue))
+crea$CodeUnits<-"umol/L"
+summary(crea$CodeValue) #Any remaining high and low values will be removed
+crea<-crea[as.numeric(crea$CodeValue)>=20 & !is.na(crea$CodeValue),] 
+#Upper limit TBA
+
+save(crea,file="crearecleaned.rda")
+
+#DATA CLEANING 
+
+#load("sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+#load("crearecleaned.rda") # all steps above completed
+
+length(crea$CodeValue) #412394 records left
+
+#REMOVE SAME DAY CREATININE ENTRIES IF THE SOURCE LOCATION CODE DIFFERS.
+names(crea)
+crea<-crea[order(crea$PatientID,crea$CodeValue, rev(crea$Source)),]
+crea2<-crea[(duplicated(crea[,c(1,4,6)])&!duplicated(crea[,7])),]
+length(crea2$CodeValue) #Only 24 same day duplicates are from different sources
+crea3<-crea[(duplicated(crea[,c(1,4,6)])),]
+length(crea3$CodeValue) #in total, 105665 of 412394 (26%) records have a same day duplicate
+
+crea<-crea[!rownames(crea) %in% rownames(crea2),]
+
+#REMOVE DELAYED CREATININE ENTRIES FROM SAME CALENDAR MONTH IF THE SOURCE LOCATION CODE DIFFERS.
+
+crea$event.date<-as.Date(as.character(crea$EntryDate),format="%Y%m%d")
+(as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))) -> year
+(as.numeric(month(strptime(crea$event.date, format="%Y-%m-%d")))) -> month
+crea$EntryPeriod<-paste(month,year)
+
+crea$Source<-ifelse(crea$Source=="salfordt",paste("2"),paste("1")) #2 for hospital, 1 for GP
+crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
+
+crea<-crea[order(crea[,1], -(crea[,4]),(crea[,7])),]
+crea4<-crea[(duplicated(crea[,c(1,6,14)])&!duplicated(crea[,7])),] #DELAYED DUPLICATES (SAME PATIENT, MONTH, VALUE)
+length(crea4$PatientID) #- Only 1 of the remaining potential duplicate records outside of the same day window come from different locations
+crea5<-crea[duplicated(crea[,c(1,6,14)]),] 
+table(crea5$Source) #The vast majority (12802 of out of range duplicates are multiple tests from within hospital. Only 730 have a GP code and are repeats within GP practises)
+
+crea<-crea[!rownames(crea) %in% rownames(crea4),]
+
+length(crea$PatientID) # 412369 records retained 
+
+
+#SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
+smalltab<-crea[,c("PatientID","CodeValue", "EntryDate")]
+xcrea<-smalltab %>% group_by(PatientID, EntryDate) %>%
+summarize(Creatinine = mean(as.numeric(as.character(CodeValue))))
+head(xcrea)
+ungroup(xcrea)
+crea<-merge(crea,as.data.frame(xcrea),all.x=TRUE)
+
+save(crea,file="crearecleaned.rda")
+
+######################################################
+#Add demographic variables from lookup tables
+
+#LSOA 
+
+#ASSIGN AGE
+#crea$Age<-(as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d"))))-crea$BirthYear
+
+#CODE ETHNICITY
 eth<-read.table("ethnicitycprd.csv",header=TRUE,sep=",")
 eth<-eth[,c(1,5)]
-CPRD.data6<-merge(CPRD.data5,eth,by.x="medcode",by.y="medcode",all=TRUE)
+crea<-merge(crea,eth,by.x="medcode",by.y="medcode",all=TRUE)
 #Only medcodes present are 22953 and 12351.
 #also 23955 generic code x1
+crea<-crea[order(crea$patid),] 
 
-CPRD.data6<-CPRD.data6[order(CPRD.data6$patid),] 
+#COHORT SELECTION
+#LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
+crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
+table(crea$PatientID) < 2 -> rare  
+rownames(as.matrix(rare)) -> ids
+table(rare)
+crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
+levels(unique(as.factor(crea.rep$PatientID))) # 6589 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
+length(crea.rep$PatientID) #284233 remaining
+sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
+#Breakpoint
+#######################################################
+save(crea.rep, file = "crea.rephf2tests.Rdata")
+save(sir.data, file = "sir.datahf2tests.Rdata")
+#######################################################
+
+#ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING R SCRIPT IN SAME FOLDER
+#ADD PRESCRIPTION DATA USING R SCRIPT IN SAME FOLDER
+
+#Narrow lookup table to the full list of codes of interest to speed up processing
+#temp = list.files(pattern="*1.csv")
+#for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+#merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
+#list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartFailure1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
+#sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
+
+##########################################################################
+#FROM VERSIONS 061217 onwards:
+#SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
+library(lubridate)
+sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+
+aggregate(as.numeric(year(strptime(sir.data$event.date, format="%Y-%m-%d"))), list(sir.data$PatientID), range) -> ranges
+ranges$x[,2] - ranges$x[,1] -> ranges$range
+ranges[(which(ranges$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
+crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
+unique(crea.rep$PatientID)#5950
+save(crea.rep,file="crea.rep2yrsall.rda")
+
+#IF DELETING DELAYED PATHOLOGY DUPLICATES
+#names(sir.data)
+#d<-sir.data[duplicated(sir.data[,c(1,2,6,15)])&sir.data$ReadCode %in% Pathology1.csv$ReadCode,c(1,2,6,7,15)]
+#d<-unique(d[order(as.Date(d$EntryDate,format="%Y%m%d")),,drop=FALSE,fromLast=FALSE]) #REMAINING DUPLICATES BASED ON SAME VALUE AND CALENDAR MONTH BUT DIFFERENT SOURCE LOCATION
+#THE EARLIEST OF THE DUPLICATES IS KEPT.
+
+#Then use strptime (strip time) to convert dates into POSIX format
+#date_vec <-strptime(paste(crea.rep$entry.date), "%Y/%m/%d")
+#compare observation 1 and 2, 2 and 3, 3 and 4...
+#first_date <- date_vec[1:(length(date_vec)-1)]
+#second_date <- date_vec[2:length(date_vec)]
+#second_gap <- difftime(second_date, first_date, units="days")
+#Determine the gaps that are less than 30 days apart.Leave TRUE in to keep 1st instance
+#dup_index <- second_gap>10
+#dup_index <- c(TRUE, dup_index)
+#dat[dup_index, ]
+
+
+
+
+
 
 CPRDinput<-file(paste("CPRD_input.csv"), open="w")
 cat("Patient_ID","Date","Age","Gender","Ethnicity","Medcode","data1","data2","data3","data4","data5","data6","data7","data8","DataSource","Source","\n", sep=",",file="CPRD_input.csv",append=TRUE)
