@@ -15,7 +15,7 @@ load("crea.rep181217.rda")
 load("PERMITmeddata.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
-library (dplyr)
+l
 ################################################################################################
 
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
