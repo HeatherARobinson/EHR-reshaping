@@ -184,6 +184,11 @@ levels(unique(as.factor(crea$PatientID)))
 #6918 remaining with hf as an adult, all same day duplicates removed.
 #No other duplicate pathology data removed, no data time range applied.
 
+#ADD LSOA
+imd<-read.csv("IMD2010.csv")
+imd<-imd[,c("LSOA","IMD_Decile2010")]
+crea<-merge(crea,imd,all.x=TRUE)
+
 #COHORT SELECTION
 #LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
 
