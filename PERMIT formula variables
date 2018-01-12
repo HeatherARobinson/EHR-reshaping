@@ -42,19 +42,22 @@ CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.r
 setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
 
+names(crea.rep)
+colnames(crea.rep)[57] <- "CKDpriorstage"
 crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
-summary(crea.rep$CKD)
-
 crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
 
+table(crea.rep$CKD)
+table(crea.rep$CKDpriorstage)
+
 #ASSIGN CKD STAGES
-crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(!is.na(crea.rep$CKDStage)&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
+crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
 crea.rep$CKDStage<-ifelse(is.na(crea.rep$CKDStage),0,crea.rep$CKDStage)
 
-for (i in 1:length(crea.rep$PatientID)){
+for (i in 1:length(unique(crea.rep$PatientID))){
 crea.rep$MaxCKDStage[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
 
