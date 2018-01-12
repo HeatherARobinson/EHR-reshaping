@@ -37,17 +37,19 @@ a<-merge(a,as.data.frame(first),all.x=TRUE)
 a$event.date<-as.Date(as.character(a$EntryDate),format="%Y%m%d")
 a$CKDate<-as.Date(as.character(a$CKDate),format="%Y%m%d")
 
+#CKDate is the date at which CKD is first diagnosed
+
 a<-a[!is.na(a$PatientID) & (is.na(a$CKDate)|a$CKDate>a$EntryDate),]
 attach(a)
 summary(a$CKDate,na.rm=TRUE)
 length(a$PatientID)
-#We only have 3178 tests to assess
+#We only have 1559 tests to assess
 
 #index<-which(event.date>=as.Date(ymd("2007-01-01")))
 #The index start date should be 1 year prior to the first recorded creatinine test of the study window
 #a<-a[index,]
 length(a$PatientID) #458030 potentially qualifying tests
-levels(as.factor(a$Ethnicity)) #None are level 4
+levels(as.factor(a$Ethnicity)) #None are level 4 (black ethnicities)
 
 #If going back to use sir data to capture older tests require the following lines:
 #a$CodeValue<-ifelse(as.numeric(as.character(a$CodeUnits))>0 
@@ -73,12 +75,8 @@ names(a)
 
 #Order creatinine values and find the max per day per patient
 destring(c(PatientID,Creatinine,Age,Gender,event.date,MDRDeGFR))
-a <- a[order(-Creatinine),] #Creatinine is a summary value- the highest serum creatinine per day
-table(duplicated(a[,1:2]))
-a2<-a[duplicated(a[,1:2]),] #Remove same day duplicate entries
-a<-a[!rownames(a) %in% rownames(a2),]#drop other values
-a<-a[!is.na(a$Creatinine),]
-length(a$PatientID) #Remaining entries after removing missing values
+a<-unique(a)
+length(a$PatientID) #Remaining entries
 #1526
 ########################################################################## CHECKED
 
@@ -114,6 +112,9 @@ Dmin<-0
 yearvalue<-0
 weekvalue<-0
 Dvalue<-0
+D<-0
+RV1<-0
+RV2<-0
 protagonistdos<-0
 protagonistvalue<-0
 
@@ -155,7 +156,8 @@ mightyvalue[i]<-Creatinine[i]
 protagonistvalue<-ave(mightyvalue,PatientID,FUN = function(x) max(x, na.rm = TRUE))
 
 #Finds the 48 hour difference in 2 samples taken within a 48 hour window
-D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),NA)
+D<-NA
+D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),D[i])
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
 RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i])
@@ -164,14 +166,7 @@ RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i])
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
 AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
-AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])}
-
-
-
-AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
-AKIweek[i]<-ifelse((mightyvalue[i]/weekmin[i])>=1.5 & !is.na(weekmin[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
-AKIyear[i]<-ifelse(is.na(AKIyear[i]) & !is.na(yearmedian[i]) & RV_ratio[i]<1.5 & D[i]>26,1,AKIyear[i])
-AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin>0 & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])}
+AKIweek[i]<-ifelse(is.na(AKIweek[i]) & weekmin[i]>0 & RV_ratio[i]<1.5 & D[i]>26,1,AKIweek[i])}
 
 #END OF LOOP
 close(pb)
