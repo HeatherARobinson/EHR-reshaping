@@ -103,7 +103,7 @@ a<-crea.rep[!is.na(crea.rep$BMI),]
 length(a$PatientID) #278489
 crea.rep$BMI<-unlist(crea.rep$BMI)
 #######################################################
-#MAX DAILY SERUM URIC ACID #1 YEAR
+#MEAN DAILY SERUM URIC ACID #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UricAcid1.csv$ReadCode, as.numeric(paste(sir.data$CodeValue)),NA)
 UA<-sir.data[!is.na(sir.data$temp) & !is.na(sir.data$PatientID),]
 unique(UA$CodeUnits)
@@ -466,7 +466,7 @@ summary(crea.rep$DaysSinceAF,na.rm=TRUE)
 
 #IHD
 sir.data$IHDDate<-sir.data$EntryDate 
-sir.data$IHDDate<-ifelse(!sir.data$ReadCode  %in%  IHD1.csv$ReadCode,NA,sir.data$IHDDate) 
+sir.data$IHDDate<-ifelse(!(sir.data$ReadCode  %in%  IHD1.csv$ReadCode)&!(sir.data$ReadCode  %in%  IHD1.csv$MedCode),NA,sir.data$IHDDate) 
 smalltab<-sir.data[!is.na(sir.data$IHDDate),c("PatientID","IHDDate")]
 first<-smalltab %>%
     group_by(PatientID) %>%
@@ -541,6 +541,21 @@ crea.rep$DaysSinceRT<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),s
 crea.rep$DaysSinceRT<-ifelse(crea.rep$DaysSinceRT<0,NA,crea.rep$DaysSinceRT)
 crea.rep$RenalTransplant<-ifelse(is.na(crea.rep$DaysSinceRT),0,1)
 summary(crea.rep$DaysSinceRT,na.rm=TRUE)
+
+save(crea.rep, file = "crea.repongoing.rda")
+ write.csv(crea.rep,file="crea.repongoing.csv")
+ 
+ #DEAD
+sir.data$Dead<-ifelse(sir.data$ReadCode  %in%  Death1.csv$ReadCode,1,0) 
+smalltab<-sir.data[sir.data$Dead==1,c("PatientID","Dead")]
+first<-smalltab %>%
+   group_by(PatientID) %>%  
+      slice(which.max(as.numeric(Dead))) %>%
+as.data.frame    
+head(first)
+  
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+summary(crea.rep$Dead,na.rm=TRUE)
 
 save(crea.rep, file = "crea.repongoing.rda")
  write.csv(crea.rep,file="crea.repongoing.csv")
