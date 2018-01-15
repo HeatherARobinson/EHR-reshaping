@@ -180,21 +180,20 @@ LOOP<-LOOP[order(LOOP$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-LOOP[LOOP$EntryDate<=smalltab$event.date[i]&LOOP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="LOOP.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 NS<-read.table("LOOP.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","LOOPstartDate","LOOPdesc","event.date")
+colnames(NS) <- c("PatientID","LOOPdesc","event.date")
 LOOPlist<-NS[!duplicated(NS$LOOPdesc),c("LOOPdesc")]
 
 #write.csv(LOOPlist,file="LOOPlist.csv",row.names=FALSE) 
