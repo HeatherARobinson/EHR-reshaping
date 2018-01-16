@@ -64,7 +64,7 @@ ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ARB$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-ARB<-ARB[order(ARB$EntryDate,decreasing = TRUE), ]
+ARB<-ARB[order(ARB$TYPE,ARB$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
@@ -91,7 +91,7 @@ ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 
 NS2<-read.csv("ARBlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Angiotensin_Receptor_Blockers","PatientID","event.date")]
+NS<-NS[,c("ARBs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) got up to here this time
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
@@ -101,26 +101,25 @@ AA$END_DATE<-as.Date(AA$END_DATE,format="%d/%m/%Y")
 AA$check<-paste(AA$TYPE,AA$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% AA$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-AA<-AA[order(AA$EntryDate,decreasing = TRUE), ]
+AA<-AA[order(AA$TYPE,LOOP$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-AA[AA$EntryDate<=smalltab$event.date[i]&AA$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="AA.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 NS<-read.table("AA.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","AAstartDate","AAdesc","event.date")
+colnames(NS) <- c("PatientID","AAdesc","event.date")
 AAlist<-NS[!duplicated(NS$AAdesc),c("AAdesc")]
 
 #write.csv(AAlist,file="AAlist.csv",row.names=FALSE) 
