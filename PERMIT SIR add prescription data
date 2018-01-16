@@ -83,7 +83,7 @@ write.table(P,file="ARBS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",
 
 NS<-read.table("ARBS.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","ARBstartDate","ARBdesc","event.date")
+colnames(NS) <- c("PatientID","ARBdesc","event.date")
 ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 
 #write.csv(ARBlist,file="ARBlist.csv",row.names=FALSE) 
