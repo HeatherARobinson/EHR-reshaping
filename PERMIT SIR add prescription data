@@ -175,7 +175,7 @@ LOOP$END_DATE<-as.Date(LOOP$END_DATE,format="%d/%m/%Y")
 LOOP$check<-paste(LOOP$TYPE,LOOP$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% LOOP$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-LOOP<-LOOP[order(LOOP$EntryDate,decreasing = TRUE), ]
+LOOP<-LOOP[order(LOOP$TYPE,LOOP$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-LOOP[LOOP$EntryDate<=smalltab$event.date[i]&LOOP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
