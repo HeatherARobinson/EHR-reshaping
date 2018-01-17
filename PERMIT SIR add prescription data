@@ -351,4 +351,4 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Antimicrobials<-ifelse(is.na(crea.rep$Antimicrobials),0,crea.rep$Antimicrobials)
 
 #CHECK FOR ANY REPEATED ROWS (should be one per patient per date):
-hea(crea[(crea$PatientID %in% crea$PatientID[duplicated(crea.rep$PatientID)] & crea.rep$event.date %in% crea.rep$event.date[duplicated(crea.rep$event.date)]),]
+crea.rep[(duplicated(crea.rep[c("PatientID","event.date")]) | duplicated(crea.rep[c("PatientID","event.date")], fromLast = TRUE)), ]
