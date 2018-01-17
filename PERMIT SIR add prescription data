@@ -32,15 +32,14 @@ NSAID<-NSAID[order(NSAID$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
@@ -69,17 +68,17 @@ ARB<-ARB[order(ARB$TYPE,ARB$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-ARB[ARB$EntryDate<=smalltab$event.date[i]&ARB$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="ARBS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+
 
 NS<-read.table("ARBS.txt",header=FALSE,sep=",")
 NS<-unique(NS)
@@ -92,7 +91,7 @@ ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 NS2<-read.csv("ARBlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
-crea.rep<-merge(crea.rep,NS,all.x=TRUE) got up to here this time
+crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
 AA<-meddata[meddata$FAMILY=="ALD_ANT",]
@@ -101,7 +100,7 @@ AA$END_DATE<-as.Date(AA$END_DATE,format="%d/%m/%Y")
 AA$check<-paste(AA$TYPE,AA$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% AA$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-AA<-AA[order(AA$TYPE,LOOP$EntryDate,decreasing = TRUE), ]
+AA<-AA[order(AA$TYPE,AA$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-AA[AA$EntryDate<=smalltab$event.date[i]&AA$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
@@ -129,6 +128,7 @@ NS2<-read.csv("AAlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Aldosterone_Antagonists","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
+crea.rep$Aldosterone_Antagonists<-ifelse(is.na(crea.rep$Aldosterone_Antagonists),0,crea.rep$Aldosterone_Antagonists)
 ##############################################################################################
 #THIAZIDE DIURETICS
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
@@ -138,27 +138,26 @@ THI$END_DATE<-as.Date(THI$END_DATE,format="%d/%m/%Y")
 THI$check<-paste(THI$TYPE,THI$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% THI$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-THI<-THI[order(THI$EntryDate,decreasing = TRUE), ]
+THI<-THI[order(THI$TYPE,THI$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-THI[THI$EntryDate<=smalltab$event.date[i]&THI$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="THI.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 NS<-read.table("THI.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 NS<-na.omit(NS)
-colnames(NS) <- c("PatientID","THIstartDate","THIdesc","event.date")
+colnames(NS) <- c("PatientID","THIdesc","event.date")
 THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
 #write.csv(THIlist,file="THIlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
@@ -167,6 +166,7 @@ NS2<-read.csv("THIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Thiazide_Diuretics","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
+crea.rep$Thiazide_diuretics<-ifelse(is.na(crea.rep$Thiazide_diuretics),0,crea.rep$Thiazide_diuretics)
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
 LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
@@ -283,26 +283,25 @@ NEP$END_DATE<-as.Date(NEP$END_DATE,format="%d/%m/%Y")
 NEP$check<-paste(NEP$TYPE,NEP$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% NEP$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-NEP<-NEP[order(NEP$EntryDate,decreasing = TRUE), ]
+NEP<-NEP[order(NEP$TYPE,NEP$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-NEP[NEP$EntryDate<=smalltab$event.date[i]&NEP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="NEP.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="NEPH.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("NEP.txt",header=FALSE,sep=",")
+NS<-read.table("NEPH.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","NEPstartDate","NEPdesc","event.date")
+colnames(NS) <- c("PatientID","NEPdesc","event.date")
 NEPlist<-NS[!duplicated(NS$NEPdesc),c("NEPdesc")]
 
 write.csv(NEPlist,file="NEPlist.csv",row.names=FALSE) 
@@ -312,34 +311,34 @@ NS2<-read.csv("NEPlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Other_Nephrotoxins","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-
+crea.rep$Other_Nephrotoxins<-ifelse(is.na(crea.rep$Other_Nephrotoxins),0,crea.rep$Other_Nephrotoxins)
 ########################################################################
-ANT<-meddata[meddata$FAMILY=="Antimicrobials",]
+ANT<-meddata[meddata$FAMILY=="ANT_MIC",]
 ANT$EntryDate<-as.Date(ANT$EntryDate,format="%d/%m/%Y")
 ANT$END_DATE<-as.Date(ANT$END_DATE,format="%d/%m/%Y")
 ANT$check<-paste(ANT$TYPE,ANT$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ANT$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-ANT<-ANT[order(ANT$EntryDate,decreasing = TRUE), ]
+ANT<-ANT[order(ANT$TYPE,ANT$EntryDate,decreasing = TRUE), ]
 
 for (i in 1:length(unique(smalltab$event.date))){
 N<-ANT[ANT$EntryDate<=smalltab$event.date[i]&ANT$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$TYPE), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")]),]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID,EntryDate) %>%
+group_by(PatientID) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
-data.frame()
 P<-P[order(P$PatientID,P$event.date) , ]
 write.table(P,file="ANT.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 NS<-read.table("ANT.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","ANTstartDate","ANTdesc","event.date")
+colnames(NS) <- c("PatientID","ANTdesc","event.date")
+
 ANTlist<-NS[!duplicated(NS$ANTdesc),c("ANTdesc")]
 
 #write.csv(ANTlist,file="ANTlist.csv",row.names=FALSE) 
@@ -349,3 +348,7 @@ NS2<-read.csv("ANTlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Antimicrobials","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
+crea.rep$Antimicrobials<-ifelse(is.na(crea.rep$Antimicrobials),0,crea.rep$Antimicrobials)
+
+#CHECK FOR ANY REPEATED ROWS (should be one per patient per date):
+hea(crea[(crea$PatientID %in% crea$PatientID[duplicated(crea.rep$PatientID)] & crea.rep$event.date %in% crea.rep$event.date[duplicated(crea.rep$event.date)]),]
