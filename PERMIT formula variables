@@ -61,6 +61,14 @@ for (i in 1:length(unique(crea.rep$PatientID))){
 crea.rep$MaxCKDStage[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
 
+
+#######################################################################################
+#MAX PRIOR CKD STAGE
+CKpot<-crea.rep[crea.rep$CKDStage>0,]
+for (i in 1:length(CKpot$PatientID)){
+CKpot$MaxPriorCKD[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date<=CKpot$event.date[i]])
+}
+head(CKpot,n=30)
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
 smalltab<-crea.rep[,c("PatientID","event.date","log_CREA")]
@@ -127,6 +135,8 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$
 crea.rep$CREATININE6M<-first[indx1, "Creatinine"]
 summary(crea.rep$CREATININE6M) #20657 are missing
 crea.rep$CREATININE6M<-unlist(crea.rep$CREATININE6M)
+
+###################################################################################
 
 ###################################################################################
 
