@@ -26,17 +26,22 @@ CPRD2<-read_dta("hf_cases_additional.dta")
 CPRD3<-read_dta("hf_cases_test.dta") 
 CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
 head(CPRD[CPRD$medcode=="5",]) #Only 2312 #References some dates of creatinine measures but no additional data
-crea<-CPRD3[CPRD3$medcode=="5",c(,)] #1579351 #This is the file with the creatinine values in
+crea<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the creatinine values in
 save(crea, file = "CPRDref.Rdata") #this is the file of Creatinine entries to be used as a reference
 hfnames<-unique(crea$patid)
+length(hfnames) #121571
 save(hfnames,file="hfnames.rda") #List of included patients to reduce and build on
 
 #START WITH A SKELETON OF CREATININE VALUES THEN ADD ON TO IT.
 #Remove outliers then order and select the highest value per day
 class(crea$data2)
-crea<-crea[!is.na(data2)&crea$data2>=20&crea$data2<=3000]
-crea<-crea[order(creal$data2),]
-crea<-unique(crea[,c('patid','eventdate')]) #Make a list of all creatinine measurement dates per patient, selecting the highest value
+crea<-crea[!is.na(crea$data2)&crea$data2>=20&crea$data2<=3000,]
+crea<-crea[order(-crea$data2),]
+crea$key<-paste(crea$patid,crea$eventdate)
+crea<-crea[unique(crea$key),]
+
+
+crea<-crea[unique(crea[,c("patid","eventdate")]),] #Make a list of all creatinine measurement dates per patient, selecting the highest value
 length(crea$patid)
 #1487787 records
 length(levels(as.factor(crea$patid)))
