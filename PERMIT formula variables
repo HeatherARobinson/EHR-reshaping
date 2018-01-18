@@ -43,7 +43,7 @@ setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% 
 }
 
 names(crea.rep)
-colnames(crea.rep)[57] <- "CKDpriorstage"
+colnames(crea.rep)[57] <- "CKDstage"
 crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
 crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,1,0)
 
@@ -64,11 +64,14 @@ crea.rep$MaxCKDStage[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==crea.rep$Pati
 
 #######################################################################################
 #MAX PRIOR CKD STAGE
-CKpot<-crea.rep[crea.rep$CKDStage>0,]
+CKpot<-crea.rep
+CKpot<-CKpot[,c(1,3,x,77)] #Make sure you are only getting one per day- use something granular to join them.
+CKpot<-unique(CKpot)
 for (i in 1:length(CKpot$PatientID)){
 CKpot$MaxPriorCKD[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date<=CKpot$event.date[i]])
 }
-head(CKpot,n=30)
+CKpot<-CKpot[,c(1,2,4,x)]
+crea.rep<-merge(crea.rep,CKpot,all.x=TRUE)
 ###################################################################################
 #MEAN LOG CREATININE WITHIN 6M
 smalltab<-crea.rep[,c("PatientID","event.date","log_CREA")]
