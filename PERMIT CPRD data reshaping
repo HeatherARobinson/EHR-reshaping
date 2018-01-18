@@ -21,31 +21,25 @@ library(data.table)
 library(survival)
 library(lubridate)
 
-#READ CONDITION CODE FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
-temp = list.files(pattern="*1.csv")
-for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-
-# hf_cases_clinical contains patid, adid and medcode
-# hf_cases_additional contains adid and patid
-# hf_cases_test contains patid and medcode
-
 CPRD<-read_dta("hf_cases_clinical.dta")
 CPRD2<-read_dta("hf_cases_additional.dta")
 CPRD3<-read_dta("hf_cases_test.dta") 
 CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
-CPRDref<-CPRD[CPRD$medcode=="5",] #Only 2312 #References some dates of creatinine measures
-CPRD3ref<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the values in
-CPRDref<-CPRDref[,c(1,2)]
-CPRD3ref<-CPRD3ref[,c(1,2)]
-CPRDref<-rbind(CPRDref,CPRD3ref) 
-save(CPRDref, file = "CPRDref.Rdata") #this is a list of patients and Creatinine dates to be used as a reference
+head(CPRD[CPRD$medcode=="5",]) #Only 2312 #References some dates of creatinine measures but no additional data
+crea<-CPRD3[CPRD3$medcode=="5",c(,)] #1579351 #This is the file with the creatinine values in
+save(crea, file = "CPRDref.Rdata") #this is the file of Creatinine entries to be used as a reference
+hfnames<-unique(crea$patid)
+save(hfnames,file="hfnames.rda") #List of included patients to reduce and build on
 
-#DONE
-
-#Join list of patients with creatinine tests from test and clinical tables
-CPRDref<-unique(CPRDref) #Make a list of all creatinine measurement dates per patient
+#START WITH A SKELETON OF CREATININE VALUES THEN ADD ON TO IT.
+#Remove outliers then order and select the highest value per day
+class(crea$data2)
+crea<-crea[!is.na(data2)&crea$data2>=20&crea$data2<=3000]
+crea<-crea[order(creal$data2),]
+crea<-unique(crea[,c('patid','eventdate')]) #Make a list of all creatinine measurement dates per patient, selecting the highest value
+length(crea$patid)
 #1487787 records
-length(levels(as.factor(CPRDref$patid)))
+length(levels(as.factor(crea$patid)))
 #121836 patients
 
 #CHECK PATIENTS WHICH HAVE A SPECIFIC RECORDED TIME RANGE IN YEARS AND SPECIFIC NUMBER OF TESTS
@@ -57,10 +51,11 @@ CPRDref[!(CPRDref$patid %n% ids[rare]),] -> crea.rep
 levels(unique(as.factor(crea.rep$patid)) # 6589 patients have 2 or more post-2008 creatinine tests
 length(crea.rep$patid) #1454358 remaining
 
-CPRD.data1<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
-CPRD.data2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
-CPRD.data3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
-CPRD.data4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
+CPRD<-CPRD[which(CPRD$patid %in% crea.rep$patid),]
+CPRD2<-CPRD2[which(CPRD2$patid %in% crea.rep$patid),]
+CPRD3<-CPRD3[which(CPRD3$patid %in% crea.rep$patid),]
+CPRD4<-CPRD4[which(CPRD4$patid %in% crea.rep$patid),]
+
 CPRD.data1<-CPRD.data1[,c(1:2,6,8:11)]
 CPRD.data3<-CPRD.data3[,c(1:2,6,8:17)]
 
