@@ -8,10 +8,6 @@ module load apps/gcc/R/3.3.3
 module load apps/binapps/rstudio/0.98.983-any-r
 rstudio
 
-#Windows specific
-#memory.size (100000)
-
-#R code to prepare CPRD data
 require(haven)
 require(gtools)
 library(zoo)
@@ -21,16 +17,44 @@ library(data.table)
 library(survival)
 library(lubridate)
 
-CPRD<-read_dta("hf_cases_clinical.dta")
-CPRD2<-read_dta("hf_cases_additional.dta")
 CPRD3<-read_dta("hf_cases_test.dta") 
-CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
+
 head(CPRD[CPRD$medcode=="5",]) #Only 2312 #References some dates of creatinine measures but no additional data
 crea<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the creatinine values in
-save(crea, file = "CPRDref.Rdata") #this is the file of Creatinine entries to be used as a reference
-hfnames<-unique(crea$patid)
-length(hfnames) #121571
-save(hfnames,file="hfnames.rda") #List of included patients to reduce and build on
+save(crea, file = "CPRDref.Rdata") 
+
+#this is the file of Creatinine entries to be used as a reference 
+#####################################################################################################
+#SELECTING FOR HEART FAILURE
+#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
+
+#Add hfage for selection
+
+CPRD4<-read_dta("hf_cases_patient_practice_incidentHFdate.dta")  
+CPRD4$hfage<-(as.numeric(year(strptime(CPRD4$eventdate, format="%Y-%m-%d"))))-CPRD4$yob
+CPRD4$hfage<-ifelse(as.numeric(month(strptime(CPRD4$eventdate, format="%Y-%m-%d")))>CPRD4$mob&CPRD4$mob>0,CPRD4$hfage-1,CPRD4$hfage)
+CPRD4<-CPRD4[,c(1:6,18,19)]
+head(CPRD4[duplicated(CPRD4$patid),]) 
+
+#None of the records are duplicated- each gives the hfdate based on 97 hf codes
+
+CPRD4<-CPRD4[CPRD4$hfage>=18,]
+save(CPRD4,file="CPRD4.rda")
+hfnames<-unique(CPRD4$patid)
+length(hfnames) 
+#282219
+save(hfnames,file="hfnames.rda") #List of included post18 hf patients to reduce and build on
+
+crea<-crea[crea$patid %in% hfnames,] 
+save(crea, file = "CPRDref.Rdata") 
+
+CPRD4<-CPRD4[,c(1,6:8)]
+CPRD4<-as.data.frame(CPRD4)
+crea<-as.data.frame(crea)
+crea<-merge(crea,CPRD4,all.x=TRUE,all.y=FALSE)
+#this is the file of Creatinine entries to be used as a reference.
+
+#####################################################################################################
 
 #START WITH A SKELETON OF CREATININE VALUES THEN ADD ON TO IT.
 #Remove outliers then order and select the highest value per day
@@ -39,7 +63,10 @@ crea<-crea[!is.na(crea$data2)&crea$data2>=20&crea$data2<=3000,]
 crea<-crea[order(-crea$data2),]
 crea$key<-paste(crea$patid,crea$eventdate)
 crea<-crea[unique(crea$key),]
-
+colnames(crea)[11] <- "Creatinine"
+unique(crea$data3) #Should be 142(umol/L). Lookups for units are in the text file 'SUM.txt'
+#crea$Creatinine<-ifelse(crea$data3==)
+save(crea, file = "crea.Rdata")
 
 crea<-crea[unique(crea[,c("patid","eventdate")]),] #Make a list of all creatinine measurement dates per patient, selecting the highest value
 length(crea$patid)
@@ -94,21 +121,7 @@ CPRD.data<-unique(CPRD.data)
 save(CPRD.data, file = "CPRD.data.Rdata")
 
 #######################################################################################
-#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
-hf<-CPRD.data[CPRD.data$medcode %in% HeartFailure1.csv$medcode,]
-length(unique(as.factor(hf$patid))) #x total heart failure patients identified with confirmed medcodes (V2)
-hf$hfage<-hf$Age
-smalltab<-hf[,c("patid","hfage")]
 
-first<-smalltab %>% group_by(patid) %>%
-summarize(hfage = min(as.numeric(hfage)))
-ungroup(first)
-head(first)
-
-CPRD.data<-merge(CPRD.data[CPRD.data$patid %in% hf$patid,],as.data.frame(first),all.x=TRUE)
-CPRD.data<-CPRD.data[CPRD.data$hfage>=18,]
-length(unique(CPRD.data$patid)) #7208  hf patients who were 18 or over at first diagnosis
-save(CPRD.data,file="CPRD.datahfonly.rda") #full patient records from all adult hf patients from all years
 
 CPRDgen<-aggregate(CPRD.data4$gender, list(CPRD.data4$patid), max,na.rm=TRUE)
 CPRD.data<-merge(CPRD.data,CPRDgen,by.x="patid",by.y="Group.1",all=FALSE)
