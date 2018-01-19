@@ -42,7 +42,7 @@ save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf 
 #COHORT SELECTION
 #REMOVE DIALYSIS PATIENTS
 dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-levels(as.factor(dialysis$PatientID)) #48 dialysis patients will be removed
+levels(as.factor(dialysis$PatientID)) #79 dialysis patients will be removed
 
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
