@@ -112,23 +112,37 @@ save(crea, file = "crea2.rda")
 #Add demographic variables from lookup tables
 CPRD2<-read_dta("hf_cases_clinical.dta")  
 
+
 #CODE ETHNICITY
 eth<-read.table("ethnicitycprd.csv",header=TRUE,sep=",")
 eth<-eth[,c(1,5)]
 WHICH TABLE ARE THE ETH MEDCODES IN?
 CPRD2<-merge(CPRD2,eth,by.x="medcode",by.y="medcode",all=TRUE)
-C2<-CPRD2[!is.na(CPRD2$Category),]
+CPRD2<-CPRD2[!is.na(CPRD2$Category),]
 
-table(C2$Category)
+table(CPRD2$Category)
 CPRD2<-CPRD2[,c(2,12)]
 CPRD2<-unique(CPRD2)
 head(CPRD2[duplicated(CPRD2),])
 #THERE ARE NO PATIENTS WITH CONFLICTING ETHNICITY CODES
-#CHECK ALSO FOR 23955 generic code x1
-#DRAW INFORMATION ON 23955 FROM LOOKUP TABLE
+
+
 colnames(CPRD2)[1] <- "PatientID"
 colnames(CPRD2)[2] <- "Ethnicity"
 crea<-merge(crea,CPRD2,all.x=TRUE)
+
+#CHECK ALSO FOR 23955 generic code x1
+#DRAW INFORMATION ON 23955 FROM LOOKUP TABLE
+
+CPRD2<-read_dta("hf_cases_clinical.dta")  
+C2<-CPRD2[CPRD2$medcode=="23955",]
+head(C2)
+
+
+
+
+
+
 
 ############################################################################################################ONGOING
 
