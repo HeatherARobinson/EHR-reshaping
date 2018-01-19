@@ -120,11 +120,15 @@ CPRD2<-merge(CPRD2,eth,by.x="medcode",by.y="medcode",all=TRUE)
 C2<-CPRD2[!is.na(CPRD2$Category),]
 
 table(C2$Category)
-
-#The only medcodes present are 22953 and 12351.
-#also 23955 generic code x1
-
+CPRD2<-CPRD2[,c(2,12)]
+CPRD2<-unique(CPRD2)
+head(CPRD2[duplicated(CPRD2),])
+#THERE ARE NO PATIENTS WITH CONFLICTING ETHNICITY CODES
+#CHECK ALSO FOR 23955 generic code x1
 #DRAW INFORMATION ON 23955 FROM LOOKUP TABLE
+colnames(CPRD2)[1] <- "PatientID"
+colnames(CPRD2)[2] <- "Ethnicity"
+crea<-merge(crea,CPRD2,all.x=TRUE)
 
 ############################################################################################################ONGOING
 
