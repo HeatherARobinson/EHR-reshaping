@@ -41,17 +41,20 @@ save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf 
 ####################################################################################
 #COHORT SELECTION
 #REMOVE DIALYSIS PATIENTS
-dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-levels(as.factor(dialysis$PatientID)) #79 dialysis patients will be removed
+#dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
+#levels(as.factor(dialysis$PatientID)) #79 dialysis patients will be removed
 
+#or mark dialysis patients
+
+    
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 crea <- droplevels(crea)
-crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
+#crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #CHECK FOR CASES WHERE A VIABLE VALUE IS ENTERED IN THE UNITS COLUMN BY MISTAKE
 temp<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 & as.numeric(as.character(crea$CodeUnits))<1000  & !is.na(crea$CodeValue),crea$CodeUnits,NA)
-table(temp) # 41 records affected, but most not viable values
+table(temp) # 51 records affected, but most not viable values
 crea$CodeValue<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 
 & as.numeric(as.character(crea$CodeUnits))<1000  
 & is.na(crea$CodeValue),crea$CodeUnits,crea$CodeValue)
@@ -60,7 +63,7 @@ crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 crea<-crea[!is.na(crea$CodeValue),]
 summary(crea$CodeValue)
 
-length(unique(as.factor(crea$PatientID))) #6923 hf patients over 18 at diagnosis with creatinine data
+length(unique(as.factor(crea$PatientID))) #6971 hf patients over 18 at diagnosis with creatinine data
 
 
 ###########################################################################
@@ -85,10 +88,6 @@ table(lowcr$CodeUnits)
 
 #  umol/l   umol/L        h    mol/L 
 #       5   891607        1        1 
-summary(lowcr$EventDate)
-#MOST SEEM TO BE IN RECENT UNITS AND RECENT VALUES
-
-
 
 
 #In the first iteration 891607 records were retained. 
@@ -113,7 +112,8 @@ summary(crea$CodeValue) #Any remaining high and low values will be removed
 crea<-crea[as.numeric(crea$CodeValue)>=20 & !is.na(crea$CodeValue),] 
 #Upper limit TBA
 
-save(crea,file="crearecleaned.rda")
+save(crea,file="crearecleanedincd.rda") #includes dialysis patients
+#or save(crea,file="crearecleaned.rda") #no dialysis patients
 ###############################################################################
 #DATA CLEANING 
 
@@ -121,6 +121,7 @@ save(crea,file="crearecleaned.rda")
 #load("crearecleaned.rda") # all steps above completed
 
 length(crea$CodeValue) #412394 records left
+#422129 with dialysis pats
 
 #REMOVE SAME DAY CREATININE ENTRIES IF THE SOURCE LOCATION CODE DIFFERS.
 names(crea)
@@ -129,6 +130,7 @@ crea2<-crea[(duplicated(crea[,c(1,4,6)])&!duplicated(crea[,7])),]
 length(crea2$CodeValue) #Only 24 same day duplicates are from different sources
 crea3<-crea[(duplicated(crea[,c(1,4,6)])),]
 length(crea3$CodeValue) #in total, 105665 of 412394 (26%) records have a same day duplicate
+#106686 with dialysis
 
 crea<-crea[!rownames(crea) %in% rownames(crea2),]
 
@@ -143,14 +145,15 @@ crea$Source<-ifelse(crea$Source=="salfordt",paste("2"),paste("1")) #2 for hospit
 crea$Source<-ifelse(is.na(crea$Source),paste("2"),crea$Source)
 
 crea<-crea[order(crea[,1], -(crea[,4]),(crea[,7])),]
-crea4<-crea[(duplicated(crea[,c(1,6,14)])&!duplicated(crea[,7])),] #DELAYED DUPLICATES (SAME PATIENT, MONTH, VALUE)
+crea4<-crea[(duplicated(crea[,c(1,6,14])&!duplicated(crea[,7])),] #DELAYED DUPLICATES (SAME PATIENT, MONTH, VALUE)
 length(crea4$PatientID) #- Only 1 of the remaining potential duplicate records outside of the same day window come from different locations
 crea5<-crea[duplicated(crea[,c(1,6,14)]),] 
-table(crea5$Source) #The vast majority (12802 of out of range duplicates are multiple tests from within hospital. Only 730 have a GP code and are repeats within GP practises)
+table(crea5$Source) #The vast majority of out of range duplicates are multiple tests from within hospital. 
 
 crea<-crea[!rownames(crea) %in% rownames(crea4),]
 
 length(crea$PatientID) # 412369 records retained 
+#422102 with dial included
 
 
 #SELECT MEAN DAILY CREATININE IF MULTIPLE ENTRIES AFTER REMOVING DELAYED DUPLICATES AND OUT OF RANGE VALUES
@@ -162,7 +165,8 @@ ungroup(xcrea)
 crea<-merge(crea,as.data.frame(xcrea),all.x=TRUE)
 
 save(crea,file="crearecleaned.rda")
-
+#or
+#save(crea,file="crearecleanedincd.rda")
 ######################################################
 #Add demographic variables from lookup tables
 
@@ -198,12 +202,17 @@ rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
 levels(unique(as.factor(crea.rep$PatientID))) # 6589 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
-length(crea.rep$PatientID) #284233 remaining
+# 6635 adult hf patients have 2 or more post-2008 creatinine tests
+length(crea.rep$PatientID) #284233 remaining, 290959 inc dialysis
+
 sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
 #Breakpoint
 #######################################################
 save(crea.rep, file = "crea.rephf2tests.Rdata")
 save(sir.data, file = "sir.datahf2tests.Rdata")
+#######################################################
+save(crea.rep, file = "crea.rephf2testsd.Rdata")
+save(sir.data, file = "sir.datahf2testsd.Rdata")
 #######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING R SCRIPT IN SAME FOLDER
@@ -226,8 +235,9 @@ aggregate(as.numeric(year(strptime(sir.data$event.date, format="%Y-%m-%d"))), li
 ranges$x[,2] - ranges$x[,1] -> ranges$range
 ranges[(which(ranges$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
 crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
-unique(crea.rep$PatientID)#5950
+unique(crea.rep$PatientID)#5950/6623
 save(crea.rep,file="crea.rep2yrsall.rda")
+#save(crea.rep,file="crea.rep2yrsalld.rda")
 
 #IF DELETING DELAYED PATHOLOGY DUPLICATES
 #names(sir.data)
@@ -245,3 +255,5 @@ save(crea.rep,file="crea.rep2yrsall.rda")
 #dup_index <- second_gap>10
 #dup_index <- c(TRUE, dup_index)
 #dat[dup_index, ]
+
+
