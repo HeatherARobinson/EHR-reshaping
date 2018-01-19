@@ -126,44 +126,62 @@ CPRD2<-unique(CPRD2)
 head(CPRD2[duplicated(CPRD2),])
 #THERE ARE NO PATIENTS WITH CONFLICTING ETHNICITY CODES
 
-
 colnames(CPRD2)[1] <- "PatientID"
 colnames(CPRD2)[2] <- "Ethnicity"
 crea<-merge(crea,CPRD2,all.x=TRUE)
 
+save(crea,file="crea2.rda")
+
 #CHECK ALSO FOR 23955 generic code x1
 #DRAW INFORMATION ON 23955 FROM LOOKUP TABLE
-
 CPRD2<-read_dta("hf_cases_clinical.dta")  
 C2<-CPRD2[CPRD2$medcode=="23955",]
-head(C2)
+table(C2$adid) #Not linked to text
 
-
-
-
-
-
-
-############################################################################################################ONGOING
-
-
+#################################################################################################################
 #COHORT SELECTION
-#LIMIT TO PATIENTS WITH AT LEAST 2 POST 2008 CREATININE TEST VALUES
-crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
+#LIMIT TO PATIENTS WITH AT LEAST 2 (POST 2008?) CREATININE TEST VALUES
+#crea<-crea[as.numeric(year(strptime(crea$event.date, format="%Y-%m-%d")))>=2008,]
 table(crea$PatientID) < 2 -> rare  
 rownames(as.matrix(rare)) -> ids
 table(rare)
 crea[!(crea$PatientID %in% ids[rare]),] -> crea.rep	
-levels(unique(as.factor(crea.rep$PatientID))) # 6589 non-dialysis adult hf patients have 2 or more post-2008 creatinine tests
-length(crea.rep$PatientID) #284233 remaining
-sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
-#Breakpoint
-#######################################################
-save(crea.rep, file = "crea.rephf2tests.Rdata")
-save(sir.data, file = "sir.datahf2tests.Rdata")
-#######################################################
+levels(unique(as.factor(crea.rep$PatientID))) # 198543 adult hf patients have 2 or more creatinine tests
+length(crea.rep$PatientID) #1579775 rows remaining
 
-#ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES USING R SCRIPT IN SAME FOLDER
+save(crea.rep,file="crea.rep.rda")
+
+############################################################################################################ONGOING
+#Add LSOA
+
+
+
+#Breakpoint
+#################################################################################################################
+
+#ADD CONDITIONS SPECIFIED
+CPRD<-read_dta("hf_cases_test.dta")
+C<-(CPRD[CPRD$medcode==8105,c(1,2,11)])
+C<-as.data.frame(C)
+colnames(C)[1] <- "PatientID"
+colnames(C)[3] <- "BMI"
+
+
+#LOAD IN WEIGHT CODES AND CHECK THOSE TOO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #ADD PRESCRIPTION DATA USING R SCRIPT IN SAME FOLDER
 
 #Narrow lookup table to the full list of codes of interest to speed up processing
@@ -174,8 +192,8 @@ save(sir.data, file = "sir.datahf2tests.Rdata")
 #sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
 
 ##########################################################################
-#FROM VERSIONS 061217 onwards:
-#SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS, OPTION FOR TIME RANGE RESTRICTION
+
+#SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS AND AT LEAST 2 YEARS DATA
 library(lubridate)
 sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 
