@@ -46,7 +46,6 @@ crea.rep$Dead<-ifelse(crea.rep$PatientID %in% dead$PatientID,1,0)
 #OUT OF RANGE REMOVAL TBA
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode])
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumSodium1.csv$ReadCode & !sir.data$CodeUnits=="%" & sir.data$CodeValue>=20 & sir.data$CodeValue<=3000, paste(sir.data$CodeValue),NA)
-unique(sir.data$CodeUnits[sir.data$ReadCode %in% SerumSodium1.csv$ReadCode])
 smalltab<-sir.data[!is.na(sir.data$temp),c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
@@ -283,6 +282,7 @@ a<-crea.rep[!is.na(crea.rep$DBP),]
 length(a$PatientID) #282538
 crea.rep$DBP<-unlist(crea.rep$DBP)
 ##############################################################
+
 #MEAN DAILY SERUM ALBUMIN #`1 year
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% SerumAlbumin1.csv$ReadCode])
@@ -302,6 +302,7 @@ table(crea.rep$SerumAlbuminDateFlag) #9309
 a<-crea.rep[!is.na(crea.rep$SerumAlbumin),]
 length(a$PatientID) #284008
 crea.rep$SerumAlbumin<-unlist(crea.rep$SerumAlbumin)
+
 ###################################################################
 #MAX DAILY URINE ALBUMIN 1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UAlbumin1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
