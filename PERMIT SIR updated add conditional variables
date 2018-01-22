@@ -22,9 +22,10 @@ sir.data<-sir.data[!is.na(sir.data$CodeValue),]
 head(sir.data[sir.data$EntryDate<19800101,]) #Historical xray data  etc has been retrospectively added 
 sir.data$EntryDate<-ifelse(sir.data$EntryDate>20170801|sir.data$EntryDate<19000101,NA,sir.data$EntryDate)
 
+
+#######################################################
 allfiles = list.files(pattern="*1.csv")
 for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
-#######################################################
 
 #ADD IN VARIOUS CONDITIONS AND FLAGS FROM MAIN EHR FILES
 #Narrow lookup table to the full list of codes of interest to speed up processing- use for CPRD
@@ -330,7 +331,7 @@ crea.rep$UrineAlbumin<-unlist(crea.rep$UrineAlbumin)
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% UACR1.csv$ReadCode])
 sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode&sir.data$CodeUnits=="ratio"|sir.data$CodeUnits=="None"|sir.data$CodeUnits=="U/ml"|sir.data$CodeUnits=="GPL",NA,sir.data$temp)
-sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% UACR1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)]
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% UACR1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)
 
 smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=0&sir.data$temp<=3000,c("PatientID","CodeValue","EntryDate")]
 columns=names(smalltab[c(1,3)])
@@ -435,10 +436,9 @@ first<-smalltab %>%
     slice(which.min(as.numeric(DiabDate))) %>%
 as.data.frame
     head(first)
-    
-crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$DiabDate<-as.Date(as.character(crea.rep$DiabDate),format="%Y%m%d")
+   
+first$DiabDate<-as.Date(as.character(first$DiabDate),format="%Y%m%d")
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
 crea.rep$DaysSinceDiabetic<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$DiabDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic)
 crea.rep$Diabetes<-ifelse(is.na(crea.rep$DaysSinceDiabetic),0,1)
