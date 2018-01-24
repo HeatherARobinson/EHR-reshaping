@@ -12,7 +12,7 @@ library(lubridate)
 library(dplyr)
 library(tidyr)
 load("crea.rep181217.rda")
-load("PERMITmeddata.rda")
+load("PERMITmeddatad.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
 l
@@ -41,14 +41,14 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="NSAIDS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="NSAIDSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("NSAIDS.txt",header=FALSE,sep=",")
+NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","NSAIDstartDate","NSAIDdesc","event.date")
+colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
 
-#write.csv(NSAIDlist,file="NSAIDlist.csv",row.names=FALSE) 
+#write.csv(NSAIDlist,file="NSAIDlistd.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("NSAIDlist.csv")
@@ -58,7 +58,8 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 #####################################################################################################CHECKED
 #Angiotensin Receptor Blockers
 ARB<-meddata[meddata$FAMILY=="ARB",]
-ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/%m/%Y")
+ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/
+%m/%Y")
 ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ARB$PatientID,c("PatientID","event.date")]
@@ -77,15 +78,15 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="ARBS.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="ARBSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 
-NS<-read.table("ARBS.txt",header=FALSE,sep=",")
+NS<-read.table("ARBSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","ARBdesc","event.date")
 ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 
-#write.csv(ARBlist,file="ARBlist.csv",row.names=FALSE) 
+#write.csv(ARBlist,file="ARBlistd.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("ARBlist.csv")
@@ -152,9 +153,9 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="THI.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="THID.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("THI.txt",header=FALSE,sep=",")
+NS<-read.table("THID.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 NS<-na.omit(NS)
 colnames(NS) <- c("PatientID","THIdesc","event.date")
@@ -164,9 +165,11 @@ THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
 
 NS2<-read.csv("THIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Thiazide_Diuretics","PatientID","event.date")]
+NS<-NS[,c("Thiazide_diuretics","PatientID","event.date")]
+NS<-NS[!is.na(NS$Thiazide_diuretics)]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Thiazide_diuretics<-ifelse(is.na(crea.rep$Thiazide_diuretics),0,crea.rep$Thiazide_diuretics)
+names(crea.rep)[names(crea.rep) == 'Thiazide_diuretics'] <- 'Thiazide_Diuretics'
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
 LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
@@ -179,7 +182,7 @@ LOOP<-LOOP[order(LOOP$TYPE,LOOP$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-LOOP[LOOP$EntryDate<=smalltab$event.date[i]&LOOP$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$EntryDate), ]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
 N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
@@ -188,9 +191,9 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="LOOP.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="LOOPd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("LOOP.txt",header=FALSE,sep=",")
+NS<-read.table("LOOPd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","LOOPdesc","event.date")
 
@@ -225,14 +228,14 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="IMM.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="IMMd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("IMM.txt",header=FALSE,sep=",")
+NS<-read.table("IMMd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","IMMdesc","event.date")
-IMMlist<-NS[!duplicated(NS$IMMdesc),c("IMMdesc")]
+#IMMlist<-NS[!duplicated(NS$IMMdesc),c("IMMdesc")]
 
-write.csv(IMMlist,file="IMMlist.csv",row.names=FALSE) 
+#write.csv(IMMlist,file="IMMlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("IMMlist.csv")
@@ -261,14 +264,14 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="ACEI.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="ACEId.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("ACEI.txt",header=FALSE,sep=",")
+NS<-read.table("ACEId.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","ACEIdesc","event.date")
-ACEIlist<-NS[!duplicated(NS$ACEIdesc),c("ACEIdesc")]
+#ACEIlist<-NS[!duplicated(NS$ACEIdesc),c("ACEIdesc")]
 
-write.csv(ACEIlist,file="ACEIlist.csv",row.names=FALSE) 
+#write.csv(ACEIlist,file="ACEIlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("ACEIlist.csv")
@@ -297,14 +300,14 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="NEPH.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="NEPHd.csv",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("NEPH.txt",header=FALSE,sep=",")
+NS<-read.table("NEPHd.csv",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NEPdesc","event.date")
-NEPlist<-NS[!duplicated(NS$NEPdesc),c("NEPdesc")]
+#NEPlist<-NS[!duplicated(NS$NEPdesc),c("NEPdesc")]
 
-write.csv(NEPlist,file="NEPlist.csv",row.names=FALSE) 
+#write.csv(NEPlist,file="NEPlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("NEPlist.csv")
@@ -333,13 +336,13 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="ANT.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="ANTd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("ANT.txt",header=FALSE,sep=",")
+NS<-read.table("ANTd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","ANTdesc","event.date")
 
-ANTlist<-NS[!duplicated(NS$ANTdesc),c("ANTdesc")]
+#ANTlist<-NS[!duplicated(NS$ANTdesc),c("ANTdesc")]
 
 #write.csv(ANTlist,file="ANTlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
