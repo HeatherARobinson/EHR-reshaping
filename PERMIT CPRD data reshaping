@@ -159,26 +159,67 @@ save(crea.rep,file="crea.rep.rda")
 #Breakpoint
 #################################################################################################################
 
-#ADD CONDITIONS SPECIFIED
+#ADD BMI
 CPRD<-read_dta("hf_cases_test.dta")
+#There are some in test, also some in clinical, 
+
 C<-(CPRD[CPRD$medcode==8105,c(1,2,11)])
 C<-as.data.frame(C)
 colnames(C)[1] <- "PatientID"
 colnames(C)[3] <- "BMI"
 
+C2<-(CPRD2[CPRD2$medcode==8105,c(1,2,X)])
+C2<-as.data.frame(C2)
+colnames(C2)[1] <- "PatientID"
+colnames(C2)[3] <- "BMI"
+C<-rbind(C,C2)
 
+CPRD2<-read_dta("hf_cases_clinical.dta")  
+H<-(CPRD2[CPRD2$medcode %in% Height1.csv$Medcode,])
+H<-as.data.frame(H)
+colnames(H)[1] <- "PatientID"
+CPRD5<-read_dta("hf_cases_additional.dta") 
+H<-merge(H,CPRD5,all.x=TRUE,all.y=FALSE) 
+#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
+H<-H[,c(1,4,12)]
+colnames(H)[3] <- "Height"
+
+#Near data match each creatinine record to the last prior recorded height and weight
+firstH<-H %>% 
+group_by(patid) %>%
+summarize(Height=max(Height)) %>%
+as.data.frame
+
+W<-(CPRD2[CPRD2$medcode %in% Weight1.csv$Medcode,])
+W<-as.data.frame(W)
+CPRD5<-read_dta("hf_cases_additional.dta") 
+W<-merge(W,CPRD5,all.x=TRUE,all.y=FALSE) 
+#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
+W<-W[,c(1,4,12)]
+colnames(W)[3] <- "Weight"
+
+A<-merge(W,H,all.x=TRUE)
+A$BMI<-as.numeric(A$Weight)/(as.numeric(A$Height))^2
+colnames(A)[1] <- "PatientID"
+C<-rbind(C,A[,c(1,2,5)])
+C<-C[!is.na(C$BMI),]
 #LOAD IN WEIGHT CODES AND CHECK THOSE TOO
 
+#CLOSEST DAILY BMI MEAN #1YR DATE FLAG
 
+BMItab<-C[C$BMI>=10 & C$BMI<=70,]
+firstA <-BMItab %>% 
+group_by(PatientID,eventdate) %>%
+summarize(BMI=mean(BMI)) %>%
+as.data.frame
 
-
-
-
-
-
-
-
-
+indx1 <- neardate(crea$PatientID, firstA$PatientID, crea$event.date, firstA$eventdate, best="prior")
+crea$BMI<-firstA[indx1, "BMI"]
+crea$BMIDateFlag<- ifelse(as.numeric(abs(crea$event.date - firstA$eventdate[indx1])) >365, 1, 0)
+table(crea$BMIDateFlag) 
+a<-crea[!is.na(crea$BMI),]
+length(a$PatientID) 
+crea$BMI<-unlist(crea$BMI)
 
 
 
