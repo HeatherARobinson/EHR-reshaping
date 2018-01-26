@@ -160,7 +160,7 @@ D<-NA
 D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),D[i])
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
-RV_ratio[i]<-ifelse(RV1[i]>RV2[i],RV1[i],RV2[i])
+RV_ratio[i]<-ifelse(is.na(RV1[i]),RV2[i],RV1[i])
 ##########################################################################################################CHECKED
 
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
