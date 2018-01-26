@@ -93,77 +93,99 @@ CKpot$MaxPriorCKD[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==CKpot$PatientID[
 CKpot<-CKpot[,c(1,2,3,6)]
 crea.rep<-merge(crea.rep,CKpot,all.x=TRUE)
 ###################################################################################
-#MEAN LOG CREATININE WITHIN 6M
+#FIRST LOG CREATININE AFTER 6M
 
 first<-crea.rep[,c("PatientID","event.date","log_CREA")]
 first$event.date2<-first$event.date+180
 indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
-
 first$LogCrea6M<-crea.rep[indx1,"log_CREA"]
-#Remove those that should not have been matched
 
-maxes<-
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
 first<-merge(first,maxes)
-merge on max dates then select
-first$LogCrea6M<-ifelse(first$max>first$event.date2,NA,first$LogCrea6M)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$LogCrea6M<-unlist(crea.rep$LogCrea6M)
 
 ###################################################################################
-#MEAN EGFR WITHIN 6M-MDRD
+#FIRST EGFR AFTER 6M-MDRD
 
 first<-crea.rep[,c("PatientID","event.date","MDRDeGFR")]
 first$event.date2<-first$event.date+180
 
-for (i in 1:length(unique(first$event.date))){
-N[i]<-first[first$event.date>first$event.date[i]  & first$event.date2<=first$event.date2[i],] %>%
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$MDRDeGFR6M<-crea.rep[indx1,"MDRDeGFR"]
+
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
 group_by(PatientID) %>%
-summarise(P=mean(N$MDRDeGFR))
-N$ed[i]<-first$event.date[i]
-write.table(N[i],file="log6.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
-}
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
 
-
-summary(crea.rep$MDRD6M) #20657 are missing
-crea.rep$MDRD6M<-unlist(crea.rep$MDRD6M)
-
-
-
-
-summary(crea.rep$LOGCREA6M) #20657 are missing
-crea.rep$LOGCREA6M<-unlist(crea.rep$LOGCREA6M)
-
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$MDRDeGFR6M<-unlist(crea.rep$MDRDeGFR6M)
 
 ################################################################################### CHECKED
-#MEAN CKDEPI eGFR WITHIN 6M
-smalltab<-crea.rep[,c("PatientID","event.date","CKDEPIeGFR")]
-columns=names(smalltab[c(1,3)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
+#FIRST CKDEPI AFTER 6M
+
+first<-crea.rep[,c("PatientID","event.date","CKDEPIeGFR")]
 first$event.date2<-first$event.date+180
 
-indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$CKDEPIeGFR6M<-crea.rep[indx1,"CKDEPIeGFR"]
 
-crea.rep$CKDEPI6M<-first[indx1, "CKDEPIeGFR"]
-summary(crea.rep$CKDEPI6M) #20657 are missing
-crea.rep$CKDEPI6M<-unlist(crea.rep$CKDEPI6M)
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$CKDEPIeGFR6M<-unlist(crea.rep$CKDEPIeGFR6M)
 
 ################################################################################### CHECKED
 
-#MEAN CREATININE WITHIN 6M
-smalltab<-crea.rep[,c("PatientID","event.date","Creatinine")]
-columns=names(smalltab[c(1,3)])
-dots<-lapply(columns, as.symbol)
-first <-smalltab %>% 
-group_by_(.dots=dots) %>%
-as.data.frame
+#FIRST CREATININE AFTER 6M
+first<-crea.rep[,c("PatientID","event.date","Creatinine")]
 first$event.date2<-first$event.date+180
 
-indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date,first$event.date2,best="after")
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$Creatinine6M<-crea.rep[indx1,"Creatinine"]
 
-crea.rep$CREATININE6M<-first[indx1, "Creatinine"]
-summary(crea.rep$CREATININE6M) #20657 are missing
-crea.rep$CREATININE6M<-unlist(crea.rep$CREATININE6M)
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$Creatinine6M<-unlist(crea.rep$Creatinine6M)
 
 ###################################################################################
 
