@@ -1,5 +1,5 @@
-Open MobaXTerm
-ssh username@incline256.itservices.manchester.ac.uk
+OOpen MobaXTerm
+ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
 (enter password this does not print on screen!)
 module load apps/binapps/stata/14-iph
 stata
@@ -16,12 +16,12 @@ library(tidyverse)
 library(data.table)
 library(survival)
 library(lubridate)
-
+CPRD2<-read_dta("hf_cases_clinical.dta") 
 CPRD3<-read_dta("hf_cases_test.dta") 
-
+CPRD5<-read_dta("hf_cases_additional.dta") 
 #head(CPRD[CPRD$medcode=="5",]) #Only 2312 #References some dates of creatinine measures but no additional data
-crea<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the creatinine values in
-
+#crea<-CPRD3[CPRD3$medcode=="5",] #1579351 #This is the file with the creatinine values in
+load("creaongoing.rda")
 #this is the file of Creatinine entries to be used as a reference 
 #####################################################################################################
 #SELECTING FOR HEART FAILURE
@@ -154,59 +154,35 @@ save(crea.rep,file="crea.rep.rda")
 ############################################################################################################ONGOING
 #Add LSOA
 
-
+IMD<-read.csv("patient_imd2010_16_241RMnA.txt",sep="\t")
+IMD<-IMD[,c(1,3)]
+colnames(IMD)<-c("PatientID","IMD_Decile2010")
+crea<-merge(crea,IMD,all.x=TRUE)
 
 #Breakpoint
 #################################################################################################################
-
+#ADD CONDITIONAL VARIABLES
+library(dplyr)
 #ADD BMI
-CPRD<-read_dta("hf_cases_test.dta")
-#There are some in test, also some in clinical, 
+#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
 
-C<-(CPRD[CPRD$medcode==8105,c(1,2,11)])
+#There are some in test, also some in clinical, 
+BMI<-read.csv("BMI1.csv")
+C<-(CPRD3[CPRD3$medcode %in% BMI$Medcode,c(1,2,11)])
 C<-as.data.frame(C)
 colnames(C)[1] <- "PatientID"
 colnames(C)[3] <- "BMI"
 
-C2<-(CPRD2[CPRD2$medcode==8105,c(1,2,X)])
+C2<-(CPRD2[CPRD2$medcode %in% BMI$Medcode | CPRD2$enttype==13,])
 C2<-as.data.frame(C2)
+C2<-merge(C2,CPRD5,all.x=TRUE,all.y=FALSE) 
 colnames(C2)[1] <- "PatientID"
+C2<-C2[!is.na(C2$data3),]
+C2<-C2[,c(1,4,14)]
 colnames(C2)[3] <- "BMI"
 C<-rbind(C,C2)
 
-CPRD2<-read_dta("hf_cases_clinical.dta")  
-H<-(CPRD2[CPRD2$medcode %in% Height1.csv$Medcode,])
-H<-as.data.frame(H)
-colnames(H)[1] <- "PatientID"
-CPRD5<-read_dta("hf_cases_additional.dta") 
-H<-merge(H,CPRD5,all.x=TRUE,all.y=FALSE) 
-#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
-H<-H[,c(1,4,12)]
-colnames(H)[3] <- "Height"
-
-#Near data match each creatinine record to the last prior recorded height and weight
-firstH<-H %>% 
-group_by(patid) %>%
-summarize(Height=max(Height)) %>%
-as.data.frame
-
-W<-(CPRD2[CPRD2$medcode %in% Weight1.csv$Medcode,])
-W<-as.data.frame(W)
-CPRD5<-read_dta("hf_cases_additional.dta") 
-W<-merge(W,CPRD5,all.x=TRUE,all.y=FALSE) 
-#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
-W<-W[,c(1,4,12)]
-colnames(W)[3] <- "Weight"
-
-A<-merge(W,H,all.x=TRUE)
-A$BMI<-as.numeric(A$Weight)/(as.numeric(A$Height))^2
-colnames(A)[1] <- "PatientID"
-C<-rbind(C,A[,c(1,2,5)])
-C<-C[!is.na(C$BMI),]
-#LOAD IN WEIGHT CODES AND CHECK THOSE TOO
-
 #CLOSEST DAILY BMI MEAN #1YR DATE FLAG
-
 BMItab<-C[C$BMI>=10 & C$BMI<=70,]
 firstA <-BMItab %>% 
 group_by(PatientID,eventdate) %>%
@@ -220,17 +196,43 @@ table(crea$BMIDateFlag)
 a<-crea[!is.na(crea$BMI),]
 length(a$PatientID) 
 crea$BMI<-unlist(crea$BMI)
+save(crea,file="creaongoing.rda")
+rm(a)
+#IF BMI IS MISSING WE CAN CALCULATE IT.
 
+Height<-read.csv("Height1.csv")
+H<-(CPRD2[CPRD2$medcode %in% Height$Medcode,])
+H<-as.data.frame(H)
+H<-merge(H,CPRD5,all.x=TRUE,all.y=FALSE) 
+H<-H[,c(1,4,12)]
+colnames(H)[3] <- "Height"
 
+#Near data match each creatinine record to the last (tallest) recorded height and the most recent weight
+firstH<-H %>% 
+group_by(patid) %>%
+summarize(Height=max(Height)) %>%
+as.data.frame
+crea<-merge(crea,firstH)
+crea$Height<-unlist(crea$Height)
+save(crea,file="creaongoing.rda")
+rm(firstH)
 
-#ADD PRESCRIPTION DATA USING R SCRIPT IN SAME FOLDER
+W<-(CPRD2[CPRD2$medcode %in% Weight1.csv$Medcode,])
+W<-as.data.frame(W)
+CPRD5<-read_dta("hf_cases_additional.dta") 
+W<-merge(W,CPRD5,all.x=TRUE,all.y=FALSE) 
+#Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
+W<-W[,c(1,4,12)]
+colnames(W)<- c("PatientID","entrydate","Weight")
 
-#Narrow lookup table to the full list of codes of interest to speed up processing
-#temp = list.files(pattern="*1.csv")
-#for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
-#merged <- Reduce(function(x, y) merge(x, y, all=TRUE), 
-#list(AF1.csv,BMI1.csv,BNP1.csv,BUN1.csv,cessation1.csv,DBP1.csv,Diabetes1.csv,Dialysis1.csv,Haemoglobin1.csv,HeartFailure1.csv, HeartRate1.csv,IHD1.csv,MCV1.csv,Nephrectomy1.csv,NTPROBNP1.csv,PVD1.csv,RM1.csv,SBP1.csv,SerumAlbumin1.csv,SerumPotassium1.csv,SerumSodium1.csv,smoking1.csv,transplant1.csv,UACR1.csv,UAlbumin1.csv,UricAcid1.csv))
-#sir.data<-sir.data[which(sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode %in% merged$ReadCode),]
+indx1 <- neardate(crea$PatientID, W$PatientID, crea$event.date, W$eventdate, best="prior")
+crea$Weight<-W[indx1, "Weight"]
+crea$Weightdate<-W[indx1,"entrydate"
+crea$Weight<-unlist(crea$Weight)
+crea$Weightdate<-unlist(crea$Weightdate)
+
+crea$BMIDateFlag<-ifelse(is.na(crea$BMIDateFlag)&!is.na(crea$Height)&!is.na(crea$Weight)&(as.numeric(abs(crea$event.date - crea$Weightdate))>365),1,crea$BMIDateFlag)
+crea$BMI<-ifelse(is.na(crea$BMI&!is.na(crea$Height)&!is.na(crea$Weight),(crea$Weight/(crea$Height^2)),crea$BMI)
 
 ##########################################################################
 
