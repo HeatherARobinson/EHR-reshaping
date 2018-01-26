@@ -206,12 +206,15 @@ H<-as.data.frame(H)
 H<-merge(H,CPRD5,all.x=TRUE,all.y=FALSE) 
 H<-H[,c(1,4,12)]
 colnames(H)[3] <- "Height"
+colnames(H)[1] <- "PatientID"
 
 #Near data match each creatinine record to the last (tallest) recorded height and the most recent weight
 firstH<-H %>% 
-group_by(patid) %>%
+group_by(PatientID) %>%
 summarize(Height=max(Height)) %>%
 as.data.frame
+
+
 crea<-merge(crea,firstH)
 crea$Height<-unlist(crea$Height)
 save(crea,file="creaongoing.rda")
