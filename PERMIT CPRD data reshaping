@@ -105,7 +105,7 @@ crea$log_CREA<-log(crea$Creatinine)
 colnames(crea)[2] <- "PatientID"
 colnames(crea)[3] <- "event.date"
 colnames(crea)[18] <- "Gender"
-crea<-crea[,c(2,3,8,21:26,28)]
+crea<-crea[,c(2,3,18,21:24,26:28)]
 save(crea, file = "crea2.rda")
 ######################################################################################################## CHECKED
 
@@ -158,8 +158,10 @@ IMD<-read.csv("patient_imd2010_16_241RMnA.txt",sep="\t")
 IMD<-IMD[,c(1,3)]
 colnames(IMD)<-c("PatientID","IMD_Decile2010")
 crea<-merge(crea,IMD,all.x=TRUE)
-
+save(crea.rep,file="crea.rep.rda")
 #Breakpoint
+#################################################################################################################
+load("crea.rep.rda")
 #################################################################################################################
 #ADD CONDITIONAL VARIABLES
 library(dplyr)
@@ -196,6 +198,7 @@ table(crea$BMIDateFlag)
 a<-crea[!is.na(crea$BMI),]
 length(a$PatientID) 
 crea$BMI<-unlist(crea$BMI)
+crea$BMIDateFlag<-ifelse(is.na(crea$BMIDateFlag),0,crea$BMIDateFlag)
 save(crea,file="creaongoing.rda")
 rm(a)
 #IF BMI IS MISSING WE CAN CALCULATE IT.
@@ -215,82 +218,191 @@ summarize(Height=max(Height)) %>%
 as.data.frame
 
 
-crea<-merge(crea,firstH)
+crea<-merge(crea,firstH,all.x=TRUE)
 crea$Height<-unlist(crea$Height)
 save(crea,file="creaongoing.rda")
 rm(firstH)
 
-W<-(CPRD2[CPRD2$medcode %in% Weight1.csv$Medcode,])
+Weight<-read.csv("Weight1.csv")
+W<-(CPRD2[CPRD2$medcode %in% Weight$Medcode,])
 W<-as.data.frame(W)
 CPRD5<-read_dta("hf_cases_additional.dta") 
 W<-merge(W,CPRD5,all.x=TRUE,all.y=FALSE) 
 #Call the data fields that go with the clinical table from the 'additional' table using enttype and adid.
 W<-W[,c(1,4,12)]
-colnames(W)<- c("PatientID","entrydate","Weight")
+colnames(W)<- c("PatientID","event.date","Weight")
 
-indx1 <- neardate(crea$PatientID, W$PatientID, crea$event.date, W$eventdate, best="prior")
+indx1 <- neardate(crea$PatientID, W$PatientID, crea$event.date, W$event.date, best="prior")
 crea$Weight<-W[indx1, "Weight"]
-crea$Weightdate<-W[indx1,"entrydate"
+crea$Weightdate<-W[indx1,"entry.date"]
 crea$Weight<-unlist(crea$Weight)
 crea$Weightdate<-unlist(crea$Weightdate)
 
 crea$BMIDateFlag<-ifelse(is.na(crea$BMIDateFlag)&!is.na(crea$Height)&!is.na(crea$Weight)&(as.numeric(abs(crea$event.date - crea$Weightdate))>365),1,crea$BMIDateFlag)
-crea$BMI<-ifelse(is.na(crea$BMI&!is.na(crea$Height)&!is.na(crea$Weight),(crea$Weight/(crea$Height^2)),crea$BMI)
+crea$BMI<-ifelse(is.na(crea$BMI)&!is.na(crea$Height)&!is.na(crea$Weight),(crea$Weight/(crea$Height^2)),crea$BMI)
+crea$BMI<-ifelse(crea$BMI>=10&crea$BMI<=70,crea$BMI,NA)
+#no additional BMIs added this way
 
+save(crea,file="creaongoing.rda")
 ##########################################################################
 
 #SELECT PATIENTS WHICH HAVE AT LEAST 2 TESTS AND AT LEAST 2 YEARS DATA
-library(lubridate)
-sir.data$event.date<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
+#FIND MIN AND MAX DATES PER PATIENT
+x<-CPRD2[,c(1,2)]
+x1<-x %>% 
+group_by(patid) %>%
+summarize(start=min(eventdate),end=max(eventdate)) %>%
+as.data.frame
+x1$range<-as.numeric(as.character(x1$end-x1$start))
 
-aggregate(as.numeric(year(strptime(sir.data$event.date, format="%Y-%m-%d"))), list(sir.data$PatientID), range) -> ranges
-ranges$x[,2] - ranges$x[,1] -> ranges$range
-ranges[(which(ranges$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
-crea.rep[-which(crea.rep$PatientID %in% range_short_ids),]->crea.rep 
-unique(crea.rep$PatientID)#5950
-save(crea.rep,file="crea.rep2yrsall.rda")
+x1[(which(x1$range<2)),1] -> range_short_ids    # define exclusion range as 2 years
+crea[-which(crea$PatientID %in% range_short_ids),]->crea.rep 
+length(unique(crea.rep$PatientID))
+save(crea.rep,file="crea.rep.rda")
 
-CPRDinput<-file(paste("CPRD_input.csv"), open="w")
-cat("Patient_ID","Date","Age","Gender","Ethnicity","Medcode","data1","data2","data3","data4","data5","data6","data7","data8","DataSource","Source","\n", sep=",",file="CPRD_input.csv",append=TRUE)
-for (n in 1:8025802){ #Change loop number to number of records in dataset
-cat((paste(CPRD.data6$patid[n])), (paste(CPRD.data6$eventdate[n])), (paste(CPRD.data6$Age[n])), (paste(CPRD.data6$gender[n])), (paste(CPRD.data6$Category[n])),(paste(CPRD.data6$medcode[n])),(paste(CPRD.data6$data1[n])), (paste(CPRD.data6$data2[n])),(paste(CPRD.data6$data3[n])), (paste(CPRD.data6$data4[n])), (paste(CPRD.data6$data5[n])), (paste(CPRD.data6$data6[n])),(paste(CPRD.data6$data7[n])),(paste(CPRD.data6$data8[n])),(paste(CPRD.data6$DataSource[n])), (paste(CPRD.data6$Source[n])), "\n", file="CPRD_input.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
+###########################################################################
+#SERUM SODIUM
+SerumSodium1<-read.csv("SerumSodium1.csv")
+C<-(CPRD3[CPRD3$medcode %in% SerumSodium1$Medcode,c(1,2,11,12)])
+table(C$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR NONE)
 
-#FREEZE OF CPRD.DATA6
-load("myDF.Rdata")
+C<-as.data.frame(C)
+colnames(C)<- c("PatientID","event.date","Value")
 
-CPRD.data6$Creatinine<-ifelse(CPRD.data6$medcode=="5",as.numeric(CPRD.data6$data2),NA)
-#Any non-numeric values are marked NA
-CPRD.data6$LogCreatinine<-log10(CPRD.data6$Creatinine)
-CPRD.data6$Creatinine<-ifelse(CPRD.data6$Creatinine<18,NA,CPRD.data6$Creatinine)  # creatinine values less than 18 considered not valid
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(SerumSodium=mean(Value)) %>%
+as.data.frame
 
-#Check HF cohort
-HF<-read.csv("HeartFailure.csv")
-HFs<-CPRD.data[CPRD.data$medcode %in% HF$Medcode,]
-length(unique(as.factor(HFs$patid))) #121766 patients with a post 2008 creatinine test and a HF diagnosis based on codes
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$SerumSodium<-first[indx1, "SerumSodium"]
+crea.rep$SerSodDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >30, 1, 0)
+table(crea.rep$SerSodDateFlag) #652
+crea.rep$SerumSodium<-unlist(crea.rep$SerumSodium)
 
-#Add LVEF values
+###########################################################################
+#SERUM POTASSIUM
+SerumPotassium<-read.csv("SerumPotassium1.csv")
+C<-(CPRD3[CPRD3$medcode %in% SerumPotassium$Medcode,c(1,2,11,12)])
+table(C$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR NONE)
 
-LV<-CPRD.data[CPRD.data$medcode==30918 & CPRD.data$data2>=40,] #Find patients with impaired LVEF
-LVEF<-CPRD.data[CPRD.data$patid %in% LV$patid,]
-length(unique(as.factor(LVEF$patid))) #24 patients with a post 2008 creatinine test and an impaired LVEF
-LVEF2<-CPRD.data[CPRD.data$patid %in% LV$patid & CPRD.data$patid %in% HFs$patid,]
-length(unique(as.factor(LVEF2$patid))) #24 patients with a post 2008 creatinine test, HF code and a LVEF based on codes
+C<-as.data.frame(C)
+colnames(C)<- c("PatientID","event.date","Value")
+C<-C[C$Value>=2 & C$Value<=10,]
 
-#All of the LVEF qualifying patients also had a HF code.
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(SerumPotassium=mean(Value)) %>%
+as.data.frame
 
-#Add BNP values
-BNP<-read.csv("BNP.csv")
-BNPs<-CPRD.data[(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==1] & CPRD.data$data2>=2000)|(CPRD.data$medcode %in% BNP$Medcode[BNP$Sensitive==0] & CPRD.data$data2>=100),] #Find patients with impaired LVEF
-BN<-CPRD.data[CPRD.data$patid %in% BNPs$patid,]
-length(unique(as.factor(BN$patid))) #9374 patients with a post 2008 creatinine test and a high BNP
-BN2<-CPRD.data[CPRD.data$patid %in% BNPs$patid & CPRD.data$patid %in% HFs$patid,]
-length(unique(as.factor(BN2$patid))) #9328 patients with a post 2008 creatinine test, HF code and a BNP based on codes
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$SerumPotassium<-first[indx1, "SerumPotassium"]
+crea.rep$SerPotDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >30, 1, 0)
+table(crea.rep$SerPotDateFlag) #652
+crea.rep$SerumPotassium<-unlist(crea.rep$SerumPotassium)
 
-#46 of the BNP qualifying patients were missing a HF code.
+###############################################################################
+#URIC ACID
 
-#Test speculative HF codes
-HFs2<-CPRD.data[CPRD.data$medcode %in% HF$Medcode[HF$Speculative==0],]
-length(unique(as.factor(HFs2$patid))) #109748 patients with a post 2008 creatinine test and a HF diagnosis based on codes
+UA<-read.csv("UricAcid1.csv")
+C<-(CPRD3[CPRD3$medcode %in% UA$Medcode,c(1,2,11,12)])
+table(C$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR umol)
+C$data2<-ifelse(C$data3==142,C$data2/1000,C$data2)
+
+C<-as.data.frame(C)
+colnames(C)<- c("PatientID","event.date","Value")
+C<-C[C$Value>=0.1 & C$Value<=1,]
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(UricAcid=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$UricAcid<-first[indx1, "UricAcid"]
+crea.rep$UricAcidDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >365, 1, 0)
+table(crea.rep$UricAcidDateFlag) #652
+crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
+
+save(crea,file="creaongoing.rda")
 
 
+###############################################################################
+#UACR
+UACR<-read.csv("UACR1.csv")
+C<-(CPRD3[CPRD3$medcode %in% UA$Medcode,c(1,2,11,12)])
+table(C$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR umol)
+C$data2<-ifelse(C$data3==142,C$data2/1000,C$data2)
+C$data2<-ifelse(C$data3==99,C$data2*1000,C$data2)
+
+C<-as.data.frame(C[C$data2<=3000,])
+colnames(C)<- c("PatientID","event.date","Value")
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(UACratio=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$UACratio<-first[indx1, "UACratio"]
+crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >365, 1, 0)
+table(crea.rep$UACDateFlag) #652
+crea.rep$UACratio<-unlist(crea.rep$UACratio)
+
+save(crea,file="creaongoing.rda")
+
+###############################################################################
+#BUN
+BUN<-read.csv("BUN1.csv")
+C<-(CPRD3[CPRD3$medcode %in% BUN$Medcode &CPRD3$enttype==204,c(1,2,11,12)])
+table(C$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR NA)
+
+C<-as.data.frame(C[C$data2>=1&C$data2<=50,])
+colnames(C)<- c("PatientID","event.date","Value")
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(BUN=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$BUN<-first[indx1, "BUN"]
+crea.rep$BUNDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >365, 1, 0)
+table(crea.rep$BUNDateFlag) #652
+crea.rep$BUN<-unlist(crea.rep$BUN)
+
+save(crea,file="creaongoing.rda")
+
+
+###############################################################################
+#DBP
+DBP<-read.csv("DBP1.csv")
+C<-(CPRD3[CPRD3$medcode==1,c(1,2,10)])
+C2<-CPRD3[CPRD3$medcode %in% DBP$Medcode &!CPRD3$medcode==1,c(1,2,11,12)]
+table(C2$data3)
+#CHECK FOR UNIQUE UNITS USED (mmol/L OR NA)
+colnames(C)<- c("PatientID","event.date","Value")
+colnames(C2)<- c("PatientID","event.date","Value")
+C<-rbind(C,C2[,c(1:3)])
+C<-as.data.frame(C[C$data2>=1&C$data2<=50,])
 
