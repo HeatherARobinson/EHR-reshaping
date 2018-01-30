@@ -443,7 +443,7 @@ CB<-C2[,c(1,2,11)]#data2
 colnames(CB)<- c("PatientID","event.date","Value")
 C<-rbind(CA,CB)
 
-C<-as.data.frame(C[C$Value>=20&C$Value<=200,])
+C<-as.data.frame(C[C$Value>=30&C$Value<=300,])
 columns=names(C[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-C %>% 
@@ -458,12 +458,14 @@ crea.rep$SBPDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.d
 table(crea.rep$SBPDateFlag) #652
 crea.rep$SBP<-unlist(crea.rep$SBP)
 
-save(crea,file="creaongoing.rda")
+save(crea.rep,file="crea.rep.rda")
 ###############################################################################
 #MEAN DAILY MEAN CORPUSCULAR VOLUME #120 DAYS
 MCV<-read.csv("MCV1.csv")
 C<-(CPRD3[CPRD3$medcode  %in% MCV$Medcode,])
 C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
+
+#CHECK UNITS!
 
 C<-C[,c(1,4,10)]#data2
 colnames(C)<- c("PatientID","Value","event.date")
@@ -518,6 +520,8 @@ C2<-(CPRD2[CPRD2$medcode %in% UA$Medcode,])
 C2<-merge(C2,CPRD5,all.x=TRUE,all.y=FALSE) 
 summary(C2)#NO numeric data
 
+#CHECK UNITS!
+
 C<-C[,c(1,2,11)]
 colnames(C)<- c("PatientID","event.date","Value")
 C<-C[C$Value>=0 & C$Value<=1000,]
@@ -569,7 +573,7 @@ HR<-read.csv("HeartRate1.csv")
 C<-(CPRD2[CPRD2$medcode %in% HR$Medcode & CPRD2$enttype=="131",])
 C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
 
-C<-as.data.frame(C[,c(1,2,11)])
+C<-as.data.frame(C[,c(1,4,13)])
 colnames(C)<- c("PatientID","event.date","Value")
 C<-C[C$Value>=20 & C$Value<=200,]
 
@@ -587,9 +591,42 @@ crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$e
 table(crea.rep$HeartRateDateFlag) #652
 crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 
-
-
 #####################################################################################
 #BNP
+
+#CHECK UNITS!
+
 ######################################################################################
 #NTPROBNP 
+
+#CHECK UNITS!
+#####################################################################################
+#Haemoglobin
+
+#CHECK UNITS!
+######################################################################################
+#Diabetes
+##############################################################################
+#IHD
+##################################################################################
+#PVD
+######################################################################################
+#RRT
+###########################################################################################
+#TRANSPLANT
+#########################################################################################
+#NEPHRECTOMY
+#######################################################################################
+
+
+
+
+
+#FORMULA VARIABLE START
+
+#ANAEMIA
+
+#HTN
+########################################################################################
+#PP
+crea.rep$PP<-ifelse(!is.na(crea.rep$SBP)&!is.na(crea.rep$DBP),crea.rep$SBP-crea.rep$DBP,NA)
