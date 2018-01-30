@@ -593,8 +593,33 @@ crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 
 #####################################################################################
 #BNP
+BNP<-read.csv("BNP1.csv")
+C<-CPRD3[CPRD3$medcode %in% BNP$Medcode,]
+C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
+unique(C$data3)
+#MANY UNITS
+C$data2<-ifelse(C$data3==105,C$data2*,C$data2)
+C$data2<-ifelse(C$data3==120,C$data2*,C$data2)
+C<-C[C$data2>=1&C$data2<=1000,]
 
-#CHECK UNITS!
+C<-as.data.frame(C[,c(1,10,4)])
+colnames(C)<- c("PatientID","event.date","Value")
+C<-C[C$Value>=30 & C$Value<=260,]
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(BNP=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$BNP<-first[indx1, "BNP"]
+crea.rep$BNPDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >365, 1, 0)
+table(crea.rep$BNPDateFlag) #652
+crea.rep$BNP<-unlist(crea.rep$BNP)
+
 
 ######################################################################################
 #NTPROBNP 
@@ -602,6 +627,35 @@ crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 #CHECK UNITS!
 #####################################################################################
 #Haemoglobin
+HB<-read.csv("Haemoglobin1.csv")
+C<-(CPRD3[CPRD3$medcode %in% HB$Medcode & CPRD3$enttype=="173",])
+C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
+unique(C$data3)
+#MANY UNITS
+C<-C[!C$data3==97&!C$data3==1,]
+#AVOID UNITS INDICATING PROPORTIONS OF Hba
+
+#0=NA,56,57,,97,26
+C$data2<-ifelse(C$data3==56,C$data2*10,C$data2)
+
+C<-as.data.frame(C[,c(1,2,11)])
+colnames(C)<- c("PatientID","event.date","Value")
+C<-C[C$Value>=30 & C$Value<=260,]
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(Haemoglobin=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$Haemoglobin<-first[indx1, "Haemoglobin"]
+crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >30, 1, 0)
+table(crea.rep$HaemDateFlag) #652
+crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
+
 
 #CHECK UNITS!
 ######################################################################################
