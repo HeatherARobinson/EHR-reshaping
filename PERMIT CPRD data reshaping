@@ -543,23 +543,53 @@ CPRD2$tempDate<-CPRD2$eventdate
 CPRD2$tempDate<-ifelse(!CPRD2$medcode  %in%  AF1$Medcode,NA,CPRD2$tempDate) 
 CPRD3$tempDate<-CPRD3$eventdate 
 CPRD3$tempDate<-ifelse(!CPRD3$medcode  %in%  AF1$Medcode,NA,CPRD3$tempDate) 
-CPRD$tempDate<-CPRD$eventdate 
-CPRD$tempDate<-ifelse(!CPRD$medcode  %in%  AF1$Medcode,NA,CPRD$tempDate) 
 
-smalltab<-rbind(CPRD[,c(1,2)],CPRD2[,c(1,2)],CPRD3[,c(1,2)])
-smalltab<-smalltab[!is.na(smalltab$tempDate),c("PatientID","tempDate")]
+smalltab<-rbind(CPRD2[,c(1,12)],CPRD3[,c(1,18)])
+smalltab<-smalltab[!is.na(smalltab$tempDate),]
 first<-smalltab %>%
-    group_by(PatientID) %>%
+    group_by(patid) %>%
     arrange(tempDate) %>%
-    slice(which.min(as.numeric(AFDate))) %>%
+    slice(which.min(as.numeric(tempDate))) %>%
 as.data.frame
     head(first)
     
 names(first)<-c("PatientID","AFDate")
 crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$AFDate<-as.Date(as.character(crea.rep$AFDate),format="%Y%m%d")
+
+crea.rep$AFDate<-as.Date(crea.rep$AFDate,origin="1970/01/01")
 crea.rep$DaysSinceAF<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$AFDate,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceAF<-ifelse(crea.rep$DaysSinceAF<0,NA,crea.rep$DaysSinceAF)
 crea.rep$AF<-ifelse(is.na(crea.rep$DaysSinceAF),0,1)
 summary(crea.rep$DaysSinceAF,na.rm=TRUE)
+
+#################################################################################
+#HEART RATE
+#data1 enttype 131
+HR<-read.csv("HeartRate1.csv")
+C<-(CPRD2[CPRD2$medcode %in% HR$Medcode & CPRD2$enttype=="131",])
+C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
+
+C<-as.data.frame(C[,c(1,2,11)])
+colnames(C)<- c("PatientID","event.date","Value")
+C<-C[C$Value>=20 & C$Value<=200,]
+
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(HeartRate=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$HeartRate<-first[indx1, "HeartRate"]
+crea.rep$HeartRateDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >30, 1, 0)
+table(crea.rep$HeartRateDateFlag) #652
+crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
+
+
+
+#####################################################################################
+#BNP
+######################################################################################
+#NTPROBNP 
