@@ -464,8 +464,7 @@ save(crea.rep,file="crea.rep.rda")
 MCV<-read.csv("MCV1.csv")
 C<-(CPRD3[CPRD3$medcode  %in% MCV$Medcode,])
 C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
-
-#CHECK UNITS!
+table(C$data3)
 
 C<-C[,c(1,4,10)]#data2
 colnames(C)<- c("PatientID","Value","event.date")
@@ -492,6 +491,7 @@ save(crea.rep,file="crea.rep.rda")
 SA<-read.csv("SerumAlbumin1.csv")
 C<-(CPRD3[CPRD3$medcode %in% SA$Medcode & !CPRD3$enttype=="291",])
 table(C$data3)
+C$data2<-ifelse(C$data3==83,C$data2/1000, C$data2)
 #CHECK FOR UNIQUE UNITS USED (mmol/L OR NONE)
 
 C<-as.data.frame(C[,c(1,2,11)])
@@ -521,7 +521,8 @@ C2<-merge(C2,CPRD5,all.x=TRUE,all.y=FALSE)
 summary(C2)#NO numeric data
 
 #CHECK UNITS!
-
+unique(C$data3)
+C$data2<-ifelse(C$data3==57,C$data2*1000,C$data2)
 C<-C[,c(1,2,11)]
 colnames(C)<- c("PatientID","event.date","Value")
 C<-C[C$Value>=0 & C$Value<=1000,]
@@ -598,14 +599,12 @@ C<-CPRD3[CPRD3$medcode %in% BNP$Medcode,]
 C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
 unique(C$data3)
 #MANY UNITS
-C$data2<-ifelse(C$data3==105,C$data2*,C$data2)
-C$data2<-ifelse(C$data3==120,C$data2*,C$data2)
+C$data2<-ifelse(C$data3==120,C$data2/1000,C$data2)
 C<-C[C$data2>=1&C$data2<=1000,]
 
 C<-as.data.frame(C[,c(1,10,4)])
 colnames(C)<- c("PatientID","event.date","Value")
-C<-C[C$Value>=30 & C$Value<=260,]
-
+C<-na.omit(C)
 columns=names(C[c(1,2)])
 dots<-lapply(columns, as.symbol)
 first <-C %>% 
@@ -623,6 +622,31 @@ crea.rep$BNP<-unlist(crea.rep$BNP)
 
 ######################################################################################
 #NTPROBNP 
+NTBNP<-read.csv("NTPROBNP1.csv")
+C<-CPRD3[CPRD3$medcode %in% NTBNP$Medcode,]
+C<-merge(C,CPRD5,all.x=TRUE,all.y=FALSE) 
+unique(C$data3)
+#MANY UNITS
+C$data2<-ifelse(C$data3==120,C$data2/1000,C$data2)
+C$data2<-ifelse(C$data3==96,C$data2*1000000000*0.289,C$data2)
+C<-C[C$data2>=1&C$data2<=6000,]
+
+C<-as.data.frame(C[,c(1,10,4)])
+colnames(C)<- c("PatientID","event.date","Value")
+C<-na.omit(C)
+columns=names(C[c(1,2)])
+dots<-lapply(columns, as.symbol)
+first <-C %>% 
+group_by_(.dots=dots) %>%
+summarise(NTPROBNP=mean(Value)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$event.date, first$event.date, 
+                   best="prior")
+crea.rep$NTPROBNP<-first[indx1, "NTPROBNP"]
+crea.rep$NTPROBNPDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.date[indx1])) >365, 1, 0)
+table(crea.rep$NTPROBNPDateFlag) #652
+crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
 
 #CHECK UNITS!
 #####################################################################################
@@ -656,12 +680,35 @@ crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.
 table(crea.rep$HaemDateFlag) #652
 crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
 
-
-#CHECK UNITS!
 ######################################################################################
 #Diabetes
 ##############################################################################
 #IHD
+IHD1<-read.csv("IHD1.csv")
+CPRD2$tempDate<-CPRD2$eventdate 
+CPRD2$tempDate<-ifelse(!CPRD2$medcode  %in%  IHD1$Medcode,NA,CPRD2$tempDate) 
+CPRD3$tempDate<-CPRD3$eventdate 
+CPRD3$tempDate<-ifelse(!CPRD3$medcode  %in%  IHD1$Medcode,NA,CPRD3$tempDate) 
+
+smalltab<-rbind(CPRD2[,c(1,12)],CPRD3[,c(1,18)])
+smalltab<-smalltab[!is.na(smalltab$tempDate),]
+first<-smalltab %>%
+    group_by(patid) %>%
+    arrange(tempDate) %>%
+    slice(which.min(as.numeric(tempDate))) %>%
+as.data.frame
+    head(first)
+    
+names(first)<-c("PatientID","AFDate")
+crea.rep<-merge(crea.rep,as.data.frame(first),all.x=TRUE)
+
+crea.rep$AFDate<-as.Date(crea.rep$AFDate,origin="1970/01/01")
+crea.rep$DaysSinceAF<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$AFDate,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceAF<-ifelse(crea.rep$DaysSinceAF<0,NA,crea.rep$DaysSinceAF)
+crea.rep$AF<-ifelse(is.na(crea.rep$DaysSinceAF),0,1)
+summary(crea.rep$DaysSinceAF,na.rm=TRUE)
+
+
 ##################################################################################
 #PVD
 ######################################################################################
