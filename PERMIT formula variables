@@ -43,24 +43,28 @@ CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.r
 
 #setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 
-
 names(crea.rep)
 
-tacrea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
-crea.rep$CKDStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
+crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
+crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
 table(crea.rep$CKD)
 
 #ASSIGN CKD STAGES
-crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(crea.rep$CKDStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDStage)
-crea.rep$CKDStage<-ifelse(is.na(crea.rep$CKDStage),0,crea.rep$CKDStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
 
 for (i in 1:length(unique(crea.rep$PatientID))){
-crea.rep$MaxCKDStage[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==crea.rep$PatientID[i]])
+crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
+
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3&crea.rep$MDRDeGFR<45,paste("3b"),paste(crea.rep$CKDGStage))
+crea.rep$CKDAStage<-ifelse(crea.rep$UACR==3&crea.rep$MDRDeGFR<45,paste("3b"),paste(crea.rep$CKDGStage))
+
+
 
 #REMOVE INSUFFICIENT LOOKBACK PATIENTS
 library(tcltk2)
