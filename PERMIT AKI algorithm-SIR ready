@@ -21,35 +21,12 @@ attach(crea.rep)
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 KD<-crea.rep[crea.rep$KDmark>0,]
 a<-crea.rep[crea.rep$PatientID %in% KD$PatientID,]
-#The dataset is cleaned again at the end to make sure that CKD patients are not classed as having an AKI
-na.omit(a)
 
-a$CKDate<-ifelse(a$CKDStage>0,a$EntryDate,NA) 
-smalltab<-a[!is.na(a$CKDate),c("PatientID","CKDate")]
-first<-smalltab %>%
-   group_by(PatientID) %>%  
-   arrange(CKDate) %>% 
-   slice(which.min(as.numeric(CKDate))) %>%
-as.data.frame    
-head(first)
-  
-a<-merge(a,as.data.frame(first),all.x=TRUE)
 a$event.date<-as.Date(as.character(a$EntryDate),format="%Y%m%d")
-a$CKDate<-as.Date(as.character(a$CKDate),format="%Y%m%d")
-
-#CKDate is the date at which CKD is first diagnosed
-
-a<-a[!is.na(a$PatientID) & (is.na(a$CKDate)|a$CKDate>a$EntryDate),]
+a<-a[!is.na(a$PatientID),]
 attach(a)
-summary(a$CKDate,na.rm=TRUE)
 length(a$PatientID)
-#We only have 1559 tests to assess
-
-#index<-which(event.date>=as.Date(ymd("2007-01-01")))
-#The index start date should be 1 year prior to the first recorded creatinine test of the study window
-#a<-a[index,]
-length(a$PatientID) #458030 potentially qualifying tests
-levels(as.factor(a$Ethnicity)) #None are level 4 (black ethnicities)
+levels(as.factor(a$Ethnicity))
 
 #If going back to use sir data to capture older tests require the following lines:
 #a$CodeValue<-ifelse(as.numeric(as.character(a$CodeUnits))>0 
@@ -207,34 +184,3 @@ indx1 <-neardate(crea.rep$PatientID, a$PatientID, crea.rep$event.date, a$event.d
 crea.rep$NoAKIepisodes<-a[indx1, "AKIcounter"]
 crea.rep$NoAKIepisodes<-unlist(crea.rep$NoAKIepisodes)
 crea.rep$NoAKIepisodes<-ifelse(is.na(crea.rep$NoAKIepisodes),0,crea.rep$NoAKIepisodes)
-
-#DON'T COUNT AKI IF IT PROGRESSES TO CKD
-
-a<-crea.rep[crea.rep$MaxPriorCKD>0,]
-#The dataset is cleaned again at the end to make sure that CKD patients are not classed as having an AKI
-na.omit(a)
-
-a$CKDate<-ifelse(a$CKDStage>0,a$EntryDate,NA) 
-smalltab<-a[!is.na(a$CKDate),c("PatientID","CKDate")]
-first<-smalltab %>%
-   group_by(PatientID) %>%  
-   arrange(CKDate) %>% 
-   slice(which.min(as.numeric(CKDate))) %>%
-as.data.frame    
-head(first)
-  
-b<-merge(as.data.frame(first),crea.rep,all.x=TRUE,all.y=FALSE)
-b<-b[b$CKDate>b$event.date,]
-b<-b[,c("PatientID","NoAKIepisodes")]
-colnames(b)<-c("PatientID","PreCKDAKIs")
-second<-b %>%
-   group_by(PatientID) %>%  
-      slice(which.max(PreCKDAKIs)) %>%
-as.data.frame    
-head(second)
-crea.rep<-merge(crea.rep,second,all.x=TRUE)
-crea.rep$NoAKIepisodes<-ifelse(crea.rep$NoAKIepisodes>crea.rep$PreCKDAKIs,crea.rep$PreCKDAKIs,crea.rep$NoAKIepisodes)
-
-
-
-
