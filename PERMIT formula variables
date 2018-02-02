@@ -77,8 +77,9 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),"
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),"HR",crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="2"|crea.rep$CKDGStage=="1"),"HR",crea.rep$CKDPrognosis)
 
+
+
 #REMOVE INSUFFICIENT LOOKBACK PATIENTS
-library(tcltk2)
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
 #find all tests in window, take min KDmark. If 1, CKD, if 0, not.
@@ -89,24 +90,16 @@ CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
 CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
 
 CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
-pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
+
 CKpot$yes<-0
 for (i in 1:length(CKpot$PatientID)){
 CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes)
-setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
 }
+CKpot<-CKpot[CKpot$yes==1,c("PatientID","event.date","yes")]
+crea.rep,merge(crea.rep$CKpot,all.x=TRUE)
+crea.rep$CKDGStage<-ifelse(crea.rep$yes==1,paste("0"),paste(crea.rep$CKDGStage))
+save("crea.rep",file="crea.repv7.rda")
 
-
-#######################################################################################
-#MAX PRIOR CKD STAGE
-CKpot<-crea.rep
-CKpot<-CKpot[,c(1,2,7,81)] #Make sure you are only getting one per day- use something granular to join them.
-CKpot<-unique(CKpot)
-for (i in 1:length(CKpot$PatientID)){
-CKpot$MaxPriorCKD[i]<-max(crea.rep$CKDStage[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date<=CKpot$event.date[i]])
-}
-CKpot<-CKpot[,c(1,2,3,6)]
-crea.rep<-merge(crea.rep,CKpot,all.x=TRUE)
 ###################################################################################
 #FIRST LOG CREATININE AFTER 6M
 
