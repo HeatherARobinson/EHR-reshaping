@@ -49,18 +49,28 @@ crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
 crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
 table(crea.rep$CKD)
 
-#ASSIGN CKD STAGES
+CKpot$yes<-0
+for (i in 1:length(CKpot$PatientID)){
+CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes)
+}
+CKpot<-CKpot[CKpot$yes==1,c("PatientID","event.date","yes")]
+crea.rep<-merge(crea.rep,CKpot,all.x=TRUE)
+
+#ASSIGN CKD STAGES UNLESS NO LOOKBACK AVAILABLE
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDGStage)
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$yes==1,paste("0"),paste(crea.rep$CKDGStage))
+
 for (i in 1:length(unique(crea.rep$PatientID))){
 crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3&crea.rep$MDRDeGFR<45,paste("3b"),paste(crea.rep$CKDGStage))
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage=="3",paste("3a"),paste(crea.rep$CKDGStage))
+
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
+crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
 
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
@@ -77,27 +87,6 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),"
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),"HR",crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="2"|crea.rep$CKDGStage=="1"),"HR",crea.rep$CKDPrognosis)
 
-
-
-#REMOVE INSUFFICIENT LOOKBACK PATIENTS
-crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
-CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
-#find all tests in window, take min KDmark. If 1, CKD, if 0, not.
-
-#Create a dataset including all patients with a KD flag:
-CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
-CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
-CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
-
-CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
-
-CKpot$yes<-0
-for (i in 1:length(CKpot$PatientID)){
-CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes)
-}
-CKpot<-CKpot[CKpot$yes==1,c("PatientID","event.date","yes")]
-crea.rep,merge(crea.rep$CKpot,all.x=TRUE)
-crea.rep$CKDGStage<-ifelse(crea.rep$yes==1,paste("0"),paste(crea.rep$CKDGStage))
 save("crea.rep",file="crea.repv7.rda")
 
 ###################################################################################
