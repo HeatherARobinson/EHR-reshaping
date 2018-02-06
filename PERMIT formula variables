@@ -47,7 +47,7 @@ names(crea.rep)
 
 crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
 crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
-table(crea.rep$CKD)
+table(crea.rep$CKDGStage)
 
 CKpot$yes<-0
 for (i in 1:length(CKpot$PatientID)){
