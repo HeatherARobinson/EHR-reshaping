@@ -94,7 +94,7 @@ save("crea.rep",file="crea.repv7.rda")
 
 first<-crea.rep[,c("PatientID","event.date","log_CREA")]
 first$event.date2<-first$event.date+180
-indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="after",nomatch=NA_integer_)
 first$LogCrea6M<-crea.rep[indx1,"log_CREA"]
 
 #THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
@@ -108,8 +108,9 @@ maxes<-maxes[,c(1,2)]
 colnames(maxes)<-c("PatientID","MaxDate")
 first<-merge(first,maxes)
 first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
-
-crea.rep<-merge(crea.rep,first,all.x=TRUE)
+ first$PatientID<-as.character(first$PatientID)
+crea.rep$PatientID<-as.character(crea.rep$PatientID)
+crea.rep<-merge(crea.rep,first,all.x=TRUE,all.y=FALSE)
 crea.rep$LogCrea6M<-unlist(crea.rep$LogCrea6M)
 
 ###################################################################################
@@ -130,6 +131,9 @@ slice(which.max(event.date)) %>%
 as.data.frame
 maxes<-maxes[,c(1,2)]
 colnames(maxes)<-c("PatientID","MaxDate")
+
+first$PatientID<-as.character(first$PatientID)
+maxes$PatientID<-as.character(maxes$PatientID)
 first<-merge(first,maxes)
 first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
 
