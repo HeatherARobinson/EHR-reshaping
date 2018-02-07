@@ -134,8 +134,10 @@ crea.rep$UricAcid<-unlist(crea.rep$UricAcid)
 table(droplevels(sir.data$CodeUnits[sir.data$ReadCode %in% BUN1.csv$ReadCode]))
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BUN1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>=1,as.numeric(sir.data$CodeUnits),sir.data$temp)
-smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=1&sir.data$temp<=50,c("PatientID","CodeValue","EntryDate")]
-smalltab<-smalltab[smalltab$CodeValue<=50,]
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$CodeValue>=1&as.numeric(sir.data$CodeValue)<=50,c("PatientID","CodeValue","EntryDate")]
+smalltab
+summary(smalltab$CodeValue)
+
 columns=names(smalltab[c(1,3)])
 dots<-lapply(columns, as.symbol)
 first <-smalltab %>% 
@@ -151,6 +153,8 @@ table(crea.rep$BUNDateFlag) #7458
 a<-crea.rep[!is.na(crea.rep$BUN),]
 length(a$PatientID) #7612
 crea.rep$BUN<-unlist(crea.rep$BUN)
+crea.rep$BUNDateFlag<-ifelse(is.na(crea.rep$BUNDateFlag),0,crea.rep$BUNDateFlag)
+ crea.rep$BUN_DF<-ifelse(crea.rep$BUNDateFlag==0,crea.rep$BUN,NA)
 ##############################################################
 #MEAN DAILY SERUM POTASSIUM #1 MONTH
 sir.data$temp<-ifelse(sir.data$ReadCode %in% SerumPotassium1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -194,6 +198,9 @@ a<-crea.rep[!is.na(crea.rep$HeartRate),]
 length(a$PatientID) #35414
 crea.rep$HeartRate<-unlist(crea.rep$HeartRate)
 
+crea.rep$HeartRateDateFlag<-ifelse(is.na(crea.rep$HeartRateDateFlag),0,crea.rep$HeartRateDateFlag)
+ crea.rep$HeartRate_DF<-ifelse(crea.rep$HeartRateDateFlag==0,crea.rep$HeartRate,NA)
+
 ##############################################################
 #MEAN BNP #1 YEAR
 sir.data$temp<-ifelse(sir.data$ReadCode %in% BNP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
@@ -214,6 +221,8 @@ table(crea.rep$BNPDateFlag) #7
 a<-crea.rep[!is.na(crea.rep$BNP),]
 length(a$PatientID) #14
 crea.rep$BNP<-unlist(crea.rep$BNP)
+crea.rep$BNPDateFlag<-ifelse(is.na(crea.rep$BNPDateFlag),0,crea.rep$BNPDateFlag)
+crea.rep$BNP_DF<-ifelse(crea.rep$BNPDateFlag==0,crea.rep$BNP,NA)
 
 ##############################################################
 #MEAN NT-PRO BNP #1 YEAR
@@ -231,12 +240,17 @@ indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$
                    best="prior")
 crea.rep$NTPROBNP<-first[indx1, "NTPROBNP"]
 crea.rep$NTPROBNPDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, 0)
+
+crea.rep$NTPROBNPDateFlag<-ifelse(is.na(crea.rep$NTPROBNPDateFlag),0,crea.rep$NTPROBNPDateFlag)
 table(crea.rep$NTPROBNPDateFlag) #643
 a<-crea.rep[!is.na(crea.rep$NTPROBNP),]
 length(a$PatientID) #914
 crea.rep$NTPROBNP<-unlist(crea.rep$NTPROBNP)
 
+crea.rep$NTPROBNP_DF<-ifelse(crea.rep$NTPROBNPDateFlag==0,crea.rep$NTPROBNP,NA)
 
+
+ crea.rep$BUN_DF<-ifelse(crea.rep$BUNDateFlag==0,crea.rep$BUN,NA)
 ##############################################################
 #MIN DAILY SYSTOLIC BP #30 DAYS
 sir.data$SBP<-ifelse(sir.data$ReadCode %in% SBP1.csv$ReadCode,as.numeric(paste(sir.data$CodeValue)),NA)
