@@ -8,66 +8,60 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$HTN<-ifelse(is.na(crea.rep$HTN),0,crea.rep$HTN)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
-###############################################################################
 
-#CALCULATING MDRD eGFR
+#MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 o<-ifelse(is.na(crea.rep$Ethnicity),1,o)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
-
-#12156 test dates have 2 measures for an individual with different values
-
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ##################################################################################
-##############################################################################################
-#Identify kidney injury patients
-#tabulate the first qualifying test for each patient
+
+#Identify kidney injury patients and tabulate the first qualifying test for each patient
+
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
-#find all tests in window, take min KDmark. If 1, CKD, if 0, not.
 
-#Create a dataset including all patients with a KD flag:
+#Create a dataset including all data from all patients with a KD flag:
 CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
 CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
 CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
-#The flag will appear from the point at which the patient crosses the threshold of being classifiecd as having CKD.
+CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
+#The KD flag will appear from the point at which the patient crosses the threshold of being classified as having CKD.
 
 ############################################################################################## CHECKED
 #Diagnose CKD
-CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
 
-#pb1<-tkProgressBar(title="Processing CKD values",min=0,max=length(CKpot$PatientID),width=300) 
 for (i in 1:length(CKpot$PatientID)){
 CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
 }
-
-#setTkProgressBar(pb1,i,label=paste(round(i/(length(CKpot$PatientID))*100, 0),"% done"))
-
-names(crea.rep)
-
-crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
-crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
-table(crea.rep$CKDGStage)
+#CKD is flagged as 1 if the test qualifies and there is no normal test within 3 months prior
+#At this stage some are temporarily falsely positively identified that have no lookback test
 
 CKpot$yes<-0
 for (i in 1:length(CKpot$PatientID)){
-CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes)
+CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes[i])
 }
-CKpot<-CKpot[CKpot$yes==1,c("PatientID","event.date","yes")]
-crea.rep<-merge(crea.rep,CKpot,all.x=TRUE)
+
+#Select only records with a lookback test
+CKpot<-CKpot[CKpot$yes==1,]
 
 #ASSIGN CKD STAGES UNLESS NO LOOKBACK AVAILABLE
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=60&crea.rep$MDRDeGFR<=89,2,crea.rep$CKDGStage)
+
+crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
+crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
+#Stage 1 is skipped here as it cannot be identified from creatinine only
+table(crea.rep$CKDGStage)
+
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
-crea.rep$CKDGStage<-ifelse(crea.rep$yes==1,paste("0"),paste(crea.rep$CKDGStage))
 
 for (i in 1:length(unique(crea.rep$PatientID))){
 crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
+#can replace with dplyr
 
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
 crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
