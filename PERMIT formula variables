@@ -37,18 +37,14 @@ CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.r
 #CKD is flagged as 1 if the test qualifies and there is no normal test within 3 months prior
 #At this stage some are temporarily falsely positively identified that have no lookback test
 
-CKpot$yes<-0
-for (i in 1:length(CKpot$PatientID)){
-CKpot$yes[i]<-ifelse(crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i],1,CKpot$yes[i])
-}
+#Neardate match to EntryDate1- if the match is before EntryDate1 then keep those rows in.
+indx1<-neardate(check$PatientID,crea.rep$PatientID,check$EntryDate1,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+check$Lookback<-crea.rep[indx1,"event.date"]
+check$CKDGStage<-ifelse(check$Lookback<=check$EntryDate1 & check$CKD==1,1,0)
+CKpot<-check[check$CKDGStage==1,]
 
-#Select only records with a lookback test
-CKpot<-CKpot[CKpot$yes==1,]
-
-#ASSIGN CKD STAGES UNLESS NO LOOKBACK AVAILABLE
-
-crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKD")],all.x=TRUE)
-crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKD)>0,2,0)
+crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKDGStage")],all.x==TRUE)
+crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
 #Stage 1 is skipped here as it cannot be identified from creatinine only
 table(crea.rep$CKDGStage)
 
