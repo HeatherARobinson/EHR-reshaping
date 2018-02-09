@@ -38,12 +38,12 @@ CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.r
 #At this stage some are temporarily falsely positively identified that have no lookback test
 
 #Neardate match to EntryDate1- if the match is before EntryDate1 then keep those rows in.
-indx1<-neardate(check$PatientID,crea.rep$PatientID,check$EntryDate1,crea.rep$event.date,best="prior",nomatch=NA_integer_)
-check$Lookback<-crea.rep[indx1,"event.date"]
-check$CKDGStage<-ifelse(check$Lookback<=check$EntryDate1 & check$CKD==1,1,0)
-CKpot<-check[check$CKDGStage==1,]
+indx1<-neardate(CKpot$PatientID,crea.rep$PatientID,CKpot$EntryDate1,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+CKpot$Lookback<-crea.rep[indx1,"event.date"]
+CKpot$CKDGStage<-ifelse(CKpot$Lookback<=CKpot$EntryDate1 & CKpot$CKD==1,1,0)
+CKpot<-CKpot[CKpot$CKDGStage==1,]
 
-crea.rep<-merge(crea.rep,CKpot[,c("PatientID","event.date","CKDGStage")],all.x==TRUE)
+crea.rep<-merge(crea.rep,CKpot[,c(1,2,8)],all.x=TRUE)
 crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
 #Stage 1 is skipped here as it cannot be identified from creatinine only
 table(crea.rep$CKDGStage)
@@ -62,6 +62,14 @@ crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$Pa
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
 crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
 
+CKs<-CKpot %>%
+group_by(PatientID)%>%
+slice(which.min(EntryDate1)) %>%
+as.data.frame
+CKs<-CKs[,c(1,2)]
+names(CKs)<-c("PatientID","CKD_Date")
+crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
+
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
@@ -77,7 +85,9 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),"
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),"HR",crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="2"|crea.rep$CKDGStage=="1"),"HR",crea.rep$CKDPrognosis)
 
-save("crea.rep",file="crea.repv7.rda")
+
+
+save("crea.rep",file="crea.repv8.rda")
 
 ###################################################################################
 #FIRST LOG CREATININE AFTER 6M
