@@ -48,6 +48,7 @@ crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
 #Stage 1 is skipped here as it cannot be identified from creatinine only
 table(crea.rep$CKDGStage)
 
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==0&crea.rep$MDRDeGFR>=90,1,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
@@ -74,19 +75,28 @@ crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
 
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2","LR","NA")
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="3a","MR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),"MR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),"VHR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),"VHR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="3a"|crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),"VHR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),"HR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),"HR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),"HR",crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="2"|crea.rep$CKDGStage=="1"),"HR",crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1,1,NA)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==1 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1 & crea.rep$CKDAStage==3,3,NA)
 
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
 
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="0"|crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
 
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="3a"|crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
+
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="1",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3b",3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5",4,crea.rep$CKDPrognosis)
 save("crea.rep",file="crea.repv8.rda")
 
 ###################################################################################
