@@ -1,0 +1,224 @@
+#CODE EACH OF THE FORMULA VARIABLES
+crea.rep$Ethnicity<-ifelse(is.na(crea.rep$Ethnicity),7,crea.rep$Ethnicity)
+crea.rep$log_CREA <- log10(crea.rep$Creatinine)
+crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
+crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
+crea.rep$HTN<-ifelse(is.na(crea.rep$HTN),0,crea.rep$HTN)
+crea.rep$Gender<-ifelse(crea.rep$Gender==1,paste("M"),paste(crea.rep$Gender))
+rea.rep$Gender<-ifelse(crea.rep$Gender=="2",paste("F"),paste(crea.rep$Gender))
+crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
+
+#MDRD eGFR
+o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+o<-ifelse(is.na(crea.rep$Ethnicity),1,o)
+p<-ifelse(crea.rep$Gender=="F",0.742,1)
+crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
+##################################################################################
+
+#Identify kidney injury patients and tabulate the first qualifying test for each patient
+
+crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
+CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","event.date","KDmark")] #Kidney Injury flagged tests
+
+#Create a dataset including all data from all patients with a KD flag:
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
+CKpot$EntryDate2<-as.Date(as.character(CKpot$event.date),format="%Y-%m-%d")
+CKpot$EntryDate1<-as.Date(as.character(CKpot$event.date),format="%Y-%m-%d")-90
+CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
+#The KD flag will appear from the point at which the patient crosses the threshold of being classified as having CKD.
+
+############################################################################################## CHECKED
+#Diagnose CKD
+
+for (i in 1:length(CKpot$PatientID)){
+CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
+}
+#CKD is flagged as 1 if the test qualifies and there is no normal test within 3 months prior
+#At this stage some are temporarily falsely positively identified that have no lookback test
+
+save(CKpot,file="CKpot.rda")
+
+library(survival)
+#Neardate match to EntryDate1- if the match is before EntryDate1 then keep those rows in.
+indx1<-neardate(CKpot$PatientID,crea.rep$PatientID,CKpot$EntryDate1,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+CKpot$Lookback<-crea.rep[indx1,"event.date"]
+CKpot$CKDGStage<-ifelse(CKpot$Lookback<=CKpot$EntryDate1 & CKpot$CKD==1,1,0)
+CKpot<-CKpot[CKpot$CKDGStage==1,]
+
+crea.rep<-merge(crea.rep,CKpot[,c(1,2,8)],all.x=TRUE)
+crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
+#Stage 1 is skipped here as it cannot be identified from creatinine only
+table(crea.rep$CKDGStage)
+
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==0&crea.rep$MDRDeGFR>=90,1,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
+
+for (i in 1:length(unique(crea.rep$PatientID))){
+crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$PatientID[i]])
+}
+#can replace with dplyr
+
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
+crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
+
+CKs<-CKpot %>%
+group_by(PatientID)%>%
+slice(which.min(EntryDate1)) %>%
+as.data.frame
+CKs<-CKs[,c(1,2)]
+names(CKs)<-c("PatientID","CKD_Date")
+crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
+
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
+
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1,1,NA)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==1 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1 & crea.rep$CKDAStage==3,3,NA)
+
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
+
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="0"|crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
+
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="3a"|crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
+
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="1",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3b",3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5",4,crea.rep$CKDPrognosis)
+
+save("crea.rep",file="crea.repv9.rda")
+
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=90,0,NA)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<=89,1,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR)
+###################################################################################
+#FIRST LOG CREATININE AFTER 6M
+
+first<-crea.rep[,c("PatientID","event.date","log_CREA")]
+first$event.date2<-first$event.date+180
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="after",nomatch=NA_integer_)
+first$LogCrea6M<-crea.rep[indx1,"log_CREA"]
+
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+ first$PatientID<-as.character(first$PatientID)
+crea.rep$PatientID<-as.character(crea.rep$PatientID)
+crea.rep<-merge(crea.rep,first,all.x=TRUE,all.y=FALSE)
+crea.rep$LogCrea6M<-unlist(crea.rep$LogCrea6M)
+
+###################################################################################
+#FIRST EGFR AFTER 6M-MDRD
+
+first<-crea.rep[,c("PatientID","event.date","MDRDeGFR")]
+first$event.date2<-first$event.date+180
+
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$MDRDeGFR6M<-crea.rep[indx1,"MDRDeGFR"]
+
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+
+first$PatientID<-as.character(first$PatientID)
+maxes$PatientID<-as.character(maxes$PatientID)
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$MDRDeGFR6M<-unlist(crea.rep$MDRDeGFR6M)
+
+################################################################################### CHECKED
+#FIRST CKDEPI AFTER 6M
+
+first<-crea.rep[,c("PatientID","event.date","CKDEPIeGFR")]
+first$event.date2<-first$event.date+180
+
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$CKDEPIeGFR6M<-crea.rep[indx1,"CKDEPIeGFR"]
+
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$CKDEPIeGFR6M<-unlist(crea.rep$CKDEPIeGFR6M)
+
+################################################################################### CHECKED
+
+#FIRST CREATININE AFTER 6M
+first<-crea.rep[,c("PatientID","event.date","Creatinine")]
+first$event.date2<-first$event.date+180
+
+indx1<-neardate(first$PatientID,crea.rep$PatientID,first$event.date2,crea.rep$event.date,best="prior",nomatch=NA_integer_)
+first$Creatinine6M<-crea.rep[indx1,"Creatinine"]
+
+#THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
+#WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
+
+maxes<-first %>%
+group_by(PatientID) %>%
+slice(which.max(event.date)) %>%
+as.data.frame
+maxes<-maxes[,c(1,2)]
+colnames(maxes)<-c("PatientID","MaxDate")
+first<-merge(first,maxes)
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
+
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$Creatinine6M<-unlist(crea.rep$Creatinine6M)
+
+###################################################################################
+
+###################################################################################
+
+#MDRD eGFR
+o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+p<-ifelse(crea.rep$Gender=="F",0.742,1)
+crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
+
+################################################################################
+#crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
+###################################################################################
+#crea.rep$AKIepisodes<- #no. past AKI episodes- SEE ADDITIONAL FILE FOR NHS ALGORITHM
+###################################################################################
+#crea.rep$WorsRenFail<- Worsening renal failure- DUNJA WILL CODE
