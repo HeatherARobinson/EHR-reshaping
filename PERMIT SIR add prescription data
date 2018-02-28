@@ -15,7 +15,7 @@ load("crea.rep181217.rda")
 load("PERMITmeddatad.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
-l
+
 ################################################################################################
 
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
@@ -48,10 +48,10 @@ NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
 
-#write.csv(NSAIDlist,file="NSAIDlistd.csv",row.names=FALSE) 
+#write.csv(NSAIDlist,file="NSAIDlistd2.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("NSAIDlist.csv")
+NS2<-read.csv("NSAIDlistd.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("NSAIDs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
@@ -78,18 +78,18 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="ARBSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="ARBSd28.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 
-NS<-read.table("ARBSd.txt",header=FALSE,sep=",")
+NS<-read.table("ARBSd28.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","ARBdesc","event.date")
 ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 
-#write.csv(ARBlist,file="ARBlistd.csv",row.names=FALSE) 
+#write.csv(ARBlist,file="ARBlistd28.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("ARBlist.csv")
+NS2<-read.csv("ARBlist28.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
