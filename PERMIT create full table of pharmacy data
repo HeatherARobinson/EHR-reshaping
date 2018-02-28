@@ -12,7 +12,7 @@ library(plyr)
 library(dplyr)
 library(tidyr)
 sir.data<-sir.data[sir.data$EntryDate>=20070101&sir.data$EntryDate<=20170901,]
-sir.data<-sir.data[sir.data$ReadCode %in% codes1$CODE|sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID,]
+sir.data<-sir.data[(sir.data$ReadCode %in% codes1$CODE & sir.data$PatientID %in% crea.rep$PatientID)|(sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID),]
 sir.data$EntryDate<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 #inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
 #sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
@@ -134,12 +134,12 @@ m<-(as.numeric(meddata$CodeValue)/as.numeric(meddata$TABLETS_PER_DAY))
 meddata$END_DATE<-ifelse(!is.na(meddata$TABLETS_PER_DAY)&!is.na(subs$CodeValue),meddata$EntryDate+as.difftime(m, unit="days"),NA)
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
-save(meddata,file="PERMITmeddatad.rda")
+save(meddata,file="PERMITmeddata28.rda")
 
 ################################################################################### CHECKED
 #STOP INSTRUCTIONS- THOSE WITH STOP INSTRUCTIONS FOR OTHER DRUGS HAVE ENTRIES IN THE ALT_OTHER_MEDS COLUMN
 
-load("PERMITmeddatad.rda")
+load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
 meddata$REP<-ifelse(meddata$REP=="Same",paste(meddata$TYPE),paste(meddata$REP))
 meddata$REP<-as.factor(meddata$REP)
@@ -173,11 +173,11 @@ first$NEWENDDATE<-as.Date(first$NEWENDDATE,origin="1970-01-01")
 head(first[!is.na(first$NEWENDDATE),])
 
 first<-first[!is.na(first$NEWENDDATE)&first$NEWENDDATE>first$EntryDate&first$NEWENDDATE<first$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","NEWENDDATE")]
-length(first$PatientID)#only 7 prescriptions are affected
+length(first$PatientID)#only 12 prescriptions are affected
 meddata<-merge(meddata,first,all.x=TRUE)
 meddata$END_DATE<-ifelse(!is.na(meddata$NEWENDDATE)&meddata$END_DATE>meddata$NEWENDDATE&meddata$EntryDate<meddata$NEWENDDATE,meddata$NEWENDDATE,meddata$END_DATE)
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
-save(meddata,file="PERMITmeddatad.rda")
+save(meddata,file="PERMITmeddata28.rda")
 
 ####################################################################################CHECKED
 #DEAL WITH 'EXTRAS'
@@ -221,7 +221,7 @@ ex[!is.na(ex$TYPE),] #No specific entries are impacted- many will be additions t
 
 #CONVERT VOLUME DOSAGES FOR LIQUID MEDS. OMIT WATER TO AVOID PICKING UP SOLID DOSE MEDS INSTRUCTED TO BE DISSOLVED IN WATER.
 meddata$CodeValue<-ifelse(grepl("ml",meddata$DESCRIPTION)&!grepl("water",meddata$DESCRIPTION),as.numeric(meddata$CodeValue)/5,as.numeric(meddata$CodeValue))
-save(meddata,file="PERMITmeddatad.rda")
+save(meddata,file="PERMITmeddata28.rda")
 write.table(meddata,file="perl_inputd2201.txt",row.names=FALSE,sep="\t")
 
 #WRITE PERL INPUT TABLE WHICH OVERLAPS CONTINUOUS PRESCRIPTIONS (IF YOU NEED TO DO THIS TO DETERMINE A START AND END DATE)
