@@ -11,8 +11,8 @@ library(plyr)
 library(lubridate)
 library(dplyr)
 library(tidyr)
-load("crea.rep181217.rda")
-load("PERMITmeddatad.rda")
+load("crea.repv9.rda")
+load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
 
@@ -48,7 +48,7 @@ NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
 
-#write.csv(NSAIDlist,file="NSAIDlistd2.csv",row.names=FALSE) 
+#write.csv(NSAIDlist,file="NSAIDlistd.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("NSAIDlistd.csv")
