@@ -89,7 +89,7 @@ ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 #write.csv(ARBlist,file="ARBlistd28.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("ARBlist28.csv")
+NS2<-read.csv("ARBlistd28.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
