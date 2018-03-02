@@ -129,7 +129,7 @@ NS2<-read.csv("AAlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Aldosterone_Antagonists","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Aldosterone_Antagonists<-ifelse(is.na(crea.rep$Aldosterone_Antagonists),0,crea.rep$Aldosterone_Antagonists)
+crea.rep$AAs<-ifelse(is.na(crea.rep$AAs),0,crea.rep$AAs)
 ##############################################################################################
 #THIAZIDE DIURETICS
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
@@ -166,7 +166,7 @@ THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
 NS2<-read.csv("THIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Thiazide_diuretics","PatientID","event.date")]
-NS<-NS[!is.na(NS$Thiazide_diuretics)]
+NS<-NS[!is.na(NS$Thiazide_diuretics),]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Thiazide_diuretics<-ifelse(is.na(crea.rep$Thiazide_diuretics),0,crea.rep$Thiazide_diuretics)
 names(crea.rep)[names(crea.rep) == 'Thiazide_diuretics'] <- 'Thiazide_Diuretics'
