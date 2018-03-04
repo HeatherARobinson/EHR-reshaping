@@ -127,11 +127,16 @@ AAlist<-NS[!duplicated(NS$AAdesc),c("AAdesc")]
 
 NS2<-read.csv("AAlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Aldosterone_Antagonists","PatientID","event.date")]
+NS<-NS[,c("AAs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$AAs<-ifelse(is.na(crea.rep$AAs),0,crea.rep$AAs)
 ##############################################################################################
 #THIAZIDE DIURETICS
+#SOME DOSES APPEAR TO BE ZERO SO CHECK THIS OUT
+meddata[meddata$DAILY_DOSE==0,]
+#THIS IS ONLY A PROBLEM FOR ONE INSTRUCTION AND ONE DRUG
+meddata$DAILY_DOSE<-ifelse(meddata$DAILY_DOSE==0,NA,meddata$DAILY_DOSE)
+
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
 THI$DAILY_DOSE<-signif(THI$DAILY_DOSE,digits=2)
 THI$EntryDate<-as.Date(THI$EntryDate,format="%d/%m/%Y")
@@ -160,16 +165,15 @@ NS<-unique(NS)
 NS<-na.omit(NS)
 colnames(NS) <- c("PatientID","THIdesc","event.date")
 THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
-#write.csv(THIlist,file="THIlist.csv",row.names=FALSE) 
-#ADDED NEW CODE NOTATION MANUALLY
+#
+median(meddata$DAILY_DOSE[meddata$TYPE=="Bendroflumethiazide"],na.rm=TRUE)
 
 NS2<-read.csv("THIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Thiazide_diuretics","PatientID","event.date")]
-NS<-NS[!is.na(NS$Thiazide_diuretics),]
+NS<-NS[,c("Thiazide_Diuretics","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Thiazide_diuretics<-ifelse(is.na(crea.rep$Thiazide_diuretics),0,crea.rep$Thiazide_diuretics)
-names(crea.rep)[names(crea.rep) == 'Thiazide_diuretics'] <- 'Thiazide_Diuretics'
+crea.rep$Thiazide_Diuretics<-ifelse(is.na(crea.rep$Thiazide_Diuretics),0,crea.rep$Thiazide_Diuretics)
+
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
 LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
