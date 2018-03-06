@@ -1,10 +1,7 @@
-#MAKE A LARGE TABLE TO PARSE THROUGH RESEARCH MEDICATION EVENTS PERL SCRIPT
-
 load("sir.datahfonly.Rdata")
-load("crea.rep051217.rda")
+load("crea.repv10.rda")
 inst<-read.csv("inst051217.csv")
-codes1<-read.csv("reads.csv")
-codes2<-read.csv("emis.csv")
+codes1<-read.csv("SIRdrugs.csv")
 
 library(stringr)
 library(lubridate)
@@ -12,7 +9,7 @@ library(plyr)
 library(dplyr)
 library(tidyr)
 sir.data<-sir.data[sir.data$EntryDate>=20070101&sir.data$EntryDate<=20170901,]
-sir.data<-sir.data[(sir.data$ReadCode %in% codes1$CODE & sir.data$PatientID %in% crea.rep$PatientID)|(sir.data$ReadCode %in% codes2$CODE & sir.data$PatientID %in% crea.rep$PatientID),]
+sir.data<-sir.data[(sir.data$ReadCode %in% codes1$CODE & sir.data$PatientID %in% crea.rep$PatientID),]
 sir.data$EntryDate<-as.Date(as.character(sir.data$EntryDate),format="%Y%m%d")
 #inst$DESCRIPTION<-gsub('[[:punct:]]','',inst$DESCRIPTION) #REMOVE PUNCTUATION
 #sir.data$CodeUnits<-gsub('[[:punct:]]','',sir.data$CodeUnits) #REMOVE PUNCTUATION
@@ -37,6 +34,7 @@ sub$DESCRIPTION<-gsub("four", "4", sub$DESCRIPTION)
 sub$DESCRIPTION<-gsub("five", "5", sub$DESCRIPTION) 
 sub$DESCRIPTION<-gsub("six", "6", sub$DESCRIPTION) 
 
+sub$DESCRIPTION<-tolower(sub$DESCRIPTION)#LOWER CASE
 sub$DESCRIPTION<-gsub(" ", "", sub$DESCRIPTION, fixed = TRUE)  #REMOVE SPACES FROM INSTRUCTION STRINGS (This step already taken in instruction data lookup)
 inst<-inst[!duplicated(inst$DESCRIPTION),] #MAKE SURE NO DUPLICATE LINES IN THE LOOKUP TABLE THAT CAN LEAD TO NAs IN THE FINAL TABLE
 #############################################################################################################CHECKED
@@ -53,7 +51,8 @@ sub$DESCRIPTION<-gsub("[)]", "", sub$DESCRIPTION)
 inst$DESCRIPTION<-gsub("[)]", "", inst$DESCRIPTION) 
 inst$DESCRIPTION<-gsub("[(]", "", inst$DESCRIPTION) 
 
-unique(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
+ESS<-unique(sub$DESCRIPTION[!sub$DESCRIPTION %in% inst$DESCRIPTION])
+write.csv(ESS,file="EXTRADESCS.csv")
 ##################################################################################CHECKED
 
 #MARK PRESCRIPTIONS WHICH ARE INTENDED TO BE EXTRA TABLETS TO ADD TO AN EXISTING DOSE OF THE SAME DRUG.
@@ -77,14 +76,14 @@ summary(sub)# THERE ARE BOTH PROGRESSIVE DOSES AND REPLACEMENT PRESCRIPTIONS IN 
 colnames(sub)[colnames(sub) == 'ReadCode'] <- 'CODE'#RENAME FOR LATER MERGING
 
 #JOIN ON THE DOSAGE DATA
-sub2<-merge(sub[sub$CODE %in% codes1$CODE & !sub$CODE %in% codes2$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
-sub3<-merge(sub[sub$CODE %in% codes2$CODE,],codes2,all.x=TRUE) #Add EMIS/OXMIS dosage information
-subs<-rbind(sub2,sub3)
+subs<-merge(sub[sub$CODE %in% codes1$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
+
 ########################################################################### CHECKED
 #CALCULATE MISSING DATA WHERE POSSIBLE
 
-levels(as.factor(sub3$DESCRIPTION)) #WHERE OXMIS/ EMIS ARE USED THE DOSAGES ARE IN 'DOSE, and there are no prescription instructions.
 subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
+subs$DOSE_PER_TAB<-as.numeric(subs$DOSE_PER_TAB)
+subs$TABLETS_PER_DAY<-as.numeric(subs$TABLETS_PER_DAY)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE)&!is.na(subs$TABLETS_PER_DAY),subs$TABLETS_PER_DAY*subs$DOSE_PER_TAB,subs$DAILY_DOSE)
 
 subs$TABLETS_PER_DAY<-ifelse(is.na(subs$TABLETS_PER_DAY)&!is.na(subs$DAILY_DOSE)&!is.na(subs$DOSE_PER_TAB),subs$DAILY_DOSE/subs$DOSE_PER_TAB,subs$TABLETS_PER_DAY)
@@ -173,7 +172,7 @@ first$NEWENDDATE<-as.Date(first$NEWENDDATE,origin="1970-01-01")
 head(first[!is.na(first$NEWENDDATE),])
 
 first<-first[!is.na(first$NEWENDDATE)&first$NEWENDDATE>first$EntryDate&first$NEWENDDATE<first$END_DATE,c("PatientID","EntryDate","END_DATE","TYPE","NEWENDDATE")]
-length(first$PatientID)#only 12 prescriptions are affected
+length(first$PatientID)#50 prescriptions are affected
 meddata<-merge(meddata,first,all.x=TRUE)
 meddata$END_DATE<-ifelse(!is.na(meddata$NEWENDDATE)&meddata$END_DATE>meddata$NEWENDDATE&meddata$EntryDate<meddata$NEWENDDATE,meddata$NEWENDDATE,meddata$END_DATE)
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
@@ -184,8 +183,7 @@ save(meddata,file="PERMITmeddata28.rda")
 ex<-meddata[meddata$EXTRA==1,]
 subx<-meddata[meddata$EXTRA==0,]
 ex<-ex[ex$TYPE %in% subx$TYPE & ex$PatientID %in% subx$PatientID & ex$EntryDate>=subx$EntryDate & ex$END_DATE<subx$END_DATE,]
-ex[!is.na(ex$TYPE),] #No specific entries are impacted- many will be additions to other types of drugs in the dosette.
-
+ex[!is.na(ex$TYPE),] #2 specific entries are impacted
 #head(subx)
 #smalltab<-ex[,c("PatientID","TYPE","EntryDate","END_DATE","DAILY_DOSE")]
 #columns=names(smalltab[c(1:3)])
