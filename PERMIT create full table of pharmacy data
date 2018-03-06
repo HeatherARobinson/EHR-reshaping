@@ -122,8 +122,8 @@ subt$C1<-ifelse((duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicate
 subt$CodeValue<-ifelse(subt$C1==1,as.integer(as.numeric(as.character(subt$CodeValue))-as.numeric(as.character(subt$n))),paste(subt$CodeValue))#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
 subt$EntryDateb<-ifelse(subt$C1==1,subt$EntryDate+subt$DAYS,subt$EntryDate)
 subt$EntryDate<-as.Date(subt$EntryDateb,origin=(subt$EntryDate[1]-subt$EntryDateb[1]))
-subt<-subt[,c(1,2,4:19,21)]
-subnt<-subnt[,c(1,2,4:19,21)]
+subt<-subt[,c(1:19,21)]
+subnt<-subnt[,c(1:19,21)]
 meddata<-rbind(subt,subnt)
 
 ############################################################################CHECKED
