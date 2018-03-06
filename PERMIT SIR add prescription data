@@ -47,16 +47,19 @@ NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
-#write.csv(NSAIDlist,file="NSAIDlistd.csv",row.names=FALSE) 
+old<-read.csv("NSAIDlistOLD.csv")
+NSAIDlist[!NSAIDlist %in% old$NSAIDdesc]
+
+#write.csv(NSAIDlist,file="NSAIDlist0603.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("NSAIDlistd.csv")
+NS2<-read.csv("NSAIDlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("NSAIDs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 #####################################################################################################CHECKED
 #Angiotensin Receptor Blockers
-ARB<-meddata[meddata$FAMILY=="ARB",]
+ARB<-meddata[meddata$FAMILY=="ARBs",]
 ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/
 %m/%Y")
 ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
@@ -85,10 +88,10 @@ NS<-unique(NS)
 colnames(NS) <- c("PatientID","ARBdesc","event.date")
 ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 
-#write.csv(ARBlist,file="ARBlistd28.csv",row.names=FALSE) 
+#write.csv(ARBlist,file="ARBlist0603.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("ARBlistd28.csv")
+NS2<-read.csv("ARBlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
