@@ -15,7 +15,7 @@ load("crea.repv10.rda")
 load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
-
+meddata$FAMILY<-ifelse(meddata$TYPE=="Doxycycline",paste("Antimicrobial"),paste(meddata$FAMILY))
 ################################################################################################
 
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
@@ -47,7 +47,6 @@ NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
-
 #write.csv(NSAIDlist,file="NSAIDlistd.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
