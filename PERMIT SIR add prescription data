@@ -101,6 +101,7 @@ AA<-meddata[meddata$FAMILY=="ALD_ANT",]
 AA$EntryDate<-as.Date(AA$EntryDate,format="%d/%m/%Y")
 AA$END_DATE<-as.Date(AA$END_DATE,format="%d/%m/%Y")
 AA$check<-paste(AA$TYPE,AA$DAILY_DOSE,sep="")
+crea.rep$event.date<-as.Date(crea.rep$event.date,"%d%m%Y")
 smalltab<-crea.rep[crea.rep$PatientID %in% AA$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
 AA<-AA[order(AA$TYPE,AA$EntryDate,decreasing = TRUE), ]
@@ -127,17 +128,16 @@ AAlist<-NS[!duplicated(NS$AAdesc),c("AAdesc")]
 #write.csv(AAlist,file="AAlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("AAlist.csv")
+NS2<-read.csv("AAlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("AAs","PatientID","event.date")]
+NS<-NS[,c("Ald_Ant","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$AAs<-ifelse(is.na(crea.rep$AAs),0,crea.rep$AAs)
+crea.rep$Ald_Ant<-ifelse(is.na(crea.rep$Ald_Ant),0,crea.rep$Ald_Ant)
 ##############################################################################################
 #THIAZIDE DIURETICS
 #SOME DOSES APPEAR TO BE ZERO SO CHECK THIS OUT
-meddata[meddata$DAILY_DOSE==0,]
+
 #THIS IS ONLY A PROBLEM FOR ONE INSTRUCTION AND ONE DRUG
-meddata$DAILY_DOSE<-ifelse(meddata$DAILY_DOSE==0,NA,meddata$DAILY_DOSE)
 
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
 THI$DAILY_DOSE<-signif(THI$DAILY_DOSE,digits=2)
@@ -167,6 +167,8 @@ NS<-unique(NS)
 NS<-na.omit(NS)
 colnames(NS) <- c("PatientID","THIdesc","event.date")
 THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
+#write.csv(THIlist,file="THIlist.csv",row.names=FALSE) 
+#ADDED NEW CODE NOTATION MANUALLY
 #
 median(meddata$DAILY_DOSE[meddata$TYPE=="Bendroflumethiazide"],na.rm=TRUE)
 
