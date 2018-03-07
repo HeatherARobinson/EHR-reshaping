@@ -58,6 +58,8 @@ NS2<-read.csv("NSAIDlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("NSAIDs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
+crea.rep$NSAIDs<-ifelse(is.na(crea.rep$NSAIDs),0,crea.rep$NSAIDs)
+
 #####################################################################################################CHECKED
 #Angiotensin Receptor Blockers
 ARB<-meddata[meddata$FAMILY=="ARBs",]
@@ -96,6 +98,7 @@ NS2<-read.csv("ARBlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
+crea.rep$ARBs<-ifelse(is.na(crea.rep$ARBs),0,crea.rep$ARBs)
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
 AA<-meddata[meddata$FAMILY=="ALD_ANT",]
@@ -325,7 +328,7 @@ NS<-NS[,c("Other_Nephrotoxins","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Other_Nephrotoxins<-ifelse(is.na(crea.rep$Other_Nephrotoxins),0,crea.rep$Other_Nephrotoxins)
 ########################################################################
-ANT<-meddata[meddata$FAMILY=="ANT_MIC",]
+ANT<-meddata[meddata$FAMILY=="Antimicrobial",]
 ANT$EntryDate<-as.Date(ANT$EntryDate,format="%d/%m/%Y")
 ANT$END_DATE<-as.Date(ANT$END_DATE,format="%d/%m/%Y")
 ANT$check<-paste(ANT$TYPE,ANT$DAILY_DOSE,sep="")
