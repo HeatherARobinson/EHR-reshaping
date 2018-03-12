@@ -740,26 +740,24 @@ summary(crea.rep$DaysSincePVD,na.rm=TRUE)
 
 #NEPHRECTOMY
 Nep<-read.csv("Nephrectomy1.csv")
-head(CPRD2[CPRD2$medcode %in% Nep$ReadCode,])# CHECK THERE ARE VALUES TO MATCH
-sir.data$NephDate<-sir.data$EntryDate 
-sir.data$NephDate<-ifelse(!sir.data$ReadCode  %in%  Nephrectomy1.csv$ReadCode,NA,sir.data$NephDate) 
+head(CPRD2[CPRD2$medcode %in% Nep$Medcode,])# CHECK THERE ARE VALUES TO MATCH
+CPRD2$NephDate<-CPRD2$eventdate 
+CPRD2$NephDate<-ifelse(!CPRD2$medcode  %in%  Nep$Medcode,NA,paste(CPRD2$NephDate)) 
 
-smalltab<-sir.data[!is.na(sir.data$NephDate) & sir.data$PatientID %in% crea.rep$PatientID,c("PatientID","NephDate")]
+smalltab<-CPRD2[!is.na(CPRD2$NephDate) & CPRD2$patid %in% crea.rep$PatientID,c("patid","NephDate")]
 first<-smalltab %>%
-    group_by(PatientID) %>%
+    group_by(patid) %>%
     arrange(NephDate) %>%
     slice(1L) %>%
 as.data.frame
 head(first)
-first$NephDate<-as.Date(as.character(first$NephDate),format="%Y%m%d")
- 
+names(first)[1]<-"PatientID"
+
 crea.rep<-merge(crea.rep,first,all.x=TRUE)
-crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
-crea.rep$NephDate<-as.Date(as.character(crea.rep$NephDate),format="%Y-%m-%d")
 crea.rep$DaysSinceNephrectomy<-difftime(strptime(crea.rep$NephDate,format="%Y-%m-%d"),strptime(crea.rep$event.date,format="%Y-%m-%d"),unit="days")
 crea.rep$DaysSinceNephrectomy<-as.numeric(crea.rep$DaysSinceNephrectomy, units="days")
 crea.rep$DaysSinceNephrectomy<-ifelse(crea.rep$DaysSinceNephrectomy<0,NA,crea.rep$DaysSinceNephrectomy)
-#save(crea.rep, file = "crea.repongoing.rda")
+save(crea.rep, file = "crea.repongoing.rda")
 
 
 #RRT
