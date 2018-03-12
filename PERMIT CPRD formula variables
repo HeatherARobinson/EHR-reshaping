@@ -218,3 +218,6 @@ crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.2
 #crea.rep$AKIepisodes<- #no. past AKI episodes- SEE ADDITIONAL FILE FOR NHS ALGORITHM
 ###################################################################################
 #crea.rep$WorsRenFail<- Worsening renal failure- DUNJA WILL CODE
+
+
+crea.rep$BirthYear<-(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))))-crea.rep$Age
