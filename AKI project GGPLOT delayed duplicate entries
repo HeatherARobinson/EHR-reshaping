@@ -1,0 +1,20 @@
+# GENERATE GGPLOT OF DELAYED POTENTIAL DUPLICATE ENTRIES
+b<-read.csv("DelayedtestsAKIProject.csv")
+library(ggplot2)
+d<-ggplot(subset(b, Delay<200),
+       aes(x=Delay,
+           y=Percent,group=Differentiation, linetype=Differentiation))+
+  geom_line(size=1)+
+   ylab("Proportion of test records flagged as potential duplicate entries")+
+  xlab("Days elapsed since test request first recorded")+
+ theme( axis.line = element_line(colour = "darkblue", 
+                      size = 1, linetype = "solid"), panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5))+
+                                ylim(0.42,0.65)+
+                                theme(legend.text=element_text(size=14))+
+                                theme(legend.position = c(0.15, 0.9))+
+                                theme(legend.title=element_blank())
+                                d
+                                
+                      
