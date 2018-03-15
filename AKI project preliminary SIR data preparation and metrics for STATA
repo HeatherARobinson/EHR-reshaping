@@ -1,15 +1,12 @@
-ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
+ssh username/domain
 module load apps/binapps/stata/14-iph
 stata
-
 insheet using "SIR_Rinput.csv"
 
 set more {off} [, permanently]
-
 destring studyid dos stcreat age sex mdrd , replace
 
-
-#DEFINING 2012 AS INDEX YEAR USING STATA TIME
+#DEFINE 2012 AS INDEX YEAR WHERE DATE IS PROVIDED IN STATA TIME
 gen yr12=1 if year(dos)==2012
 label var yr12 "sample from 2012"
 gen post2009=1 if dos>=17899
@@ -33,7 +30,7 @@ tabstat protagonist, stat (n, mean, median, min, max)
 *the maximum value of "protagonist is the number of times you need to do your loop to ensure each sample is compared with all others.
 tabstat mdrd if protagonist==1 & mdrd>=30&mdrd<=45, stat(count)
 
-#CALLING NUMBER OF BLOOD TESTS IN INDEX YEAR
+#CALL NUMBER OF BLOOD TESTS IN INDEX YEAR
 tabstat protagonist2, stat (n, mean, median, min, max)
 
 duplicates tag studyid  dos, gen(dup)
