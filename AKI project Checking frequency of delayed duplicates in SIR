@@ -1,17 +1,18 @@
-setwd("c:/Users/mqbpjhr4/Documents")
-library(lubridate)
 
+library(lubridate)
 Patients<-read.table("Patients.csv",header=TRUE, sep=",")
 tests<-read.table("tests.csv",header=TRUE,sep= ",")
 SIR<- merge(Patients,tests,all=TRUE, by='PatID')
-require(lubridate) 
+
+# SELECT COHORT UNDER STUDY
 SIR$Age<-(as.numeric(year(strptime(SIR$EntryDate, format="%d/%m/%Y"))))-SIR$Year_Of_Birth
 attach(SIR)
 Over<-subset(SIR,SIR$Age>15 & as.numeric(year(strptime(SIR$EntryDate, format="%d/%m/%Y")))>=2009,)
 Over$location<- ifelse(Over$Source=="salfordt", c("Hospital"),("GP"))
 attach(Over)
 levels(ReadCode)
-#Group redundant read codes/rubrics
+
+# SELECT RECORDS INDICATING CONFOUNDERS
 levels(Over$ReadCode)[1:23] <- "dialysisorckd"
 levels(Over$ReadCode)[3:6] <- "eGFR"
 levels(Over$ReadCode)[4:7] <- "transplant"
@@ -19,7 +20,8 @@ levels(Over$ReadCode)[2] <- "creatinine"
 levels(Over$ReadCode)[5:18] <- "dialysisorckd"
 table(Over$ReadCode)
 attach(Over)
-#Drop all records entered after commencement of dialysis/transplant
+
+#DROP RECORDS AFTER CONFOUNDING EVENT CODE RECORDED
 Over$endpoint<-with(Over, ifelse(ReadCode=="dialysisorckd",paste(EntryDate), "NA"))
 Over$endpoint<-with(Over, ifelse(ReadCode=="transplant",paste(EntryDate), paste(endpoint)))
 table(Over$EntryDate)
@@ -28,9 +30,9 @@ Over$date_diff <- ifelse(!is.na(Over$endpoint),
 (as.character(Over$endpoint), format="%Y/%m/%d")-as.Date(as.character(Over$EntryDate), format="%d/%m/%Y")
 ), print("NA"))
 Over<-Over[-which(Over$date_diff<0), ]
-#This gives you a subset of records for patients before CKD, transplant or dialysis
+#'OVER' CONTAINS A SUBSET OF PATIENT RECORDS PRIOR TO ANY CONFOUNDING EVENT BEING RECORDED FOR THOSE INDIVIDUALS
 
-#Check which units have been used to measure Creatinine and convert #from mg/dL to umol/L if needed
+# ASSESS PRESENT CREATININE UNITS AND CONVERT VALUES TO MG/DL IF NEEDED
 levels(Over$Units)
 levels(Over$Units)[c(8,25)]<-"umolOL"
 levels(Over$Units)[c(7,12:21)]<-"mLmin173m2"
@@ -38,46 +40,22 @@ table(Over$ReadCode,Over$Units)
 Over$stcreat<- ifelse(Over$Units=="umolOL"| Over$Units=="None",Over$Value,(Over$Value/1000)) 
 Over$stcreat<- ifelse(Over$ReadCode=="creatinine",paste(Over$stcreat), paste("NA")) 
 
+# ASSESS PRESENT EGFR UNITS AND CONVERT VALUES TO MG/DL IF NEEDED
 levels(Over$Units)[9:10]<-"mLmin173m2"
 Over$mdrd<- ifelse(Over$Units=="mLmin173m2",paste(Over$Value),paste(Over$value/1440)) 
 Over$mdrd<- ifelse(Over$ReadCode=="eGFR",paste(Over$mdrd), paste("NA"))
 class(EntryDate)
 Over$EntryDate<-as.Date(Over$EntryDate, format="%d/%m/%Y")
-#Drop entries with dubious units.
-
 Over<-Over[!is.na(Over$stcreat),]
+
+# OPTIONAL CODES FOR USE IN REMOVING DELATED DUPLICATE ENTRIES INTRODUCED THROUGH RECORD TRANSFER BETWEEN SYSTEMS
 #a<-Over[duplicated(Over$Value)&duplicated(Over$PatID),c("PatID","ReadCode","stcreat","EntryDate")]
 #a<-Over[duplicated(Over$Value)&duplicated(Over$PatID)&!duplicated(Over$Source),c("PatID","ReadCode","stcreat","EntryDate")]
-
-
 names(a)<-c("PatID","ReadCode","stcreat","DupDate")
 a<-a[a$ReadCode=="creatinine",]
-head(a)
 Over<-merge(Over,a,all.x=TRUE)
 attach(Over)
 Over$delay<-as.numeric(difftime(EntryDate,DupDate,units="days"))
 length(Over$delay[Over$delay==0])
-#Same day creatinine duplicates 384562 of 738697
 length(Over$delay[Over$delay>=0 & Over$delay<=1])
-#147942
 
-
-b<-read.csv("DelayedtestsAKIProject.csv")
-library(ggplot2)
-d<-ggplot(subset(b, Delay<200),
-       aes(x=Delay,
-           y=Percent,group=Differentiation, linetype=Differentiation))+
-  geom_line(size=1)+
-   ylab("Proportion of test records flagged as potential duplicate entries")+
-  xlab("Days elapsed since test request first recorded")+
- theme( axis.line = element_line(colour = "darkblue", 
-                      size = 1, linetype = "solid"), panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5))+
-                                ylim(0.42,0.65)+
-                                theme(legend.text=element_text(size=14))+
-                                theme(legend.position = c(0.15, 0.9))+
-                                theme(legend.title=element_blank())
-                                d
-                                
-                      
