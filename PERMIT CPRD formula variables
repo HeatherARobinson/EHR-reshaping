@@ -129,9 +129,16 @@ first<-merge(first,maxes)
 first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
  first$PatientID<-as.character(first$PatientID)
 crea.rep$PatientID<-as.character(crea.rep$PatientID)
+first<-unique(first)
 crea.rep<-merge(crea.rep,first,all.x=TRUE,all.y=FALSE)
 crea.rep$LogCrea6M<-unlist(crea.rep$LogCrea6M)
 
+###################################################################################
+
+#MDRD eGFR
+o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
+p<-ifelse(crea.rep$Gender=="F",0.742,1)
+crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 ###################################################################################
 #FIRST EGFR AFTER 6M-MDRD
 
@@ -191,6 +198,7 @@ first$Creatinine6M<-crea.rep[indx1,"Creatinine"]
 #THE ABOVE CODE PREFERABLY MATCHES A RESULT FROM AFTER 6 MONTHS, BUT OTHERWISE SELECTS ONE BEFORE IT. 
 #WE NEED TO REMOVE DATA COLLECTED FROM BEFORE 6 MONTHS:
 
+#FIND THE LATEST TEST ENTERED FOR THE PATIENT
 maxes<-first %>%
 group_by(PatientID) %>%
 slice(which.max(event.date)) %>%
@@ -198,19 +206,12 @@ as.data.frame
 maxes<-maxes[,c(1,2)]
 colnames(maxes)<-c("PatientID","MaxDate")
 first<-merge(first,maxes)
-first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
 
+#IF THE LATEST TEST PLUS 6M IS AFTER OR ON THE CURRENT TEST DATE THEN LATER DATER WILL HAVE BEEN SELECTED
+
+first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
 crea.rep<-merge(crea.rep,first,all.x=TRUE)
 crea.rep$Creatinine6M<-unlist(crea.rep$Creatinine6M)
-
-###################################################################################
-
-###################################################################################
-
-#MDRD eGFR
-o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
-p<-ifelse(crea.rep$Gender=="F",0.742,1)
-crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
 
 ################################################################################
 #crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
