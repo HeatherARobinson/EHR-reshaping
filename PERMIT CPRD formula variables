@@ -7,7 +7,8 @@ crea.rep$HTN<-ifelse(is.na(crea.rep$HTN),0,crea.rep$HTN)
 crea.rep$Gender<-ifelse(crea.rep$Gender==1,paste("M"),paste(crea.rep$Gender))
 rea.rep$Gender<-ifelse(crea.rep$Gender=="2",paste("F"),paste(crea.rep$Gender))
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
-
+crea.rep$CKD<-ifelse(!is.na(crea.rep$CKDGStage)&!crea.rep$CKDGStage==0,1,NA)
+crea.rep$CKD<-ifelse(crea.rep$CKDAStage>1,1,crea.rep$CKD)
 #MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 o<-ifelse(is.na(crea.rep$Ethnicity),1,o)
@@ -238,3 +239,26 @@ crea.rep$SerSodium_DF<-ifelse(!is.na(crea.rep$SerumSodium)& !crea.rep$SerSodDate
 crea.rep$SerumAlbumin_DF<-ifelse(!is.na(crea.rep$SerumAlbumin)& !crea.rep$SADateFlag==1,crea.rep$SerumAlbumin,NA)
 crea.rep$UACratio_DF<-ifelse(!is.na(crea.rep$UACratio)& !crea.rep$UACDateFlag==1,crea.rep$UACratio,NA)
 crea.rep$UrineAlbumin_DF<-ifelse(!is.na(crea.rep$UrineAlbumin)& !crea.rep$UADateFlag==1,crea.rep$UrineAlbumin,NA)
+
+#########################################################################################
+CPRD2$temp<-ifelse(CPRD2$medcode %in% UACR1.csv$medcode,as.numeric(paste(CPRD2$data1)),NA)
+unique(sir.data$CodeUnits[sir.data$ReadCode %in% UACR1.csv$ReadCode])
+sir.data$temp<-ifelse(sir.data$ReadCode %in% UACR1.csv$ReadCode&sir.data$CodeUnits=="ratio"|sir.data$CodeUnits=="None"|sir.data$CodeUnits=="U/ml"|sir.data$CodeUnits=="GPL",NA,sir.data$temp)
+sir.data$temp<-ifelse(is.na(sir.data$temp)&sir.data$ReadCode %in% UACR1.csv$ReadCode & as.numeric(sir.data$CodeUnits)>0,as.numeric(sir.data$CodeUnits),sir.data$temp)
+
+smalltab<-sir.data[!is.na(sir.data$temp)&sir.data$temp>=0&sir.data$temp<=3000,c("PatientID","CodeValue","EntryDate")]
+columns=names(smalltab[c(1,3)])
+dots<-lapply(columns, as.symbol)
+first <-smalltab %>% 
+group_by_(.dots=dots) %>%
+summarise(UACratio=mean(CodeValue)) %>%
+as.data.frame
+
+indx1 <-neardate(crea.rep$PatientID, first$PatientID, crea.rep$EntryDate, first$EntryDate, 
+                   best="prior")
+crea.rep$UACratio<-first[indx1, "UACratio"]
+crea.rep$UACDateFlag<- ifelse(as.numeric(abs(crea.rep$EntryDate - first$EntryDate[indx1])) >365, 1, 0)
+table(crea.rep$UACDateFlag) #122181
+a<-crea.rep[!is.na(crea.rep$UACratio),]
+length(a$PatientID) #159870
+crea.rep$UACratio<-unlist(crea.rep$UACratio)
