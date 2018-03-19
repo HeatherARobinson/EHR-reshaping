@@ -680,8 +680,6 @@ crea.rep$HaemDateFlag<- ifelse(as.numeric(abs(crea.rep$event.date - first$event.
 table(crea.rep$HaemDateFlag) #652
 crea.rep$Haemoglobin<-unlist(crea.rep$Haemoglobin)
 
-######################################################################################
-#Diabetes
 ##############################################################################
 #IHD
 IHD1<-read.csv("IHD1.csv")
@@ -734,6 +732,7 @@ crea.rep$DaysSincePVD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),
 crea.rep$DaysSincePVD<-ifelse(crea.rep$DaysSincePVD<0,NA,crea.rep$DaysSincePVD)
 crea.rep$PVD<-ifelse(is.na(crea.rep$DaysSincePVD),0,1)
 summary(crea.rep$DaysSincePVD,na.rm=TRUE)
+save(crea.rep, file = "crea.repongoing.rda")
 
 
 ######################################################################################
@@ -758,25 +757,28 @@ crea.rep$DaysSinceNephrectomy<-difftime(strptime(crea.rep$NephDate,format="%Y-%m
 crea.rep$DaysSinceNephrectomy<-as.numeric(crea.rep$DaysSinceNephrectomy, units="days")
 crea.rep$DaysSinceNephrectomy<-ifelse(crea.rep$DaysSinceNephrectomy<0,NA,crea.rep$DaysSinceNephrectomy)
 save(crea.rep, file = "crea.repongoing.rda")
+######################################################################################
+Dialysis<-read.csv("Dialysis1.csv")
+Transplant<-read.csv("transplant1.csv")
 
+head(CPRD2[CPRD2$medcode %in% RRT$Medcode| CPRD2$medcode %in% Dialysis$Medcode,])# CHECK THERE ARE VALUES TO MATCH
+CPRD2$RRTDate<-CPRD2$eventdate 
+CPRD2$RRTDate<-ifelse(!CPRD2$medcode  %in%  RRT$Medcode & !CPRD2$medcode  %in%  RRT$Medcode,NA,paste(CPRD2$RRTDate)) 
 
-#RRT
-sir.data$RRTDate<-sir.data$EntryDate 
-sir.data$RRTDate<-ifelse(!sir.data$ReadCode  %in%  Dialysis1.csv$ReadCode,NA,sir.data$RRTDate) 
-smalltab<-sir.data[!is.na(sir.data$RRTDate),c("PatientID","RRTDate")]
+smalltab<-CPRD2[!is.na(CPRD2$RRTDate) & CPRD2$patid %in% crea.rep$PatientID,c("patid","RRTDate")]
 first<-smalltab %>%
-    group_by(PatientID) %>%
+    group_by(patid) %>%
     arrange(RRTDate) %>%
-    slice(which.min(as.numeric(RRTDate))) %>%
+    slice(1L) %>%
 as.data.frame
-    head(first)
-   
-first$RRTDate<-as.Date(as.character(first$RRTDate),format="%Y%m%d")
-crea.rep<-merge(crea.rep,first,all.x=TRUE)
-crea.rep$DaysSinceRRT<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),strptime(crea.rep$RRTDate,format="%Y-%m-%d"),unit="days")
-crea.rep$DaysSinceRRT<-ifelse(crea.rep$DaysSinceRRT<0,NA,crea.rep$DaysSinceRRT)
-crea.rep$RRT<-ifelse(is.na(crea.rep$DaysSinceRRT),0,1)
+head(first)
+names(first)[1]<-"PatientID"
 
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$DaysSinceRRT<-difftime(strptime(crea.rep$RRTDate,format="%Y-%m-%d"),strptime(crea.rep$event.date,format="%Y-%m-%d"),unit="days")
+crea.rep$DaysSinceRRT<-as.numeric(crea.rep$DaysSinceRRT, units="days")
+crea.rep$DaysSinceRRT<-ifelse(crea.rep$DaysSinceRRT<0,NA,crea.rep$DaysSinceRRT)
+save(crea.rep, file = "crea.repongoing.rda")
 
 save(crea.rep, file = "crea.repongoing.rda")
 
