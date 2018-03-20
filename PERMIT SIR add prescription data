@@ -1,11 +1,13 @@
 
-#PERL COMMANDS
+#PERL COMMANDS (IF USING RESEARCH EVENTS MEDICATION SOFTWARE)
 cd research-events-medication-htn
 npm install
 node index.js -a resources\perl_input.txt && sort resources\perl_input.txt.done > resources\codesh.txt.done.sorted
 #PERL NOT USED IN THIS INSTANCE DUE TO THE COMPLEXITY OF THE INSTRUCTIONS
 ##################################################################################################################################
+
 #R COMMANDS
+
 library(stringr)
 library(plyr)
 library(lubridate)
