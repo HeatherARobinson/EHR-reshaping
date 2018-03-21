@@ -1,27 +1,23 @@
 inst<-read.csv("productedited803.csv")
-meds<-CPRD[CPRD$medcode %in% inst$CODE1,]
+meds<-CPRD[CPRD$prodcode %in% inst$CODE1,]
+dos<-read.table("common_dosages.txt",header=TRUE)
+meds<-meds[,c(1,2,5,7:14)]
+inst<-inst[,c(1,4:8)]
+names(inst)[1]<-"prodcode"
+meddata<-merge(meds,inst,all.x=TRUE)
+meddata<-merge(meddata,dos[,c(1,3)],all.x=TRUE)
+length(medata$textid) #23886844
+length(medata$textid[!is.na(medata$daily_dose)]) #
+meddata$daily_dose<-ifelse(is.na(meddata$daily_dose),1,meddata$daily_dose)
 
-library(stringr)
-library(lubridate)
-library(plyr)
-library(dplyr)
-library(tidyr)
 
-#SELECT MEDS DATA ONLY
-sub<-meds[,c("PatientID","ReadCode","CodeValue","CodeUnits","EntryDate"),]
-sub <- unique(sub)
+meddata <- unique(meddata)
+meddata$DAILY_DOSE<-as.numeric(meddata$DOSE_PER_TAB*meddata$)
 
-#JOIN THE INSTRUCTIONS ONTO THE MAIN FILE
-sub<-merge(sub,inst,all.x=TRUE)
-head(sub)
 
-#JOIN ON THE DOSAGE DATA
-subs<-merge(sub[sub$CODE %in% codes1$CODE,],codes1,all.x=TRUE) #Add ReadCode dosage information
 
-########################################################################### CHECKED
-#CALCULATE MISSING DATA WHERE POSSIBLE
 
-subs$DAILY_DOSE<-as.numeric(subs$DAILY_DOSE)
+
 subs$DOSE_PER_TAB<-as.numeric(subs$DOSE_PER_TAB)
 subs$TABLETS_PER_DAY<-as.numeric(subs$TABLETS_PER_DAY)
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE)&!is.na(subs$TABLETS_PER_DAY),subs$TABLETS_PER_DAY*subs$DOSE_PER_TAB,subs$DAILY_DOSE)
