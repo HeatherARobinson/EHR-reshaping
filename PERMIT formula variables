@@ -101,7 +101,7 @@ crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="4
 save("crea.rep",file="crea.repv9.rda")
 
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=90,0,NA)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<=89,1,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
