@@ -1,12 +1,12 @@
 inst<-read.csv("productedited803.csv")
-meds<-CPRD[CPRD$prodcode %in% inst$CODE1,]
+subs<-CPRD[CPRD$prodcode %in% inst$CODE1,]
 dos<-read.table("common_dosages.txt",header=TRUE)
-meds<-meds[,c(1,2,5,7:14)]
+subs<-subs[,c(1,2,5,7:14)]
 inst<-inst[,c(1,4:8)]
 names(inst)[1]<-"prodcode"
-meddata<-merge(meds,inst,all.x=TRUE)
-meddata<-merge(meddata,dos[,c(1,3)],all.x=TRUE)
-meddata <- unique(meddata)
+subs<-merge(subs,inst,all.x=TRUE)
+subs<-merge(subs,dos[,c(1,3)],all.x=TRUE)
+subs <- unique(subs)
 
 #FILL IN MISSING DATA IF POSSIBLE
 subs<-meddata
@@ -15,12 +15,15 @@ subs$DAILY_DOSE<-subs$daily_dose*subs$DOSE_PER_TAB
 #FIND THE MEDIAN DOSE FOR EACH DRUG AND USE THIS IF MISSING
 b<-subs[,c("DAILY_DOSE","TYPE")]
 b<-na.omit(b)
-b$DAILY_DOSE<-as.numeric(b$DAILY_DOSE)
-b2<-b %>% group_by(TYPE) %>% summarise(MEDIAN_DOSE = median(DAILY_DOSE, na.rm = TRUE)) %>% as.data.frame
+b2<-b %>% 
+group_by(TYPE) %>% 
+summarise_(~ median(DAILY_DOSE)) 
+b2<-as.data.frame(b2)
 
 subs<-merge(subs,b2,all.x=TRUE)
-subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$MEDIAN_DOSE,subs$DAILY_DOSE)
-
+names(subs)[19]<-"MED_DOSE"
+subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$MED_DOSE,subs$DAILY_DOSE)
+save(subs,file="subs.rda")
 ############################################################################CHECKED
 #DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
 #THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
