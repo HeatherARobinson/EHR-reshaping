@@ -15,7 +15,7 @@ unique(meddata$FAMILY)
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
-smalltab<-crea.rep[crea.rep$PatientID %in% NSAID$PatientID,c("PatientID","event.date")]
+smalltab<-crea.rep[crea.rep$PatientID %in% NSAID$patid,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
 NSAID<-NSAID[order(NSAID$eventdate,decreasing = TRUE), ]
 ###############################################################################################checked
