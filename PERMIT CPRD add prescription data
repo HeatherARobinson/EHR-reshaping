@@ -20,19 +20,18 @@ smalltab<-unique(smalltab)
 NSAID<-NSAID[order(NSAID$eventdate,decreasing = TRUE), ]
 ###############################################################################################checked
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
-
-for (i in 1:length(unique(smalltab$eventdate))){
-N<-NSAID[NSAID$eventdate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("eventdate","PatientID","TYPE","check")]
+NSAID<-NSAID[order(NSAID$TYPE,NSAID$patid,NSAID$eventdate), ]
+for (i in 1:length(unique(smalltab$event.date))){
+N<-NSAID[NSAID$eventdate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("eventdate","patid","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$TYPE,N$PatientID,N$eventdate), ]
-N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
+N<-N[!duplicated(N[c("patid","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
-group_by(PatientID) %>%
+group_by(patid) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
-P$event.date<-smalltab$event.date[i]
-P<-P[order(P$PatientID,P$event.date) , ]
+P$eventdate<-smalltab$event.date[i]
+P<-P[order(P$patid,P$eventdate) , ]
 write.table(P,file="NSAIDSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
 NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
