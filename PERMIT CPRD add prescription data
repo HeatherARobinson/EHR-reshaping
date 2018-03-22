@@ -31,14 +31,11 @@ group_by(patid) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$eventdate<-smalltab$event.date[i]
-P<-P[order(P$patid,P$eventdate) , ]
 write.table(P,file="NSAIDSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
-
 NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","TYPE","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
-
 
 #ADD FOR LOOPS HERE FROM AKI COUNTER CODE:
 NSAIDlist$counta<-for
