@@ -6,18 +6,14 @@ library(plyr)
 library(lubridate)
 library(dplyr)
 library(tidyr)
-load("crea.repongoing.rda")
-load("PERMITmeddata28.rda")
+load("crea.rep.rda")
+"PERMITmeddata2203.rda"
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
-meddata$FAMILY<-ifelse(meddata$TYPE=="Doxycycline",paste("Antimicrobial"),paste(meddata$FAMILY))
-meddata$FAMILY<-ifelse(meddata$TYPE=="Chloretracycline",paste("Chlortetracycline"),paste(meddata$FAMILY))
 ################################################################################################
-
+unique(meddata$FAMILY)
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
-NSAID$EntryDate<-as.Date(NSAID$EntryDate,format="%d/%m/%Y")
-NSAID$END_DATE<-as.Date(NSAID$END_DATE,format="%d/%m/%Y")
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% NSAID$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -58,9 +54,6 @@ crea.rep$NSAIDs<-ifelse(is.na(crea.rep$NSAIDs),0,crea.rep$NSAIDs)
 #####################################################################################################CHECKED
 #Angiotensin Receptor Blockers
 ARB<-meddata[meddata$FAMILY=="ARBs",]
-ARB$EntryDate<-as.Date(ARB$EntryDate,format="%d/
-%m/%Y")
-ARB$END_DATE<-as.Date(ARB$END_DATE,format="%d/%m/%Y")
 ARB$check<-paste(ARB$TYPE,ARB$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ARB$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -97,8 +90,6 @@ crea.rep$ARBs<-ifelse(is.na(crea.rep$ARBs),0,crea.rep$ARBs)
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
 AA<-meddata[meddata$FAMILY=="ALD_ANT",]
-AA$EntryDate<-as.Date(AA$EntryDate,format="%d/%m/%Y")
-AA$END_DATE<-as.Date(AA$END_DATE,format="%d/%m/%Y")
 AA$check<-paste(AA$TYPE,AA$DAILY_DOSE,sep="")
 crea.rep$event.date<-as.Date(crea.rep$event.date,"%d%m%Y")
 smalltab<-crea.rep[crea.rep$PatientID %in% AA$PatientID,c("PatientID","event.date")]
@@ -140,8 +131,6 @@ crea.rep$Ald_Ant<-ifelse(is.na(crea.rep$Ald_Ant),0,crea.rep$Ald_Ant)
 
 THI<-meddata[meddata$FAMILY=="DIUR_THI",]
 THI$DAILY_DOSE<-signif(THI$DAILY_DOSE,digits=2)
-THI$EntryDate<-as.Date(THI$EntryDate,format="%d/%m/%Y")
-THI$END_DATE<-as.Date(THI$END_DATE,format="%d/%m/%Y")
 THI$check<-paste(THI$TYPE,THI$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% THI$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -179,8 +168,6 @@ crea.rep$Thiazide_Diuretics<-ifelse(is.na(crea.rep$Thiazide_Diuretics),0,crea.re
 
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
-LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
-LOOP$END_DATE<-as.Date(LOOP$END_DATE,format="%d/%m/%Y")
 LOOP$check<-paste(LOOP$TYPE,LOOP$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% LOOP$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -216,8 +203,6 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Loop_Diuretics<-ifelse(is.na(crea.rep$Loop_Diuretics),0,crea.rep$Loop_Diuretics)
 ################################################################################### CHECKED
 IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
-IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
-IMM$END_DATE<-as.Date(IMM$END_DATE,format="%d/%m/%Y")
 IMM$check<-paste(IMM$TYPE,IMM$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% IMM$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -252,8 +237,6 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Immunosuppressants<-ifelse(is.na(crea.rep$Immunosuppressants),0,crea.rep$Immunosuppressants)
 ########################################################################################
 ACEI<-meddata[meddata$FAMILY=="ACEI",]
-ACEI$EntryDate<-as.Date(ACEI$EntryDate,format="%d/%m/%Y")
-ACEI$END_DATE<-as.Date(ACEI$END_DATE,format="%d/%m/%Y")
 ACEI$check<-paste(ACEI$TYPE,ACEI$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ACEI$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -288,8 +271,6 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$ACE_Inhibitors<-ifelse(is.na(crea.rep$ACE_Inhibitors),0,crea.rep$ACE_Inhibitors)
 ###########################################################################
 NEP<-meddata[meddata$FAMILY=="Nephrotoxin",]
-NEP$EntryDate<-as.Date(NEP$EntryDate,format="%d/%m/%Y")
-NEP$END_DATE<-as.Date(NEP$END_DATE,format="%d/%m/%Y")
 NEP$check<-paste(NEP$TYPE,NEP$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% NEP$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
@@ -324,8 +305,6 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Other_Nephrotoxins<-ifelse(is.na(crea.rep$Other_Nephrotoxins),0,crea.rep$Other_Nephrotoxins)
 ########################################################################
 ANT<-meddata[meddata$FAMILY=="Antimicrobial",]
-ANT$EntryDate<-as.Date(ANT$EntryDate,format="%d/%m/%Y")
-ANT$END_DATE<-as.Date(ANT$END_DATE,format="%d/%m/%Y")
 ANT$check<-paste(ANT$TYPE,ANT$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% ANT$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
