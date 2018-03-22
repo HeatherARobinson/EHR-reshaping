@@ -12,6 +12,7 @@ meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
 ################################################################################################
 unique(meddata$FAMILY)
+gsub(" ", "", meddata$TYPE, fixed = TRUE)
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
 NSAID<-meddata[meddata$FAMILY=="NSAID",]
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
@@ -24,6 +25,7 @@ NSAID<-NSAID[order(NSAID$TYPE,NSAID$patid,NSAID$eventdate), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-NSAID[NSAID$eventdate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("eventdate","patid","TYPE","check")]
 N<-na.omit(N)
+N$TYPE
 N<-N[!duplicated(N[c("patid","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
@@ -31,15 +33,25 @@ group_by(patid) %>%
 summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$eventdate<-smalltab$event.date[i]
-write.table(P,file="NSAIDSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
-NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
+write.csv(P,file="NSAIDSd.csv",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+NS<-read.csv("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","TYPE","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
 
 #ADD FOR LOOPS HERE FROM AKI COUNTER CODE:
-NSAIDlist$counta<-for
-NSAIDlist$countb<-for
+nums<-NSAIDlist[unique(NSAIDlist$TYPE),c(3)]
+nums$counta<-1
+for(x in 2:length(nums$counta)){
+nums$counta[x]<-nums$counta[x-1]+1}
+
+NSAIDlist<-merge(NSAIDlist,nums)
+
+NSAIDlist$countb<-1
+for(x in 2:length(NSAIDlist$countb)){
+NSAIDlist$countb[x]<-ifelse(TYPE[x]==TYPE[x-1],
+NSAIDlist$countb[x-1]+a$add[x],1)}
+
 NSAIDlist$NSAIDs<-as.numeric(paste(NSAIDlist$counta,".",NSAIDlist$countb,sep=""))
 NSAIDlist<-NSAIDlist[,c("NSAIDdesc","TYPE","NSAIDs")]
 write.csv(NSAIDlist,file="NSAIDlistCPRD2203.csv",row.names=FALSE) 
