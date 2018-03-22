@@ -21,43 +21,36 @@ summarise_(~ median(DAILY_DOSE))
 b2<-as.data.frame(b2)
 
 subs<-merge(subs,b2,all.x=TRUE)
-names(subs)[19]<-"MED_DOSE"
+names(subs)[31]<-"MED_DOSE"
 subs$DAILY_DOSE<-ifelse(is.na(subs$DAILY_DOSE),subs$MED_DOSE,subs$DAILY_DOSE)
+
+#A zero often means "take as directed"- we will assume median here
+
+subs$DAILY_DOSE<-ifelse(subs$DAILY_DOSE==0,subs$MED_DOSE,subs$DAILY_DOSE)
 save(subs,file="subs.rda")
 ############################################################################
-#DIVIDE INTO MULTIPLE ROWS IF THE DOSE CHANGES OVER TIME
-#THIS CODE OVERWRITES SO BE CAREFUL TO GO BACK TO THE INITIAL CONSTRUCTION OF SUBS IF YOU WANT TO RUN IT AGAIN TO AVOID REPETITIVELY CREATING NEW ROWS.
-#THEN should contain the number of dose changes (i.e. the number of extra rows you need, so most rows should equal zero.)
 
-#DEFINE THOSE PRESCRIPTINS WITH PROGRESSIVE DOSING
-library(splitstackshape)
-subs$THEN<-ifelse(is.na(subs$THEN),0,subs$THEN)
-subs$THEN<-as.numeric(subs$THEN)
-expandRows(subs, "THEN") #Create a copied row for each changing dosage
-subt<-subs[subs$THEN>0,]
-head(subt)
-subnt<-subs[subs$THEN<1,]
+#IN CPRD DAILY DOSES FOR VARIABLE DOSES CAN BE ASSUMED TO BE THE MINIMUM (0), MAXIMUM (1) OR MEAN (2) OF THE RANGE.
+table(subs$dose_max_average[subs$choice_of_dose==1])
+#IN 99.95% of cases with a choice a mean has been taken (dose_max_average==2)
 
 ############################################################################
-
-#EDIT THE DOSES FOR THE REPLICATE ROWS (FOLLOWING DOSE CHANGE)
-subt$DAILY_DOSE<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),subt$DOSE2,subt$DAILY_DOSE)
-subt$TABLETS_PER_DAY<-ifelse(duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE),as.numeric(as.character(subt$NUM2)),subt$TABLETS_PER_DAY)
-
-subt$n<-(subt$TABLETS_PER_DAY*as.numeric(subt$DAYS))
-subt$C1<-ifelse((duplicated(subt$PatientID)&duplicated(subt$EntryDate)&duplicated(subt$TYPE)),1,0)
-subt$CodeValue<-ifelse(subt$C1==1,as.integer(as.numeric(as.character(subt$CodeValue))-as.numeric(as.character(subt$n))),paste(subt$CodeValue))#For the second entry, recalculate the prescription minus what was used up whilst on the original dosage
-subt$EntryDateb<-ifelse(subt$C1==1,subt$EntryDate+subt$DAYS,subt$EntryDate)
-subt$EntryDate<-as.Date(subt$EntryDateb,origin=(subt$EntryDate[1]-subt$EntryDateb[1]))
-subt<-subt[,c(1:19,21)]
-subnt<-subnt[,c(1:19,21)]
-meddata<-rbind(subt,subnt)
-
+#TEXT NOT MINED FOR PROGRESSIVE DOSAGE CHANGES
 ############################################################################
+
 #ASSIGN DATE OF END OF PRESCRIPTION
 
-m<-(as.numeric(meddata$CodeValue)/as.numeric(meddata$TABLETS_PER_DAY))
-meddata$END_DATE<-ifelse(!is.na(meddata$TABLETS_PER_DAY)&!is.na(subs$CodeValue),meddata$EntryDate+as.difftime(m, unit="days"),NA)
+subs$m<-ifelse(!is.na(subs$dose_duration)&!subs$dose_duration==0,subs$eventdate+subs$dose_duration,NA)
+subs$m<-ifelse(is.na(subs$m),subs$eventdate+(subs$qty/subs$daily_dose),subs$m)
+subs$END_DATE<-as.Date(subs$m,origin="1970-01-01")
+
+
+subs$m<-ifelse(is.na(subs$m),
+subs$eventdate+as.difftime(as.numeric(subs$qty),unit="days"),
+subs$m)
+#ASSUME 1 TABLET USED PER DAY IF DATA MISSING
+
+meddata$END_DATE<-ifelse(!is.na(meddata$END_DATE),meddata$eventdate+as.difftime(m, unit="days"),NA)
 meddata$END_DATE<-as.Date(meddata$END_DATE,origin="1970-01-01")
 head(meddata)
 save(meddata,file="PERMITmeddata28.rda")
