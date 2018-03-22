@@ -7,7 +7,7 @@ library(lubridate)
 library(dplyr)
 library(tidyr)
 load("crea.rep.rda")
-"PERMITmeddata2203.rda"
+load("PERMITmeddata2203.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
 ################################################################################################
@@ -17,14 +17,14 @@ NSAID<-meddata[meddata$FAMILY=="NSAID",]
 NSAID$check<-paste(NSAID$TYPE,NSAID$DAILY_DOSE,sep="")
 smalltab<-crea.rep[crea.rep$PatientID %in% NSAID$PatientID,c("PatientID","event.date")]
 smalltab<-unique(smalltab)
-NSAID<-NSAID[order(NSAID$EntryDate,decreasing = TRUE), ]
+NSAID<-NSAID[order(NSAID$eventdate,decreasing = TRUE), ]
 ###############################################################################################checked
 #LOOP THROUGH TEST DATES AND MATCH TO PRESCRIPTIONS
 
-for (i in 1:length(unique(smalltab$event.date))){
-N<-NSAID[NSAID$EntryDate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
+for (i in 1:length(unique(smalltab$eventdate))){
+N<-NSAID[NSAID$eventdate<=smalltab$event.date[i]&NSAID$END_DATE>=smalltab$event.date[i],c("eventdate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
+N<-N[order(N$TYPE,N$PatientID,N$eventdate), ]
 N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
@@ -37,16 +37,19 @@ write.table(P,file="NSAIDSd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep
 
 NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
+colnames(NS) <- c("PatientID","NSAIDdesc","TYPE","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
-old<-read.csv("NSAIDlistOLD.csv")
-NSAIDlist[!NSAIDlist %in% old$NSAIDdesc]
 
-#write.csv(NSAIDlist,file="NSAIDlist0603.csv",row.names=FALSE) 
+
+#ADD FOR LOOPS HERE FROM AKI COUNTER CODE:
+NSAIDlist$counta<-for
+NSAIDlist$countb<-for
+NSAIDlist$NSAIDs<-as.numeric(paste(NSAIDlist$counta,".",NSAIDlist$countb,sep=""))
+NSAIDlist<-NSAIDlist[,c("NSAIDdesc","TYPE","NSAIDs")]
+write.csv(NSAIDlist,file="NSAIDlistCPRD2203.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
-NS2<-read.csv("NSAIDlist0603.csv")
-NS<-merge(NS,NS2,all.x=TRUE)
+NS<-merge(NS,NSAIDlist,all.x=TRUE)
 NS<-NS[,c("NSAIDs","PatientID","event.date")]
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$NSAIDs<-ifelse(is.na(crea.rep$NSAIDs),0,crea.rep$NSAIDs)
