@@ -203,15 +203,6 @@ first<-first[first$event.date2<=first$MaxDate,c(1,2,5)]
 crea.rep<-merge(crea.rep,first,all.x=TRUE)
 crea.rep$Creatinine6M<-unlist(crea.rep$Creatinine6M)
 
-###################################################################################
-
-###################################################################################
-
-#MDRD eGFR
-o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
-p<-ifelse(crea.rep$Gender=="F",0.742,1)
-crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
-
 ################################################################################
 #crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
 ###################################################################################
