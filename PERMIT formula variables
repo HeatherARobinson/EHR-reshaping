@@ -91,7 +91,6 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==1 & crea.rep$CKDAStage==2,2,cr
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1 & crea.rep$CKDAStage==3,3,NA)
 
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),3,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
