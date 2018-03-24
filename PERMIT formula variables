@@ -80,12 +80,12 @@ CKs<-CKs[,c(1,2)]
 names(CKs)<-c("PatientID","CKD_Date")
 crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
-
-
+#Incorporate UAC data if available:
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
 
+#Stage CKD based on both UAC and creatinine data:
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1,1,NA)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==1 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1 & crea.rep$CKDAStage==3,3,NA)
@@ -108,9 +108,8 @@ crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="2
 crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3b",3,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5",4,crea.rep$CKDPrognosis)
-
-save("crea.rep",file="crea.repv9.rda")
-
+#################################
+#Where CKD diagnosed, add metric for summarised eGFR range
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=90,0,NA)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
