@@ -68,9 +68,6 @@ crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$Pa
 }
 #can replace with dplyr
 
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
-crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
-
 #Mark start of first CKD diagnosis based on creatinine
 CKs<-CKpot %>%
 group_by(PatientID)%>%
@@ -80,42 +77,33 @@ CKs<-CKs[,c(1,2)]
 names(CKs)<-c("PatientID","CKD_Date")
 crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 
-#Incorporate UAC data if available:
-crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
-crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
-crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
-
-#Stage CKD based on both UAC and creatinine data:
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1,1,NA)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==1 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1 & crea.rep$CKDAStage==3,3,NA)
-
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="3b"),3,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==1&(crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
-
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="0"|crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),2,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3a"),3,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==2&(crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
-
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="1"|crea.rep$CKDGStage=="2"),3,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDAStage==3&(crea.rep$CKDGStage=="3a"|crea.rep$CKDGStage=="3b"|crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5"),4,crea.rep$CKDPrognosis)
-
-crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="1",1,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="2",1,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3a",2,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="3b",3,crea.rep$CKDPrognosis)
-crea.rep$CKDPrognosis<-ifelse(is.na(crea.rep$CKDAStage) & crea.rep$CKDGStage=="4"|crea.rep$CKDGStage=="5",4,crea.rep$CKDPrognosis)
-#################################
-#Where CKD diagnosed, add metric for summarised eGFR range
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=90,0,NA)
+#Where CKD diagnosed based on creatinine, add metric for summarised eGFR range
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR
 crea.rep$CustomeGFR<-ifelse(is.na(crea.rep$CKDPrognosis),0,crea.rep$CustomeGFR)
+
+#Incorporate UAC data if available:
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3&!crea.rep$CKDGStage=="0",1,0)
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
+crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
+
+#Stage CKD based on both UAC and creatinine data:
+crea.rep$CKDPrognosis<-crea.rep$CKDGStage
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage<=2 & crea.rep$CKDAStage==2,1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage<=2 & crea.rep$CKDAStage==3,2,crea.rep$CKDPrognosis)
+
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage>=3,3,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3.5 & crea.rep$CKDAStage==1,2,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==1,1,crea.rep$CKDPrognosis)
+crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
+
+#Recode to KDIGO
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
+crea.rep$MaxCKDGStage<-ifelse(crea.rep$MaxCKDGStage==3.5,paste("3b"),paste(crea.rep$MaxCKDGStage))
+
 ###################################################################################
 #FIRST LOG CREATININE AFTER 6M
 
