@@ -58,8 +58,8 @@ crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
 table(crea.rep$CKDGStage)
 
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<60,3,crea.rep$CKDGStage)
+crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<30,4,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
 
