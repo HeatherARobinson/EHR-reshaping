@@ -57,7 +57,6 @@ crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
 #Stage 1 is skipped here as it cannot be identified from creatinine only, start by coding all as stage 2
 table(crea.rep$CKDGStage)
 
-crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==0&crea.rep$MDRDeGFR>=90,1,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=30&crea.rep$MDRDeGFR<45,3.5,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=45&crea.rep$MDRDeGFR<=59,3,crea.rep$CKDGStage)
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR>=15&crea.rep$MDRDeGFR<=29,4,crea.rep$CKDGStage)
