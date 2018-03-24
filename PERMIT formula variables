@@ -1,51 +1,60 @@
 load("crea.repongoing.rda")
 load("sir.datahfonly.Rdata")
-###########################################################
-#CODE EACH OF THE FORMULA VARIABLES
-crea.rep$Ethnicity<-ifelse(is.na(crea.rep$Ethnicity),7,crea.rep$Ethnicity)
+
+#CODE SIMPLE FORMULA VARIABLES
+crea.rep$Ethnicity<-ifelse(is.na(crea.rep$Ethnicity),7,crea.rep$Ethnicity) #7 is used for an 'na' category so all rows continue into the clustering
 crea.rep$log_CREA <- log10(crea.rep$Creatinine)
 crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$HTN<-ifelse(is.na(crea.rep$HTN),0,crea.rep$HTN)
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 
+####
 #MDRD eGFR
 o<-ifelse(crea.rep$Ethnicity==4,1.212,1)
 o<-ifelse(is.na(crea.rep$Ethnicity),1,o)
 p<-ifelse(crea.rep$Gender=="F",0.742,1)
 crea.rep$MDRDeGFR<-(175*((crea.rep$Creatinine/88.42)^-1.154))*(crea.rep$Age^-0.203)*o*p
-##################################################################################
 
-#Identify kidney injury patients and tabulate the first qualifying test for each patient
+####
+#CKD
+#Reduce dataset to individuals eligible for CKD and AKI staging before looping;
+#Identify potential creatinine based CKD patients (anyone with an egfr<60)
+#and find the first qualifying test for each patient
 
 crea.rep$KDmark<-ifelse(!is.na(crea.rep$MDRDeGFR)&crea.rep$MDRDeGFR<60,1,0)
 CKs<-crea.rep[crea.rep$KDmark==1,c("PatientID","EntryDate","KDmark")] #Kidney Injury flagged tests
 
-#Create a dataset including all data from all patients with a KD flag:
-CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] #All patients have at least 1.
+#Create a dataset including all data from patients with at least 1 KD flag:
+CKpot<-crea.rep[crea.rep$PatientID %in% CKs$PatientID,] 
 CKpot$EntryDate2<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")
+
+#Mark a 90 day lookback period
 CKpot$EntryDate1<-as.Date(as.character(CKpot$EntryDate),format="%Y%m%d")-90
 CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2")] 
-#The KD flag will appear from the point at which the patient crosses the threshold of being classified as having CKD.
 
 ############################################################################################## CHECKED
 #Diagnose CKD
-
+#If eGFR under 60 is not sustained for 90 days, recode KDmark as 0
 for (i in 1:length(CKpot$PatientID)){
-CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
+CKpot$CKD[i]<-min(crea.rep$KDmark[crea.rep$PatientID==CKpot$PatientID[i] &
+crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
 }
-#CKD is flagged as 1 if the test qualifies and there is no normal test within 3 months prior
+#CKD is 1 if the test qualifies and there is no normal test within 3 months prior
 #At this stage some are temporarily falsely positively identified that have no lookback test
 
-#Neardate match to EntryDate1- if the match is before EntryDate1 then keep those rows in.
+#Near date match EntryDate1 (90 days prior date)- to entries from the full dataset
+#neardate preferably matches to a prior entry if one is available
+#if the closest match is before EntryDate1 (data from more than 90 days prior available), retain row.
 indx1<-neardate(CKpot$PatientID,crea.rep$PatientID,CKpot$EntryDate1,crea.rep$event.date,best="prior",nomatch=NA_integer_)
 CKpot$Lookback<-crea.rep[indx1,"event.date"]
 CKpot$CKDGStage<-ifelse(CKpot$Lookback<=CKpot$EntryDate1 & CKpot$CKD==1,1,0)
 CKpot<-CKpot[CKpot$CKDGStage==1,]
+#CKpot is a subset table of CKD qualifying tests and their markers to be merged onto crea.rep
 
 crea.rep<-merge(crea.rep,CKpot[,c(1,2,8)],all.x=TRUE)
 crea.rep$CKDGStage<-ifelse(as.numeric(crea.rep$CKDGStage)>0,2,0)
-#Stage 1 is skipped here as it cannot be identified from creatinine only
+#Stage 1 is skipped here as it cannot be identified from creatinine only, start by coding all as stage 2
 table(crea.rep$CKDGStage)
 
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==0&crea.rep$MDRDeGFR>=90,1,crea.rep$CKDGStage)
@@ -105,7 +114,8 @@ crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,crea.
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
 crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR
+crea.rep$CustomeGFR<-ifelse(is.na(crea.rep$CKDPrognosis),0,crea.rep$CustomeGFR)
 ###################################################################################
 #FIRST LOG CREATININE AFTER 6M
 
