@@ -64,7 +64,7 @@ crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage>0&crea.rep$MDRDeGFR<15,5,crea.rep$
 crea.rep$CKDGStage<-ifelse(is.na(crea.rep$CKDGStage),0,crea.rep$CKDGStage)
 table(crea.rep$CKDGStage)
 
-for (i in 1:length(unique(crea.rep$PatientID))){
+for (i in 1:length(crea.rep$PatientID)){
 crea.rep$MaxCKDGStage[i]<-max(crea.rep$CKDGStage[crea.rep$PatientID==crea.rep$PatientID[i]])
 }
 #can replace with dplyr
@@ -100,13 +100,12 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==1,1,cr
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
 
 #Where CKD diagnosed based on creatinine, add metric for summarised eGFR range
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
-crea.rep$CustomeGFR<-ifelse(crea.rep$Prognosis== & crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
-crea.rep$CustomeGFR<-ifelse(crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR)
-crea.rep$CustomeGFR<-ifelse(is.na(crea.rep$CKDPrognosis),NA,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 & crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=30 & crea.rep$MDRDeGFR<45,3,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=15 & crea.rep$MDRDeGFR<30,4,crea.rep$CustomeGFR)
+crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR<15,5,crea.rep$CustomeGFR)
 
 #Recode to KDIGO
 crea.rep$CKDGStage<-ifelse(crea.rep$CKDGStage==3.5,paste("3b"),paste(crea.rep$CKDGStage))
