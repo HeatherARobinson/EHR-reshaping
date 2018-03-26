@@ -599,9 +599,9 @@ save(crea.rep, file = "crea.repongoing.rda")
  
 ########################################################### 
 #MATERNITY 
-sir.EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
+sir.data$EntryDate<-ifelse(sir.data$EntryDate>20170801|sir.data$EntryDate<19000101,NA,sir.data$EntryDate)
 sir.data$Maternity<-ifelse(sir.data$ReadCode  %in%  Maternity1.csv$ReadCode,1,0) 
-smalltab<-sir.data[sir.data$Maternity==1,c("PatientID","Maternity","EntryDate")]
+smalltab<-sir.data[sir.data$Maternity==1 & sir.data$PatientID %in% crea.select$PatientID,c("PatientID","Maternity","EntryDate")]
 names(smalltab)[3]<-"MatDate1"
 first<-smalltab %>%
    group_by(PatientID) %>%  
@@ -616,20 +616,21 @@ smalltab$MatDate1<-as.Date(as.character(smalltab$MatDate1),"%Y%m%d")
 smalltab$d<-as.numeric(smalltab$MatDate2-smalltab$MatDate1)
 second<-smalltab[smalltab$d>=310,]
 
-second<-second %>%
+s<-second %>%
    group_by(PatientID) %>%  
-      slice(which.min(MatDate2)) 
-        head(second)
+      slice(which.min(as.numeric(MatDate2))) %>%
+      as.data.frame
+        head(s)
         
- smalltab<-merge(smalltab,second,all.x=TRUE)       
+ smalltab<-merge(smalltab[,c(1,4)],s[,c(1,3)],all.x=TRUE)     
+smalltab<-unique(smalltab)
 #NOONE IN THIS DATASET HAS>2 CHILDREN.
+load("crea.selectv4.rda")
+crea.select<-merge(crea.select,smalltab,all.x=TRUE)
+crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate1<310,1,0)
+crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate2<310,1,crea.select$EstPregnant)
 
-crea.rep<-merge(crea.rep,as.data.frame(smalltab[,c(1,3,4)]),all.x=TRUE)
-crea.rep$EstPregnant<-ifelse(crea.rep$event.date-crea.rep$MatDate1<310,1,0)
-crea.rep$EstPregnant<-ifelse(crea.rep$event.date-crea.rep$MatDate2<310,1,0)
-
-crea.test<-crea.rep
-save(crea.test, file = "crea.testv2.rda")
+save(crea.select, file = "crea.selectv5.rda")
 
 #########################################################
 #CODE STOP CODED VARIABLES  
