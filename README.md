@@ -9,3 +9,5 @@ LCCG Liverpool Clinical Commissioning Group patient records
 
 CPRD Clinical Practise Record Datalink
 
+Material contributed by Heather Robinson (University of Manchester), Dunja Kurtoic (Max Planck Institute), Paolo Fraccaro (University of Manchester)
+
