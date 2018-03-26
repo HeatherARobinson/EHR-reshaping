@@ -87,9 +87,6 @@ crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3,1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
 
-
-
-
 #Stage CKD based on both UAC and creatinine data:
 crea.rep$CKDPrognosis<-crea.rep$CKDGStage
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage<=2 & crea.rep$CKDAStage==2,1,crea.rep$CKDPrognosis)
