@@ -440,7 +440,7 @@ crea.rep$DaysSinceNephrectomy<-as.numeric(crea.rep$DaysSinceNephrectomy, units="
 crea.rep$DaysSinceNephrectomy<-ifelse(crea.rep$DaysSinceNephrectomy<0,NA,crea.rep$DaysSinceNephrectomy)
 #save(crea.rep, file = "crea.repongoing.rda")
 
-
+########################################################
 #RRT
 sir.data$RRTDate<-sir.data$EntryDate 
 sir.data$RRTDate<-ifelse(!sir.data$ReadCode  %in%  Dialysis1.csv$ReadCode,NA,sir.data$RRTDate) 
@@ -460,7 +460,7 @@ crea.rep$RRT<-ifelse(is.na(crea.rep$DaysSinceRRT),0,1)
 
 
 save(crea.rep, file = "crea.repongoing.rda")
-
+####################################################################
 #DIABETES
 sir.data$DiabDate<-sir.data$EntryDate 
 sir.data$DiabDate<-ifelse(!sir.data$ReadCode  %in%  Diabetes1.csv$ReadCode,NA,sir.data$DiabDate) 
@@ -478,7 +478,7 @@ crea.rep$DaysSinceDiabetic<-difftime(strptime(crea.rep$event.date,format="%Y-%m-
 crea.rep$DaysSinceDiabetic<-ifelse(crea.rep$DaysSinceDiabetic<0,NA,crea.rep$DaysSinceDiabetic)
 crea.rep$Diabetes<-ifelse(is.na(crea.rep$DaysSinceDiabetic),0,1)
 
-
+###################################################################
 save(crea.rep, file = "crea.repongoing.rda")
 
 #ATRIAL FIBRILLATION
@@ -499,6 +499,7 @@ crea.rep$DaysSinceAF<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),s
 crea.rep$DaysSinceAF<-ifelse(crea.rep$DaysSinceAF<0,NA,crea.rep$DaysSinceAF)
 crea.rep$AF<-ifelse(is.na(crea.rep$DaysSinceAF),0,1)
 summary(crea.rep$DaysSinceAF,na.rm=TRUE)
+################################################################
 
 #IHD
 sir.data$IHDDate<-sir.data$EntryDate 
@@ -517,7 +518,7 @@ crea.rep$DaysSinceIHD<-difftime(strptime(crea.rep$event.date,format="%Y-%m-%d"),
 crea.rep$DaysSinceIHD<-ifelse(crea.rep$DaysSinceIHD<0,NA,crea.rep$DaysSinceIHD)
 crea.rep$IHD<-ifelse(is.na(crea.rep$DaysSinceIHD),0,1)
 summary(crea.rep$DaysSinceIHD,na.rm=TRUE)
-
+#################################################################
 #PERIPHERAL VASCULAR DISEASE
 sir.data$PVDDate<-sir.data$EntryDate 
 sir.data$PVDDate<-ifelse(!sir.data$ReadCode  %in%  PVD1.csv$ReadCode,NA,sir.data$PVDDate) 
@@ -580,8 +581,8 @@ summary(crea.rep$DaysSinceRT,na.rm=TRUE)
 
 save(crea.rep, file = "crea.repongoing.rda")
  write.csv(crea.rep,file="crea.repongoing.csv")
- 
- #DEAD
+########################################################### 
+ #DEATH
 sir.data$Dead<-ifelse(sir.data$ReadCode  %in%  Death1.csv$ReadCode,1,0) 
 smalltab<-sir.data[sir.data$Dead==1,c("PatientID","Dead")]
 first<-smalltab %>%
@@ -595,6 +596,41 @@ summary(crea.rep$Dead,na.rm=TRUE)
 
 save(crea.rep, file = "crea.repongoing.rda")
  write.csv(crea.rep,file="crea.repongoing.csv")
+ 
+########################################################### 
+#MATERNITY 
+sir.EntryDate<-as.Date(as.character(smalltab$EntryDate),format="%Y%m%d")
+sir.data$Maternity<-ifelse(sir.data$ReadCode  %in%  Maternity1.csv$ReadCode,1,0) 
+smalltab<-sir.data[sir.data$Maternity==1,c("PatientID","Maternity","EntryDate")]
+names(smalltab)[3]<-"MatDate1"
+first<-smalltab %>%
+   group_by(PatientID) %>%  
+      slice(which.min(as.numeric(MatDate1))) %>%
+as.data.frame
+head(first)
+
+names(smalltab)[3]<-"MatDate2"
+smalltab<-merge(smalltab,first,all.x=TRUE)
+smalltab$MatDate2<-as.Date(as.character(smalltab$MatDate2),"%Y%m%d")
+smalltab$MatDate1<-as.Date(as.character(smalltab$MatDate1),"%Y%m%d")
+smalltab$d<-as.numeric(smalltab$MatDate2-smalltab$MatDate1)
+second<-smalltab[smalltab$d>=310,]
+
+second<-second %>%
+   group_by(PatientID) %>%  
+      slice(which.min(MatDate2)) 
+        head(second)
+        
+ smalltab<-merge(smalltab,second,all.x=TRUE)       
+#NOONE IN THIS DATASET HAS>2 CHILDREN.
+
+crea.rep<-merge(crea.rep,as.data.frame(smalltab[,c(1,3,4)]),all.x=TRUE)
+crea.rep$EstPregnant<-ifelse(crea.rep$event.date-crea.rep$MatDate1<310,1,0)
+crea.rep$EstPregnant<-ifelse(crea.rep$event.date-crea.rep$MatDate2<310,1,0)
+
+crea.test<-crea.rep
+save(crea.test, file = "crea.testv2.rda")
+
 #########################################################
 #CODE STOP CODED VARIABLES  
 #smoking
