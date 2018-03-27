@@ -1,0 +1,10 @@
+#IN THE FINAL TABLE WE HAVE 1 ROW PER PATIENT PER DAY
+#WE KNOW IN MANY INSTANCES THERE ARE MULTIPLE TEST REQUEST LOCATIONS, SO CHOOSE THE PRIMARY CARE CODE
+load("crea.selevctv3.rda")
+load("sirdatahfonly.rda")
+names(sir.data)
+
+a<-unique(sir.data$Source)
+codes<-read.table("ccg-practice-list.csv",header=TRUE,sep=",")
+length(codes$Code)
+a<-merge(a,codes,all.x=TRUE)
