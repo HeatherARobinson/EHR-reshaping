@@ -16,7 +16,7 @@ library(tidyverse)
 library(data.table)
 library(survival)
 library(lubridate)
-CPRD<-read_dta("hf_cases_therapy.dta") 
+CPRD<-read_dta("hf_cases_therapy.dta") #Medications
 CPRD2<-read_dta("hf_cases_clinical.dta") 
 CPRD3<-read_dta("hf_cases_test.dta") 
 CPRD5<-read_dta("hf_cases_additional.dta") 
@@ -830,8 +830,12 @@ save(crea.rep, file = "crea.repongoing.rda")
 
 ########################################################### 
 #MATERNITY 
+ Maternity1.csv<-read.csv("Maternity1.csv")
 CPRD2$Maternity<-ifelse(CPRD2$medcode  %in%  Maternity1.csv$Medcode,1,0) 
-smalltab<-CPRD2[CPRD2$Maternity==1 & CPRD2$PatID %in% crea.select$PatientID,c("PatID","Maternity","eventdate")]
+CPRD3$Maternity<-ifelse(CPRD3$medcode  %in%  Maternity1.csv$Medcode,1,0) 
+tab1<-CPRD2[CPRD2$Maternity==1 & CPRD2$patid %in% crea.select$PatientID,c("patid","Maternity","eventdate")]
+tab2<-CPRD3[CPRD3$Maternity==1 & CPRD3$patid %in% crea.select$PatientID,c("patid","Maternity","eventdate")]
+smalltab<-rbind(tab1,tab2)
 names(smalltab)[3]<-"MatDate1"
 first<-smalltab %>%
    group_by(PatID) %>%  
