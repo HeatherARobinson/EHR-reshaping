@@ -599,7 +599,6 @@ save(crea.rep, file = "crea.repongoing.rda")
  
 ########################################################### 
 #MATERNITY 
-sir.data$EntryDate<-ifelse(sir.data$EntryDate>20170801|sir.data$EntryDate<19000101,NA,sir.data$EntryDate)
 sir.data$Maternity<-ifelse(sir.data$ReadCode  %in%  Maternity1.csv$ReadCode,1,0) 
 smalltab<-sir.data[sir.data$Maternity==1 & sir.data$PatientID %in% crea.select$PatientID,c("PatientID","Maternity","EntryDate")]
 names(smalltab)[3]<-"MatDate1"
@@ -621,8 +620,8 @@ s<-second %>%
       slice(which.min(as.numeric(MatDate2))) %>%
       as.data.frame
         head(s)
-        
- smalltab<-merge(smalltab[,c(1,4)],s[,c(1,3)],all.x=TRUE)     
+       #NONE OF OUR PATIENTS HAVE A SECOND CHILD IN THIS TIME WINDOW 
+#smalltab<-merge(smalltab[,c(1,4)],s[,c(1,3)],all.x=TRUE)     
 smalltab<-unique(smalltab)
 #NOONE IN THIS DATASET HAS>2 CHILDREN.
 load("crea.selectv4.rda")
