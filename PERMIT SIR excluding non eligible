@@ -1,0 +1,5 @@
+load("crea.repv13.rda")
+load("sir.datahfonly.Rdata")
+mat<-read.csv("Maternity1.csv")
+prac<-read.csv("PractiseKeySIR.csv")
+mats<-merge(sir.data[,c(1,4,7)],prac,all.x=TRUE)
