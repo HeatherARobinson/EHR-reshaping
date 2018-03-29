@@ -2,8 +2,8 @@
 #CKD IS STAGED BASED ON MAINTENANCE OF EACH EGFR LEVEL FOR A MINIMUM OF 3 MONTHS
 #CKD IS BASED ON CKD-EPI
 
-load("crea.repongoing.rda")
-load("sir.datahfonly.Rdata")
+load("crea.repv12.rda")
+load ("sir.data.rda") #Taking the long format input file
 
 ####
 #CKD
@@ -27,9 +27,9 @@ CKpotE<-CKpotE[,c("PatientID","event.date","KDmarkE","EntryDate1","EntryDate2","
 #If eGFR under 60 is not sustained for 90 days, recode KDmark as 0
 for (i in 1:length(CKpotE$PatientID)){
 CKpotE$CKDE[i]<-min(crea.rep$KDmarkE[crea.rep$PatientID==CKpotE$PatientID[i] &
-crea.rep$event.date>CKpotE$EntryDate1[i] & crea.rep$event.date<=CKpotE$EntryDate2[i])
+crea.rep$event.date>CKpotE$EntryDate1[i] & crea.rep$event.date<=CKpotE$EntryDate2[i]])
 CKpotE$MaxCKDE[i]<-max(crea.rep$CKDEPIeGFR[crea.rep$PatientID==CKpotE$PatientID[i] &
-crea.rep$event.date>CKpotE$EntryDate1[i] & crea.rep$event.date<=CKpotE$EntryDate2[i])
+crea.rep$event.date>CKpotE$EntryDate1[i] & crea.rep$event.date<=CKpotE$EntryDate2[i]])
 }
 #CKD is 1 if the test qualifies and there is no normal test within 3 months prior
 #At this stage some are temporarily falsely positively identified that have no lookback test
