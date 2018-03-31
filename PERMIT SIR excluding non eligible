@@ -25,8 +25,11 @@ table(pats3$Source)
 length(pats3$Source)
 crea.rep<-merge(crea.rep,pats3,all.x=TRUE)
 
-s<-unique(crea.rep$Source[!crea.rep$Source=="salfordt"])
-s1<-as.data.frame(s)
-s1<-s1[c(1:38,40:57),] #remove NA row (hospital)
-s1$randompracID<-
-
+#Add a random practise ID for splitting the data
+Source<-unique(crea.rep$Source[!crea.rep$Source=="salfordt"])
+Source<-Source[c(1:38,40:57)] #remove NA row (hospital)
+s1<-as.data.frame(Source)
+randompracID<-sample(1:56, 56)
+s2<-as.data.frame(randompracID)
+s3<-cbind(s1,s2)
+crea.rep<-merge(crea.rep,s3,all.x=TRUE)
