@@ -25,3 +25,8 @@ table(pats3$Source)
 length(pats3$Source)
 crea.rep<-merge(crea.rep,pats3,all.x=TRUE)
 
+s<-unique(crea.rep$Source[!crea.rep$Source=="salfordt"])
+s1<-as.data.frame(s)
+s1<-s1[c(1:38,40:57),] #remove NA row (hospital)
+s1$randompracID<-
+
