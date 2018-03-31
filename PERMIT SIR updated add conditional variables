@@ -599,21 +599,30 @@ save(crea.rep, file = "crea.repongoing.rda")
  
 ########################################################### 
 #MATERNITY 
+allfiles = list.files(pattern="*1.csv")
+for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
+
 sir.data$Maternity<-ifelse(sir.data$ReadCode  %in%  Maternity1.csv$ReadCode,1,0) 
 smalltab<-sir.data[sir.data$Maternity==1 & sir.data$PatientID %in% crea.select$PatientID,c("PatientID","Maternity","EntryDate")]
 names(smalltab)[3]<-"MatDate1"
+smalltab<-smalltab[smalltab$MatDate1>="2007-01-01",]
 first<-smalltab %>%
    group_by(PatientID) %>%  
       slice(which.min(as.numeric(MatDate1))) %>%
 as.data.frame
 head(first)
 
+#NB THIS IS THE FIRST RECORDED PREGANANCY DATE FOR THE PATIENT'S FIRST POST-2007 BABY, NOT NECESSARILY THE FIRST CHILD.
+
 names(smalltab)[3]<-"MatDate2"
-smalltab<-merge(smalltab,first,all.x=TRUE)
+smalltab<-merge(smalltab[,c(1,3)],first[,c(1,3)],all.x=TRUE)
+
+
+
 smalltab$MatDate2<-as.Date(as.character(smalltab$MatDate2),"%Y%m%d")
 smalltab$MatDate1<-as.Date(as.character(smalltab$MatDate1),"%Y%m%d")
 smalltab$d<-as.numeric(smalltab$MatDate2-smalltab$MatDate1)
-second<-smalltab[smalltab$d>=310,]
+second<-smalltab[smalltab$d>=243,]
 
 s<-second %>%
    group_by(PatientID) %>%  
@@ -626,10 +635,27 @@ smalltab<-unique(smalltab)
 #NOONE IN THIS DATASET HAS>2 CHILDREN.
 load("crea.selectv4.rda")
 crea.select<-merge(crea.select,smalltab,all.x=TRUE)
-crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate1<310,1,0)
-crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate2<310,1,crea.select$EstPregnant)
+crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate1<243,1,0)
+crea.select$EstPregnant<-ifelse(crea.select$event.date-crea.select$MatDate2<243,1,crea.select$EstPregnant)
 
 save(crea.select, file = "crea.selectv5.rda")
+
+
+
+
+
+
+        
+smalltab2<-rbind(tab1,tab2)
+names(smalltab2)[3]<-"MatDate3"   
+smalltab2$MatDate3<-as.Date(as.character(smalltab2$MatDate3),"%Y-%m-%d")
+smalltab2<-smalltab2[smalltab2$MatDate3>="2007-01-01",]
+smalltab2<-merge(smalltab2[,c(1,3)],s,all.x=TRUE)     
+smalltab2<-unique(smalltab2)
+smalltab2$MatDate2<-as.Date(as.character(smalltab$MatDate2),"%Y-%m-%d")
+smalltab2$MatDate3<-as.Date(as.character(smalltab2$MatDate3),"%Y-%m-%d")
+smalltab2$d2<-as.numeric(smalltab2$MatDate3-smalltab2$MatDate2)
+third<-smalltab2[smalltab2$d2>=310,]
 
 #########################################################
 #CODE STOP CODED VARIABLES  
