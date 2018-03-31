@@ -1,8 +1,8 @@
 memory.size<-100000
 load("crea.repv13.rda")
-load("sir.datahfonly.Rdata")
-sir.data<-sir.data[sir.data$ReadCode=="44J3.",]
-sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID,]
+load("sir.datahf2tests.Rdata")
+sir.data<-sir.data[,c(1,2,4,7)]
+sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode=="44J3.",]
 
 prac<-read.csv("PractiseKeySIR.csv")
 pats<-merge(sir.data[,c(1,4,7)],prac,all.x=TRUE)
