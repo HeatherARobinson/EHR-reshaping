@@ -42,3 +42,8 @@ crea.rep$Prehf<-ifelse(crea.rep$TimeSincehf<0,1,0)
 crea.rep$CKDfirst<-ifelse(CKDDate<hfDate,1,0)
 crea.rep$LiverDisease
 crea.rep$Maternity
+
+#Add binary drugs columns- each time creates a new column containing the looped value of k
+for (i in 1:lenth(unique(meddata$DrugName)) {
+    eval(parse(text = paste0('crea.rep$', unique(meddata$DrugName)[i],'<- k'))
+}
