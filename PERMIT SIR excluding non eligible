@@ -35,3 +35,10 @@ s3<-cbind(s1,s2)
 crea.rep<-merge(crea.rep,s3,all.x=TRUE)
 crea.rep$randompracID<-ifelse(crea.rep$Source=="salfordt",0,crea.rep$randompracID)
 save(crea.rep,file="crea.repv14.rda")
+
+#Add contextual variables
+crea.rep$hfDate
+crea.rep$Prehf<-ifelse(crea.rep$TimeSincehf<0,1,0)
+crea.rep$CKDfirst<-ifelse(CKDDate<hfDate,1,0)
+crea.rep$LiverDisease
+crea.rep$Maternity
