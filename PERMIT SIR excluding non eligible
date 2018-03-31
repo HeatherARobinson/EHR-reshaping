@@ -11,11 +11,14 @@ pats<-pats[!pats$Source=="",]
 pats1<-pats[pats$Source=="salfordt",]
 pats1<-pats1[,c(1,2,4)]
 pats2<-pats[!pats$Source=="salfordt",]
+pats2<-pats2[!duplicated(pats2[,c(2,4)],fromLast=TRUE),]
 pats2<-pats2[,c(1,2,4,5,7)]
 colnames(pats2)[1]<-"Source2"
 pats3<-merge(pats1,pats2,all=TRUE)
 pats3$Source2<-ifelse(is.na(pats3$Source2),paste(pats3$Source),paste(pats3$Source2))
 pats3<-pats3[,c(1,2,4:6)]
 colnames(pats3)[3]<-"Source"
-
+pats3<-unique(pats3)
+table(pats3$Source)
+length(pats3$Source)
 
