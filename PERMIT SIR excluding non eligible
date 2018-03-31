@@ -1,6 +1,8 @@
 memory.size<-100000
 load("crea.repv13.rda")
 load("sir.datahf2tests.Rdata")
+
+#ADD ON PRACTISE INFO TO CREA.REP
 sir.data<-sir.data[,c(1,2,4,7)]
 sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode=="44J3.",]
 
@@ -21,4 +23,5 @@ colnames(pats3)[3]<-"Source"
 pats3<-unique(pats3)
 table(pats3$Source)
 length(pats3$Source)
+crea.rep<-merge(crea.rep,pats3,all.x=TRUE)
 
