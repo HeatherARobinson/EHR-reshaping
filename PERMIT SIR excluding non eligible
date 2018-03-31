@@ -5,6 +5,13 @@ sir.data<-sir.data[,c(1,2,4,7)]
 sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode=="44J3.",]
 
 prac<-read.csv("PractiseKeySIR.csv")
-pats<-merge(sir.data[,c(1,4,7)],prac,all.x=TRUE)
-pats<-pats[order(pats$Source),]
-pats<-pats[unique(pats[,c(1,2)]),]
+pats<-merge(sir.data,prac,all.x=TRUE)
+pats<-pats[!is.na(pats$Source),]
+pats<-pats[!pats$Source=="",]
+pats1<-pats[pats$Source=="salfordt",]
+pats1<-pats1[,c(1,2,4)]
+pats2<-pats[!pats$Source=="salfordt",]
+pats2<-pats2[,c(1,2,4,5,7)]
+colnames(pats2)[1]<-"Source2"
+pats3<-merge(pats1,pats2,all=TRUE)
+
