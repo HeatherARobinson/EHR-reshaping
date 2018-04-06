@@ -598,6 +598,34 @@ save(crea.rep, file = "crea.repongoing.rda")
  write.csv(crea.rep,file="crea.repongoing.csv")
  
 ########################################################### 
+
+#CLD
+sir.data$CLDDate<-sir.data$EntryDate 
+sir.data$CLDDate<-ifelse(!sir.data$ReadCode  %in%  Liver1.csv$ReadCode,NA,sir.data$CLDDate) 
+
+smalltab<-sir.data[!is.na(sir.data$CLDDate) & sir.data$PatientID %in% crea.rep$PatientID,c("PatientID","CLDDate")]
+first<-smalltab %>%
+    group_by(PatientID) %>%
+    arrange(CLDDate) %>%
+    slice(1L) %>%
+as.data.frame
+first$CLDDate<-as.Date(as.character(first$CLDDate),format="%Y%m%d")
+head(first)
+ 
+crea.rep<-merge(crea.rep,first,all.x=TRUE)
+crea.rep$event.date<-as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d")
+crea.rep$CLDDate<-as.Date(as.character(crea.rep$CLDDate),format="%Y-%m-%d")
+crea.rep$DaysSinceCLD<-difftime(strptime(crea.rep$CLDDate,format="%Y-%m-%d"),strptime(crea.rep$event.date,format="%Y-%m-%d"),unit="days")
+
+crea.rep$DaysSinceCLD<-as.numeric(crea.rep$DaysSinceCLD, units="days")
+crea.rep$DaysSinceCLD<-ifelse(crea.rep$DaysSinceCLD<0,NA,crea.rep$DaysSinceCLD)
+unique(crea.rep$PatientID[!is.na(crea.rep$CLDDate)])
+ #65 sufferers
+
+crea.rep$CLD<-ifelse(crea.rep$DaysSinceCLD>=0,1,0)
+unique(crea.rep$PatientID[crea.rep$CLD==1]) #41 have post CLD tests considered (0.6%)
+
+##########################################################
 #MATERNITY 
 allfiles = list.files(pattern="*1.csv")
 for (i in 1:length(allfiles)) assign(allfiles[i], read.csv(allfiles[i]))
