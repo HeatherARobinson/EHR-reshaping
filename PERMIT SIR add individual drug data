@@ -1,0 +1,101 @@
+#R COMMANDS
+
+
+library(stringr)
+library(plyr)
+library(lubridate)
+library(dplyr)
+library(tidyr)
+load("crea.repv16.rda")
+load("PERMITmeddata28.rda")
+meddata<-unique(meddata)
+meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
+meddata$FAMILY<-ifelse(meddata$TYPE=="Doxycycline",paste("Antimicrobial"),paste(meddata$FAMILY))
+meddata$FAMILY<-ifelse(meddata$TYPE=="Chloretracycline",paste("Chlortetracycline"),paste(meddata$FAMILY))
+meddata$EntryDate<-as.Date(meddata$EntryDate,format="%d/%m/%Y")
+meddata$END_DATE<-as.Date(meddata$END_DATE,format="%d/%m/%Y")
+
+#LOOP THROUGH DRUGS
+meddata$TYPE<-ifelse(meddata$TYPE=="Hydrochlorothiazide",paste("Hydrochlorthiazide"),paste(meddata$TYPE))
+
+for (z in (61:length(unique(meddata$TYPE))) ){
+for (z in (34:length(unique(meddata$TYPE))) ){
+p<-meddata[meddata$TYPE==unique(meddata$TYPE)[z],c("PatientID","TYPE","EntryDate","DAILY_DOSE","END_DATE")]
+smalltab<-crea.rep[crea.rep$PatientID %in% p$PatientID,c("PatientID","event.date")]
+#smalltab is a list of all of the creatinine tests
+#p is a list of all of the prescriptions of the 1 type
+
+p<-p[order(p$EntryDate,decreasing = TRUE), ]
+#checked
+
+#LOOP THROUGH PATIENTS WITH THOSE PRESCRIPTIONS
+#SELECT ALL CREATININE TESTS IN COMPARISON WINDOW
+
+for (i in 1:length(smalltab$event.date)){
+N<-p[p$PatientID==smalltab$PatientID[i],]
+N$event.date<-smalltab$event.date[i]
+N<-N[N$EntryDate<=smalltab$event.date[i] & N$END_DATE>=smalltab$event.date[i],c("PatientID","TYPE","DAILY_DOSE","event.date")]
+N<-N[!(duplicated(N[c(1,4)])),]
+N<-N[!is.na(N$PatientID),]
+
+#REMOVE DUPLICATE ROWS PER PATIENT PER DATE (KEEP MOST RECENT DOSAGE)
+
+#ADD COLUMN HEADERS
+#REMOVE UNWANTED COLUMNS
+
+write.table(N,file=paste0(unique(meddata$TYPE)[z],'Np'),append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") 
+}}
+
+#MANUALLY DELETE ANY NX FILES WITH A SIZE OF 0KB (NO LINES)
+#READ EACH TABLE AND MERGE ON TO CREA.REP
+
+allfiles<-list.files(pattern="*NX")
+
+for (a in 1:length(allfiles)) {
+       
+  # if the merged dataset doesn't exist, create it
+  if (!exists("dataset")){
+    dataset <- read.csv(allfiles[a], header=FALSE)
+colnames(dataset) <-c("PatientID","TYPE",paste0(allfiles[a],'_dos',sep=""),"event.date")
+dataset$event.date<-as.Date(dataset$event.date,format="%Y-%m-%d")
+dataset$PatientID<-as.character(dataset$PatientID)
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("dataset")){
+    temp_dataset <-read.csv(allfiles[a], header=FALSE)
+colnames(temp_dataset) <-c("PatientID","TYPE",paste0(allfiles[a],'_dos',sep=""),"event.date")
+temp_dataset$event.date<-as.Date(temp_dataset$event.date,format="%Y-%m-%d")
+temp_dataset$PatientID<-as.character(temp_dataset$PatientID)
+    dataset<-merge(dataset, temp_dataset,all=TRUE)
+    rm(temp_dataset)
+  }
+ }
+
+crea.rep<-merge(crea.rep,dataset[,c(1,3:77)],all.x=TRUE)
+
+
+for (a in 1:length(allfiles)) {
+       
+  # if the merged dataset2 doesn't exist, create it
+  if (!exists("dataset2")){
+    dataset2 <- read.csv(allfiles[a], header=FALSE)
+colnames(dataset2) <-c("PatientID","TYPE",paste0(allfiles[a],'_yn',sep=""),"event.date")
+dataset2$event.date<-as.Date(dataset2$event.date,format="%Y-%m-%d")
+dataset2$PatientID<-as.character(dataset2$PatientID)
+dataset2[3]<-as.factor(ifelse(!is.na(dataset2[3]),1,0))
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("dataset2")){
+    temp_dataset2 <-read.csv(allfiles[a], header=FALSE)
+colnames(temp_dataset2) <-c("PatientID","TYPE",paste0(allfiles[a],'_yn',sep=""),"event.date")
+temp_dataset2$event.date<-as.Date(temp_dataset2$event.date,format="%Y-%m-%d")
+temp_dataset2$PatientID<-as.character(temp_dataset2$PatientID)
+temp_dataset2[3]<-as.factor(ifelse(!is.na(temp_dataset2[3]),1,0))
+    dataset2<-merge(dataset2, temp_dataset2,all=TRUE)
+    rm(temp_dataset2)
+  }
+ }
+
+crea.rep<-merge(crea.rep,dataset[,c(1,3:77)
