@@ -1,11 +1,9 @@
 #R COMMANDS
 
 
-library(stringr)
 library(plyr)
 library(lubridate)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 load("crea.repv16.rda")
 load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
