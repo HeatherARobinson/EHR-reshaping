@@ -109,4 +109,8 @@ head(d2)
 
 d<-merge(d1,d2,all=TRUE)
 
+#NB IF YOU RECEIVE ERROR MESSAGES AFTER THE LOOPS, CHECK THAT OLD VERSIONS OF dataset1,dataset2,d1 
+#AND d2 ARE NOT PERSISTENT IN THE ENVIRONMENT.
+#IF THIS IS THE CASE, REMOVE WITH rm()
+
 crea.rep<-merge(crea.rep,d,all.x=TRUE)
