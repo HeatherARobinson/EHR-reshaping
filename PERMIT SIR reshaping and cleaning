@@ -1,10 +1,11 @@
-memory.size(100000)
-load ("sir.data.rda") #Taking the long format input file
-load("small.rda") #This is the demographic data from he processed sir.data.rda, 
+memory.size(100000) #Assign sufficient memory to R
+load ("sir.data.rda") #Long format input file
+
+#load("small.rda") #This is the demographic data from he processed sir.data.rda, 
 #comprising PatientID, Gender, BirthDate and LSOA
-small<-unique(small)
-sir.data<-merge(sir.data,small,all.x=TRUE)
-save(sir.data,file="sirdata.rda")
+#small<-unique(small)
+#sir.data<-merge(sir.data,small,all.x=TRUE)
+#save(sir.data,file="sirdata.rda")
 #load("sirdata.rda")
 
 library(zoo)
@@ -15,14 +16,14 @@ library(data.table)
 library(survival)
 library(lubridate)
 
-#READ CONDITION FILES- SUFFIX ALL NAMES WITH A 1 THEN YOU CAN IMPORT THEM ALL TOGETHER
+#READ CONDITION FILES- suffix names with a common suffix to import together
 temp = list.files(pattern="*1.csv")
 for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
 
 #######################################################################################
-#SELECT PATIENTS WHO WERE 18 OR ABOVE AT THE TIME OF HEART FAILURE DIAGNOSIS
-hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,]
-length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
+#SELECT PATIENTS 18 OR ABOVE AT HEART FAILURE DIAGNOSIS
+hf<-sir.data[sir.data$ReadCode %in% HeartFailure1.csv$ReadCode,] #Create subset of HF patients
+#length(unique(as.factor(hf$PatientID))) #7254 total heart failure patients identified with confirmed Read Codes (V2)
 hf$Age<-(as.numeric(year(strptime(hf$EntryDate, format="%Y%m%d"))))-hf$BirthYear
 hf$hfage<-hf$Age
 smalltab<-hf[,c("PatientID","hfage")]
@@ -35,46 +36,36 @@ head(first)
 sir.data<-merge(sir.data[sir.data$PatientID %in% hf$PatientID,],as.data.frame(first),all.x=TRUE)
 sir.data<-sir.data[sir.data$hfage>=18,]
 
-length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
-save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
+#length(unique(as.factor(sir.data$PatientID))) #7208  hf patients who were 18 or over at first diagnosis
+#save(sir.data,file="sirdatahfonly.rda") #full patient records from all adult hf patients from all years
 
 ####################################################################################
 #COHORT SELECTION
-#REMOVE DIALYSIS PATIENTS
-#dialysis<-sir.data[sir.data$ReadCode %in% Dialysis1.csv$ReadCode,]
-#levels(as.factor(dialysis$PatientID)) #79 dialysis patients will be removed
-
-#or mark dialysis patients
-
-    
 #SELECT PATIENTS WITH CREATININE DATA
 sir.data[sir.data$ReadCode=="44J3.",]->crea 
 crea <- droplevels(crea)
-#crea<-crea[!crea$PatientID %in% dialysis$PatientID,]
 
 #CHECK FOR CASES WHERE A VIABLE VALUE IS ENTERED IN THE UNITS COLUMN BY MISTAKE
 temp<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 & as.numeric(as.character(crea$CodeUnits))<1000  & !is.na(crea$CodeValue),crea$CodeUnits,NA)
 table(temp) # 51 records affected, but most not viable values
-crea$CodeValue<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 
-& as.numeric(as.character(crea$CodeUnits))<1000  
-& is.na(crea$CodeValue),crea$CodeUnits,crea$CodeValue)
+crea$CodeValue<-ifelse(as.numeric(as.character(crea$CodeUnits))>0 & 
+as.numeric(as.character(crea$CodeUnits))<1000 & 
+is.na(crea$CodeValue),crea$CodeUnits,crea$CodeValue)
 crea$CodeUnits<-ifelse(!is.na(temp),paste(""),paste(crea$CodeUnits))
 crea$CodeValue<-as.numeric(as.character(crea$CodeValue))
 crea<-crea[!is.na(crea$CodeValue),]
-summary(crea$CodeValue)
 
-length(unique(as.factor(crea$PatientID))) #6971 hf patients over 18 at diagnosis with creatinine data
+#length(unique(as.factor(crea$PatientID))) #6971 hf patients over 18 at diagnosis with creatinine data
 
 
 ###########################################################################
 #SENSITIVITY TESTS
 #HOW MANY ZERO CR VALUES AND HOW MANY CR VALUES UNDER 20
-lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] #21727
-length(lowcr$PatientID)
-#ARE THESE FROM OLD ASSAY?
-levels(as.factor(lowcr$PatientID)) #4121 patients are affected
+lowcr<-crea[crea$CodeValue<18 & !is.na(crea$CodeValue),] 
+#length(lowcr$PatientID)#21727
+levels(as.factor(lowcr$PatientID)) 
 table(lowcr$CodeValue)
-#471 are zero values
+#4121 patients are affected, 471 are zero values
 
 crea<-crea[crea$CodeValue>0,]
 lowcr<-crea[crea$CodeValue<18,] 
