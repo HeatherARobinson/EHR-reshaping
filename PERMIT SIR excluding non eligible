@@ -3,9 +3,6 @@ load("crea.repv13.rda")
 load("sir.datahf2tests.Rdata")
 
 #ADD ON PRACTISE INFO TO CREA.REP
-sir.data<-sir.data[,c(1,2,4,7)]
-sir.data<-sir.data[sir.data$PatientID %in% crea.rep$PatientID & sir.data$ReadCode=="44J3.",]
-
 prac<-read.csv("PractiseKeySIR.csv")
 pats<-merge(sir.data,prac,all.x=TRUE)
 pats<-pats[!is.na(pats$Source),]
@@ -34,16 +31,5 @@ s2<-as.data.frame(randompracID)
 s3<-cbind(s1,s2)
 crea.rep<-merge(crea.rep,s3,all.x=TRUE)
 crea.rep$randompracID<-ifelse(crea.rep$Source=="salfordt",0,crea.rep$randompracID)
-save(crea.rep,file="crea.repv14.rda")
 
-#Add contextual variables
-crea.rep$hfDate
-crea.rep$Prehf<-ifelse(crea.rep$TimeSincehf<0,1,0)
-crea.rep$CKDfirst<-ifelse(CKDDate<hfDate,1,0)
-crea.rep$LiverDisease
-crea.rep$Maternity
-
-#Add binary drugs columns- each time creates a new column containing the looped value of k
-for (i in 1:lenth(unique(meddata$DrugName)) {
-    eval(parse(text = paste0('crea.rep$', unique(meddata$DrugName)[i],'<- k'))
-}
+#save(crea.rep,file="crea.repv14.rda")
