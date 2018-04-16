@@ -1,4 +1,6 @@
 Prior preprocesing: In excel, removed # symbols, removed start tabs from indented rows and edited rows with value in units column.
+#Remove codes 443J1,443J2,443J200,44J3z00 which do not contain numeric data
+
 
 setwd("c:/Users/mqbpjhr4/Documents")
 Patients<-read.table("Patients.csv",header=TRUE, sep=",")
@@ -10,19 +12,19 @@ attach(SIR)
 Over<-subset(SIR,SIR$Age>15 & as.numeric(year(strptime(SIR$EntryDate, format="%d/%m/%Y")))>=2009,)
 Over$location<- ifelse(Over$Source=="salfordt", c("Hospital"),("GP"))
 attach(Over)
-levels(ReadCode)
+levels(Over$ReadCode)
 #Group redundant read codes/rubrics
 levels(Over$ReadCode)[1:23] <- "dialysisorckd"
-levels(Over$ReadCode)[3:6] <- "eGFR"
-levels(Over$ReadCode)[4:7] <- "transplant"
+levels(Over$ReadCode)[3:7] <- "eGFR"
+levels(Over$ReadCode)[4:5] <- "transplant"
 levels(Over$ReadCode)[2] <- "creatinine"
-levels(Over$ReadCode)[5:13] <- "dialysisorckd"
+levels(Over$ReadCode)[5:12] <- "dialysisorckd"
 table(Over$ReadCode)
 attach(Over)
 #Drop all records entered after commencement of dialysis/transplant
 Over$endpoint<-with(Over, ifelse(ReadCode=="dialysisorckd",paste(EntryDate), "NA"))
 Over$endpoint<-with(Over, ifelse(ReadCode=="transplant",paste(EntryDate), paste(endpoint)))
-table(Over$EntryDate)
+
 Over$date_diff <- ifelse(!is.na(Over$endpoint), 
 (as.Date
 (as.character(Over$endpoint), format="%Y/%m/%d")-as.Date(as.character(Over$EntryDate), format="%d/%m/%Y")
@@ -36,32 +38,41 @@ Over<-Over[is.na(Over$date_diff), ]
 table(Over$Units)
 levels(Over$Units)
 
-levels(Over$Units)[1]<-"umolOL"
-levels(Over$Units)[18:27]<-“mLmin173m2”
+head(Over[Over$Units=="%",])
+levels(Over$Units)[1]<-"mLmin173m2"
+levels(Over$Units)[13:22]<-"mLmin173m2"
+
+table(Over$Units)
+
+tail(Over[Over$Units=="/min",])
+levels(Over$Units)[4]<-"mLmin173m2"
+levels(Over$Units)[8]<-"mLmin173m2"
+table(Over$Units)
+
+unique(Over$Desc[Over$Units=="/mL"])
+levels(Over$Units)[4]<-"mLmin173m2"
+levels(Over$Units)[7]<-"umol/L"
+
 table(Over$ReadCode,Over$Units)
-Over$stcreat<- ifelse(Over$Units=="umolOL"| Over$Units=="None",Over$Value,(Over$Value/1000)) 
+Over$stcreat<- ifelse(Over$Units=="umol/L"| Over$Units=="None",Over$Value,(Over$Value/1000)) 
 Over$stcreat<- ifelse(Over$ReadCode=="creatinine",paste(Over$stcreat), paste("NA")) 
 
-levels(Over$Units)[1]<-"mLmin173m2"
-levels(Over$Units)[14]<-"mLmin173m2"
-levels(Over$Units)[17:26]<-"mLmin173m2"
-levels(Over$Units)[18]<-"mLmin173m2"
-levels(Over$Units)[19:20]<-"mLmin173m2"
-levels(Over$Units)[19:20]<-"mLmin173m2"
-levels(Over$Units)[15]<-"mLmin173m2"
-levels(Over$Units)[17]<-"mLmin173m2"
-Over$mdrd<- ifelse(Over$Units=="mLmin173m2",paste(Over$Value),paste(Over$value/1440)) 
+Over$mdrd<- ifelse(Over$Units=="mLmin173m2"| Over$Units=="None",paste(Over$Value),paste(Over$value/1440)) 
 Over$mdrd<- ifelse(Over$ReadCode=="eGFR",paste(Over$mdrd), paste("NA"))
+
+#Check for and delete delayed duplicates
 class(EntryDate)
 Over$EntryDate<-as.Date(Over$EntryDate, format="%d/%m/%Y")
 MONTH<- format(Over$EntryDate, "%m")
 YEAR<- format(Over$EntryDate, "%Y")
 Over$EntryPeriod<-paste(MONTH,YEAR)
-#Delete duplicate test results
-library(lubridate)
-which(Over[!(duplicated(Over$stcreat)&duplicated(Over$PatID)&Over$mdrd=="NA"&duplicated(Over$EntryPeriod)),])
 
+library(lubridate)
 d<-Over[!(duplicated(Over$Value)&duplicated(Over$PatID)&duplicated(Over$EntryPeriod)),]
+d2<-subset(d,d$ReadCode=="creatinine",)
+e<-Over[!(duplicated(Over$Value)&duplicated(Over$PatID)),]
+e2<-subset(e,d$ReadCode=="creatinine",)
+
 df<-subset(d,d$Sex=="F"&d$ReadCode=="creatinine",)
 
 #Write an input file for STATA with headings complementary Aberdeen algorithm 
