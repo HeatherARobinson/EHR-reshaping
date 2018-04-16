@@ -29,7 +29,7 @@ drops<-Over[which(Over$date_diff <0), ]
 Over<-Over[!drops,]
 
 
-#This gives you ‘data’, a subset of records for patients before CKD, transplant or dialysis
+#This gives you a subset of records for patients before CKD, transplant or dialysis
 
 #Check which units have been used to measure Creatinine and convert #from mg/dL to umol/L if needed
 levels(Over$Units)
