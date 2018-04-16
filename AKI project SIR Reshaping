@@ -1,3 +1,5 @@
+Prior preprocesing: In excel, removed # symbols, removed start tabs from indented rows and edited rows with value in units column.
+
 setwd("c:/Users/mqbpjhr4/Documents")
 Patients<-read.table("Patients.csv",header=TRUE, sep=",")
 tests<-read.table("tests.csv",header=TRUE,sep= ",")
@@ -21,19 +23,20 @@ attach(Over)
 Over$endpoint<-with(Over, ifelse(ReadCode=="dialysisorckd",paste(EntryDate), "NA"))
 Over$endpoint<-with(Over, ifelse(ReadCode=="transplant",paste(EntryDate), paste(endpoint)))
 table(Over$EntryDate)
-date_diff <- ifelse(!is.na(Over$endpoint), 
+Over$date_diff <- ifelse(!is.na(Over$endpoint), 
 (as.Date
 (as.character(Over$endpoint), format="%Y/%m/%d")-as.Date(as.character(Over$EntryDate), format="%d/%m/%Y")
 ), print("NA"))
-drops<-Over[which(Over$date_diff <0), ]
-Over<-Over[!drops,]
-
+Over<-Over[is.na(Over$date_diff), ]
+#date_diff is never more than 0 in this dataset
 
 #This gives you a subset of records for patients before CKD, transplant or dialysis
 
 #Check which units have been used to measure Creatinine and convert #from mg/dL to umol/L if needed
+table(Over$Units)
 levels(Over$Units)
-levels(Over$Units)[15]<-"umolOL"
+
+levels(Over$Units)[1]<-"umolOL"
 levels(Over$Units)[18:27]<-“mLmin173m2”
 table(Over$ReadCode,Over$Units)
 Over$stcreat<- ifelse(Over$Units=="umolOL"| Over$Units=="None",Over$Value,(Over$Value/1000)) 
