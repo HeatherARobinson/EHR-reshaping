@@ -1,15 +1,12 @@
-#THE FOLLOWING CODE DIFFERS FROM THAT LISTED IN PERMIT FORMULA VARIABLES
-#CKD IS STAGED BASED ON MAINTENANCE OF EACH EGFR LEVEL FOR A MINIMUM OF 3 MONTHS
-#CKD IS BASED ON CKD-EPI
+#CKD IS STAGED HERE BASED ON MAINTENANCE OF EACH EGFR LEVEL FOR A MINIMUM OF 3 MONTHS
+#CKD HAS BEEN DERIVED HERE FROM CKD-EPI EGFR
 
-load("crea.repv12.rda")
-load ("sir.data.rda") #Taking the long format input file
+load("crea.repv12.rda") #table featuring 1 row per patient per day with maximum creatinine retained
+load ("sir.data.rda") #long format input file with 1 row per event entry
 
-####
-#CKD
 #Reduce dataset to individuals eligible for CKD and AKI staging before looping;
-#Identify potential creatinine based CKD patients (anyone with an egfr<60)
-#and find the first qualifying test for each patient
+#Identify potential creatinine based CKD patients (individuals with any egfr<60)
+#Isolate the first qualifying test for each patient
 
 crea.rep$KDmarkE<-ifelse(!is.na(crea.rep$CKDEPIeGFR) & crea.rep$CKDEPIeGFR<60,1,0)
 CKsE<-crea.rep[crea.rep$KDmarkE==1,c("PatientID","EntryDate","KDmarkE")] #Kidney Injury flagged tests
@@ -74,7 +71,7 @@ crea.rep<-merge(crea.rep,CKs,all.x=TRUE)
 crea.rep$TimeSinceCKD<-difftime(as.Date(as.character(crea.rep$EntryDate),format="%Y%m%d"),crea.rep$CKDG_Date,unit="days")
 ########################################################################################################
 
-#Incorporate UAC data if available:
+#Incorporate Urine Albumin to creatinine ratio data if available:
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio<3,1,0)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>=3&crea.rep$UACratio<30&!crea.rep$CKDGStage=="0",2,crea.rep$CKDAStage)
 crea.rep$CKDAStage<-ifelse(crea.rep$UACratio>30&!crea.rep$CKDGStage=="0",3,crea.rep$CKDAStage)
@@ -89,7 +86,7 @@ crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3.5 & crea.rep$CKDAStage==1,2,
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==1,1,crea.rep$CKDPrognosis)
 crea.rep$CKDPrognosis<-ifelse(crea.rep$CKDGStage==3 & crea.rep$CKDAStage==2,2,crea.rep$CKDPrognosis)
 
-#Where CKD diagnosed based on creatinine, add metric for summarised eGFR range
+#Where CKD diagnosed based on creatinine, add metric for summarised eGFR range for further phenotyping
 crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
 crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 & crea.rep$MDRDeGFR>=60 & crea.rep$MDRDeGFR<90,1,NA)
 crea.rep$CustomeGFR<-ifelse(crea.rep$CKDPrognosis>0 &crea.rep$MDRDeGFR>=45 & crea.rep$MDRDeGFR<60,2,crea.rep$CustomeGFR)
