@@ -5,7 +5,11 @@ crea.rep$PP<-crea.rep$SBP-crea.rep$DBP
 crea.rep$HTN<-ifelse(crea.rep$SBP>140|crea.rep$DBP>90,1,0)
 crea.rep$HTN<-ifelse(is.na(crea.rep$HTN),0,crea.rep$HTN)
 crea.rep$Gender<-ifelse(crea.rep$Gender==1,paste("M"),paste(crea.rep$Gender))
-rea.rep$Gender<-ifelse(crea.rep$Gender=="2",paste("F"),paste(crea.rep$Gender))
+crea.rep$Gender<-ifelse(crea.rep$Gender=="2",paste("F"),paste(crea.rep$Gender))
+crea.rep$Prehf<-ifelse(crea.rep$hfdate>crea.rep$event.date,1,0)
+crea.rep$TimeSincehf<-difftime(strptime(crea.rep$hfdate,format="%Y-%m-%d"),strptime(crea.rep$event.date,format="%Y-%m-%d"),unit="days")
+
+
 crea.rep$Anaemia<-ifelse(!is.na(crea.rep$Haemoglobin)&((crea.rep$Gender=="M" & crea.rep$Haemoglobin<130)|(crea.rep$Gender== "F" & crea.rep$Haemoglobin<115)),1,0)
 crea.rep$CKD<-ifelse(!is.na(crea.rep$CKDGStage)&!crea.rep$CKDGStage==0,1,NA)
 crea.rep$CKD<-ifelse(crea.rep$CKDAStage>1,1,crea.rep$CKD)
@@ -230,16 +234,14 @@ crea.rep<-merge(crea.rep,first,all.x=TRUE)
 crea.rep$Creatinine6M<-unlist(crea.rep$Creatinine6M)
 
 ################################################################################
-#crea.rep$RateRenChange #Rate of renal change- DUNJA WILL CODE
-###################################################################################
-#crea.rep$AKIepisodes<- #no. past AKI episodes- SEE ADDITIONAL FILE FOR NHS ALGORITHM
-###################################################################################
-#crea.rep$WorsRenFail<- Worsening renal failure- DUNJA WILL CODE
 
+#CREATE VARIABLES WITH OUT OF ACCEPTABLE DATE RANGE ENTRIES REMOVED
 
 crea.rep$BirthYear<-(as.numeric(year(strptime(crea.rep$event.date, format="%Y-%m-%d"))))-crea.rep$Age
 crea.rep$BMI_DF<-ifelse(!is.na(crea.rep$BMI)& !crea.rep$BMIDateFlag==1,crea.rep$BMI,NA)
 crea.rep$BUN_DF<-ifelse(!is.na(crea.rep$BUN)& !crea.rep$BUNDateFlag==1,crea.rep$BUN,NA)
+crea.rep$BNP_DF<-ifelse(!is.na(crea.rep$BNP)& !crea.rep$BNPDateFlag==1,crea.rep$BNP,NA)
+crea.rep$NTPROBNP_DF<-ifelse(!is.na(crea.rep$NTPROBNP)& !crea.rep$NTPROBNPDateFlag==1,crea.rep$NTPROBNP,NA)
 crea.rep$DBP_DF<-ifelse(!is.na(crea.rep$DBP)& !crea.rep$DBPDateFlag==1,crea.rep$DBP,NA)
 crea.rep$SBP_DF<-ifelse(!is.na(crea.rep$SBP)& !crea.rep$SBPDateFlag==1,crea.rep$SBP,NA)
 crea.rep$Haemoglobin_DF<-ifelse(!is.na(crea.rep$Haemoglobin)& !crea.rep$HaemoglobinDateFlag==1,crea.rep$Haemoglobin,NA)
@@ -250,7 +252,7 @@ crea.rep$SerSodium_DF<-ifelse(!is.na(crea.rep$SerumSodium)& !crea.rep$SerSodDate
 crea.rep$SerumAlbumin_DF<-ifelse(!is.na(crea.rep$SerumAlbumin)& !crea.rep$SADateFlag==1,crea.rep$SerumAlbumin,NA)
 crea.rep$UACratio_DF<-ifelse(!is.na(crea.rep$UACratio)& !crea.rep$UACDateFlag==1,crea.rep$UACratio,NA)
 crea.rep$UrineAlbumin_DF<-ifelse(!is.na(crea.rep$UrineAlbumin)& !crea.rep$UADateFlag==1,crea.rep$UrineAlbumin,NA)
-
+crea.rep$UricAcid_DF<-ifelse(!is.na(crea.rep$UricAcid)& !crea.rep$UricAcidDateFlag==1,crea.rep$UricAcid,NA)
 #########################################################################################
 CPRD2$temp<-ifelse(CPRD2$medcode %in% UACR1.csv$medcode,as.numeric(paste(CPRD2$data1)),NA)
 unique(sir.data$CodeUnits[sir.data$ReadCode %in% UACR1.csv$ReadCode])
