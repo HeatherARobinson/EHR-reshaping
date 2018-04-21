@@ -1,10 +1,9 @@
 #R COMMANDS
 
-
 library(plyr)
 library(lubridate)
 library(tidyverse)
-load("crea.repv16.rda")
+load("crea.repv19.rda")
 load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
@@ -54,7 +53,8 @@ for (a in 1:length(allfiles)) {
   # if the merged dataset doesn't exist, create it
   if (!exists("dataset")){
     dataset <- read.csv(allfiles[a], header=FALSE)
-colnames(dataset) <-c("PatientID","TYPE",paste0(allfiles[a],'_dos',sep=""),"event.date")
+    dataset <-dataset[,c(1,3,4)]
+colnames(dataset) <-c("PatientID",paste0(allfiles[a],'_dos',sep=""),"event.date")
 dataset$event.date<-as.Date(dataset$event.date,format="%Y-%m-%d")
 dataset$PatientID<-as.character(dataset$PatientID)
 dataset[3]<-ifelse(is.na(dataset[3]),0,dataset[3])
@@ -63,8 +63,8 @@ dataset[3]<-ifelse(is.na(dataset[3]),0,dataset[3])
   # if the merged dataset does exist, append to it
   if (exists("dataset")){
     temp_dataset <-read.csv(allfiles[a], header=FALSE)
-colnames(temp_dataset) <-c("PatientID","TYPE",paste0(allfiles[a],'_dos',sep=""),"event.date")
-temp_dataset$event.date<-as.Date(temp_dataset$event.date,format="%Y-%m-%d")
+    temp_dataset <-temp_dataset[,c(1,3,4)]
+colnames(temp_dataset) <-c("PatientID",paste0(allfiles[a],'_dos',sep=""),"event.date")
 temp_dataset$PatientID<-as.character(temp_dataset$PatientID)
 temp_dataset<-temp_dataset[!is.na(temp_dataset[3]),]
 temp_dataset[3]<-ifelse(is.na(temp_dataset[3]),0,temp_dataset[3])
@@ -73,9 +73,11 @@ dataset<-merge(dataset, temp_dataset,all=TRUE)
     rm(temp_dataset)
   }
  }
-dataset<-dataset[,c(1,3:77)]
-d1<-dataset %>% group_by(PatientID,event.date) %>% summarise_all(funs(max))
+ dataset$event.date<-as.Date(dataset$event.date,origin="1970-01-01")
+
+#d1<-dataset %>% group_by(PatientID,event.date) %>% summarise_all(funs(max))
 d1<-as.data.frame(d1)
+
 crea.rep<-merge(crea.rep,d1,all.x=TRUE)
 
 
@@ -84,7 +86,8 @@ for (a in 1:length(allfiles)) {
   # if the merged dataset2 doesn't exist, create it
   if (!exists("dataset2")){
     dataset2 <- read.csv(allfiles[a], header=FALSE)
-colnames(dataset2) <-c("PatientID","TYPE",paste0(allfiles[a],'_yn',sep=""),"event.date")
+    dataset2 <-dataset2[,c(1,3,4)]
+colnames(dataset2) <-c("PatientID",paste0(allfiles[a],'_yn',sep=""),"event.date")
 dataset2$event.date<-as.Date(dataset2$event.date,format="%Y-%m-%d")
 dataset2$PatientID<-as.character(dataset2$PatientID)
 dataset2[3]<-ifelse(is.na(dataset2[3]),0,dataset2[3])
@@ -93,7 +96,8 @@ dataset2[3]<-ifelse(is.na(dataset2[3]),0,dataset2[3])
   # if the merged dataset does exist, append to it
   if (exists("dataset2")){
     temp_dataset2 <-read.csv(allfiles[a], header=FALSE)
-colnames(temp_dataset2) <-c("PatientID","TYPE",paste0(allfiles[a],'_yn',sep=""),"event.date")
+    temp_dataset2 <-temp_dataset2[,c(1,3,4)]
+colnames(temp_dataset2) <-c("PatientID",paste0(allfiles[a],'_yn',sep=""),"event.date")
 temp_dataset2$event.date<-as.Date(temp_dataset2$event.date,format="%Y-%m-%d")
 temp_dataset2$PatientID<-as.character(temp_dataset2$PatientID)
 temp_dataset2[3]<-ifelse(!is.na(temp_dataset2[3]),1,0)
@@ -101,7 +105,6 @@ temp_dataset2[3]<-ifelse(!is.na(temp_dataset2[3]),1,0)
     rm(temp_dataset2)
   }
 }
- dataset2<-dataset2[,c(1,3:77)]
 
 d2<-dataset2 %>% group_by(PatientID,event.date) %>% summarise_all(funs(max))
 d2<-as.data.frame(d2)
