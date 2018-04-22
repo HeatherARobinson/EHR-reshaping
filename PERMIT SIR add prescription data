@@ -58,10 +58,14 @@ NSAIDlist[!NSAIDlist %in% old$NSAIDdesc]
 
 NS2<-read.csv("NSAIDlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
+NS$PatientID<-as.factor(NS$PatientID)
+crea.rep$PatientID<-as.factor(crea.rep$PatientID)
 NS<-NS[,c("NSAIDs","PatientID","event.date")]
+names(NS)<-c("NSAIDs_CAT","PatientID","event.date")
+NS$event.date<-as.Date(NS$event.date,format="%Y-%d-%m")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$NSAIDs<-ifelse(is.na(crea.rep$NSAIDs),0,crea.rep$NSAIDs)
-
+crea.rep$NSAIDs_CAT<-ifelse(is.na(crea.rep$NSAIDs_CAT),paste("0"),paste(crea.rep$NSAIDs_CAT))
 #####################################################################################################CHECKED
 #Angiotensin Receptor Blockers
 ARB<-meddata[meddata$FAMILY=="ARBs",]
@@ -99,8 +103,11 @@ ARBlist<-NS[!duplicated(NS$ARBdesc),c("ARBdesc")]
 NS2<-read.csv("ARBlist0603.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ARBs","PatientID","event.date")]
+names(NS)<-c("ARBs_CAT","PatientID","event.date")
+NS$PatientID<-as.factor(NS$PatientID)
+NS$event.date<-as.Date(NS$event.date,format="%Y-%d-%m")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE) 
-crea.rep$ARBs<-ifelse(is.na(crea.rep$ARBs),0,crea.rep$ARBs)
+crea.rep$ARBs_CAT<-ifelse(is.na(crea.rep$ARBs_CAT),paste("0"),paste(crea.rep$ARBs_CAT))
 #################################################################################################CHECKED
 #ALDOSTERONE ANTAGONISTS
 AA<-meddata[meddata$FAMILY=="ALD_ANT",]
