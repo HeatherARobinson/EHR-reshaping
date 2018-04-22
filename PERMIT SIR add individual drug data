@@ -60,7 +60,6 @@ dataset$yn<-1
 names(dataset)[4]<-paste0(allfiles[a],'_yn',sep="")
 dataset$event.date<-as.Date(dataset$event.date,format="%Y-%m-%d")
 dataset$PatientID<-as.character(dataset$PatientID)
-dataset<-dataset[!is.na(dataset[2]),]
 }  
   
 
@@ -75,8 +74,6 @@ dataset<-dataset[!is.na(dataset[2]),]
     names(temp_dataset)[4]<-paste0(allfiles[a],'_yn',sep="")
 temp_dataset$event.date<-as.Date(temp_dataset$event.date,format="%Y-%m-%d")
 temp_dataset$PatientID<-as.character(temp_dataset$PatientID)
-temp_dataset<-temp_dataset[!is.na(temp_dataset[2]),]
-
 dataset<-merge(dataset, temp_dataset,all=TRUE)
     rm(temp_dataset)
   }
