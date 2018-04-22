@@ -62,8 +62,7 @@ dataset$event.date<-as.Date(dataset$event.date,format="%Y-%m-%d")
 dataset$PatientID<-as.character(dataset$PatientID)
 }  
   
-
-   
+  
   # if the merged dataset does exist, append to it
   if (exists("dataset")){
     temp_dataset <-read.csv(allfiles[a], header=FALSE)
@@ -78,46 +77,10 @@ dataset<-merge(dataset, temp_dataset,all=TRUE)
     rm(temp_dataset)
   }
  }
- dataset$event.date<-as.Date(dataset$event.date,origin="1970-01-01")
-d1<-dataset %>% group_by(PatientID,event.date) %>% summarise_all(funs(max))
-d1<-as.data.frame(d1)
-
+ d1<-as.data.frame(dataset)
 crea.rep<-merge(crea.rep,d1,all.x=TRUE)
 
 
-for (a in 1:length(allfiles)) {
-       
-  # if the merged dataset2 doesn't exist, create it
-  if (!exists("dataset2")){
-    dataset2 <- read.csv(allfiles[a], header=FALSE)
-    dataset2 <-dataset2[,c(1,3,4)]
-colnames(dataset2) <-c("PatientID",paste0(allfiles[a],'_yn',sep=""),"event.date")
-dataset2$event.date<-as.Date(dataset2$event.date,format="%Y-%m-%d")
-dataset2$PatientID<-as.character(dataset2$PatientID)
-dataset2[3]<-ifelse(is.na(dataset2[3]),0,dataset2[3])
-  }
-   
-  # if the merged dataset does exist, append to it
-  if (exists("dataset2")){
-    temp_dataset2 <-read.csv(allfiles[a], header=FALSE)
-    temp_dataset2 <-temp_dataset2[,c(1,3,4)]
-colnames(temp_dataset2) <-c("PatientID",paste0(allfiles[a],'_yn',sep=""),"event.date")
-temp_dataset2$event.date<-as.Date(temp_dataset2$event.date,format="%Y-%m-%d")
-temp_dataset2$PatientID<-as.character(temp_dataset2$PatientID)
-temp_dataset2[3]<-ifelse(!is.na(temp_dataset2[3]),1,0)
-    dataset2<-merge(dataset2, temp_dataset2,all=TRUE)
-    rm(temp_dataset2)
-  }
-}
-dataset2$event.date<-as.Date(dataset$event.date,origin="1970-01-01")
-
-d2<-as.data.frame(dataset2)
-head(d2)
-
-d<-merge(d1,d2,all=TRUE)
-
-#NB IF YOU RECEIVE ERROR MESSAGES AFTER THE LOOPS, CHECK THAT OLD VERSIONS OF dataset1,dataset2,d1 
-#AND d2 ARE NOT PERSISTENT IN THE ENVIRONMENT.
+#NB IF YOU RECEIVE ERROR MESSAGES AFTER THE LOOPS, CHECK THAT OLD VERSIONS OF dataset OR d1 
+#ARE NOT PERSISTENT IN THE ENVIRONMENT
 #IF THIS IS THE CASE, REMOVE WITH rm()
-
-crea.rep<-merge(crea.rep,d,all.x=TRUE)
