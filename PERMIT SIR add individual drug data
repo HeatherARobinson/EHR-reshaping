@@ -77,7 +77,8 @@ dataset<-merge(dataset, temp_dataset,all=TRUE)
     rm(temp_dataset)
   }
  }
- d1<-as.data.frame(dataset)
+ d1<-dataset %>% group_by(PatientID,event.date) %>% summarise_all(funs(max))
+ d1<-as.data.frame(d1)
 crea.rep<-merge(crea.rep,d1,all.x=TRUE)
 
 
