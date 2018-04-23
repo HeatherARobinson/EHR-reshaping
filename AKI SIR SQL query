@@ -21,3 +21,56 @@ WHERE (YEAR(DateOfBirth)+15 <=YEAR(EntryDate)) AND
 WHERE (YEAR(EntryDate)>=2009) AND  
 WHERE NOT SourceID is IN (SELECT SourceID FROM SIR_All_Records WHERE Pat_ID<100) 
 /*Should select all records of interest from 2009 onwards from patients over 15 as specified in CoreV2.text, excluding transient hospital patients from practises outside of Salford.*/
+
+#Assessing SIR properties
+SELECT DISTINCT PatID FROM table1- how many records are there in the 2014 freeze?
+SELECT DISTINCT PatID FROM table1 WHERE YearOfBirth<=(EntryDate-18) –how many under 18s are there?
+SELECT SourceID FROM table2 ORDER BY COUNT (PatID) -how many transient hospital patients are we omitting? Decide cutoff point for numbers of patients registered at each practise. Look up borderline practises to confirm location.
+SELECT * FROM table1 WHERE Rubric LIKE ‘%transplant%’ -which ReadCodes relate to transplants?
+SELECT * FROM table1 WHERE Rubric LIKE ‘%dialy%’ - which ReadCodes relate to dialysis?
+SELECT * FROM table1 WHERE Rubric LIKE ‘%RRT%’ – which additional ReadCodes relate to dialysis?
+SELECT * FROM table1 WHERE Rubric LIKE ‘%Creatinine%# -which ReadCodes relate to Creatinine?
+SELECT * FROM table1 WHERE Rubric LIKE ‘%GFR%# -which ReadCodes relate to eGFR?
+SELECT CodeUnits  FROM table1 WHERE Rubric LIKE ‘%Creatinine%’ –how many different units are used with Creatinine? 
+
+#Making record selection for extract
+SELECT * FROM table1 INNER JOIN table 2 ON table1.PatID=table2.PatID 
+WHERE ReadCode IS NOT IN (‘’,’’,’’,’’,) AND 
+WHERE DATEPART(yy, yearofbirth)+18 <(DATEPART(yy, EntryDate) AND  
+ReadCode IN (‘’,’’,’’,’’,… )AND
+WHERE NOT SourceID is IN (‘’,’’,’’,’’,,,,…………………..)
+Selects all unique columns from both tables where the read code excludes those predetermined for transplant or dialysis, and includes those identified for Creatinine, considering only patients over 18, and excluding those from practises outside of Salford.
+Use Wizard to export results.
+
+ 
+R code: Prepare SQL extracted SIR data for STATA
+#Only If it is not possible to merge the two SIR files in SQL:
+Table1<-read.table("Table1.csv",header=TRUE, sep=",")
+Table2<-read.table("Table2.csv",header=TRUE, sep=",")
+#Table2 needs to draw in sex and age
+mergedtable<-merge(Table1,Table2,all=TRUE, by=c(‘PatID’))
+#Otherwise:
+#Expected names from SIR SQL query:  PatID, EntryDate, Rubric, ReadCode, CodeValue, CodeUnits, SourceID, #YearOfBirth, LSOA
+#Calculate age at test from EntryDate and YearOfBirth
+require(lubridate)
+EntryDateOnly<-gsub(x= mergedtable$EntryDate, pattern=” 0:00:00”, replacement=””,fixed=T)
+mergedtable$Age<-year(strptime(EntryDateOnly, format="%Y-%m-%d"),-
+Year(strptime(mergedtable$YearOfBirth, format="%Y))
+mergedtable$location<- ifelse(mergedtable$SourceID==”2”, c(“Hospital”),(“GP”))
+
+#Remove any non-Creatinine and non eGFR records with numerical results that should not have been selected
+Levels(Rubric)
+not<-subset(mergedtable,Rubric != "……")
+mergedtable<-merdgedtable(droplevels(not)$Rubric)
+
+
+#Check which units have been used to measure Creatinine and convert to umol/L
+Levels(CodeUnits)
+mergedtable$stcreat<- ifelse(mergedtable$CodeUnits==”umol/L”, c(CodeValue),(CodeValue* 0.01131222)) 
+#This example assumes Creatinine values are all in either umol/L or mg/dL, so adjust accordingly.
+#Write an input file for STATA with headings complementary to those used in the Aberdeen algorithm 
+SIRinput<-file(paste("SIRinput.csv"), open="w")
+cat("studyid","dos","Rubric","ReadCode","CodeValue"," CodeUnits","location_code","age","sex","\n", sep=",",file="SIRinput.csv",append=TRUE)
+for (n in 1:30000){ 
+#Change the loop number to the number of records in the dataset
+cat((paste(mergedtable$PatID[n])),(paste(mergedtable$EntryDate[n])),(paste(mergedtable$Rubric[n])), (paste(mergedtable$ReadCode[n])),(paste(mergedtable$CodeValue[n])),(paste(mergedtable$CodeUnits[n])), (paste(mergedtable$location[n])),(paste(mergedtable$age[n])), (paste(mergedtable$sex[n])), "\n", file="SIRinput.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
