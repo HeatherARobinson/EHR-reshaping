@@ -232,7 +232,7 @@ names(NS)<-c("Loop_Diuretics_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Loop_Diuretics_CAT<-ifelse(is.na(crea.rep$Loop_Diuretics_CAT),0,crea.rep$Loop_Diuretics_CAT)
 ################################################################################### CHECKED
-IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
+IMM<-meddata[meddata$FAMILY=="Immunosuppressants",]
 IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
 IMM$END_DATE<-as.Date(IMM$END_DATE,format="%d/%m/%Y")
 IMM$check<-paste(IMM$TYPE,IMM$DAILY_DOSE,sep="")
@@ -243,7 +243,7 @@ IMM<-IMM[order(IMM$TYPE,IMM$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-IMM[IMM$EntryDate<=smalltab$event.date[i]&IMM$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$EntryDate), ]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
 N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
@@ -257,18 +257,20 @@ write.table(P,file="IMMd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",
 NS<-read.table("IMMd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","IMMdesc","event.date")
-#IMMlist<-NS[!duplicated(NS$IMMdesc),c("IMMdesc")]
+#IMMlist2<-NS[!duplicated(NS$IMMdesc),c("IMMdesc")]
 
-#write.csv(IMMlist,file="IMMlist.csv",row.names=FALSE) 
+#write.csv(IMMlist2,file="IMMlist2.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 
 NS2<-read.csv("IMMlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Immunosuppressants","PatientID","event.date")]
+names(NS)<-c("Immunosuppressants_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Immunosuppressants<-ifelse(is.na(crea.rep$Immunosuppressants),0,crea.rep$Immunosuppressants)
+crea.rep$Immunosuppressants_CAT<-ifelse(is.na(crea.rep$Immunosuppressants_CAT),0,crea.rep$Immunosuppressants_CAT)
 ########################################################################################
 ACEI<-meddata[meddata$FAMILY=="ACEI",]
+ACEI$TYPE<-ifelse(ACEI$TYPE=="Trandopril",paste("Trandolapril"),paste(ACEI$TYPE))
 ACEI$EntryDate<-as.Date(ACEI$EntryDate,format="%d/%m/%Y")
 ACEI$END_DATE<-as.Date(ACEI$END_DATE,format="%d/%m/%Y")
 ACEI$check<-paste(ACEI$TYPE,ACEI$DAILY_DOSE,sep="")
@@ -279,7 +281,7 @@ ACEI<-ACEI[order(ACEI$TYPE,ACEI$EntryDate,decreasing = TRUE), ]
 for (i in 1:length(unique(smalltab$event.date))){
 N<-ACEI[ACEI$EntryDate<=smalltab$event.date[i]&ACEI$END_DATE>=smalltab$event.date[i],c("EntryDate","PatientID","TYPE","check")]
 N<-na.omit(N)
-N<-N[order(N$PatientID,N$EntryDate), ]
+N<-N[order(N$TYPE,N$PatientID,N$EntryDate), ]
 N<-N[!duplicated(N[c("PatientID","TYPE")],fromLast=TRUE),]
 
 P<-N %>%
@@ -301,8 +303,9 @@ colnames(NS) <- c("PatientID","ACEIdesc","event.date")
 NS2<-read.csv("ACEIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("ACE_Inhibitors","PatientID","event.date")]
+names(NS)<-c("ACE_Inhibitors_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$ACE_Inhibitors<-ifelse(is.na(crea.rep$ACE_Inhibitors),0,crea.rep$ACE_Inhibitors)
+crea.rep$ACE_Inhibitors_CAT<-ifelse(is.na(crea.rep$ACE_Inhibitors_CAT),0,crea.rep$ACE_Inhibitors_CAT)
 ###########################################################################
 NEP<-meddata[meddata$FAMILY=="Nephrotoxin",]
 NEP$EntryDate<-as.Date(NEP$EntryDate,format="%d/%m/%Y")
