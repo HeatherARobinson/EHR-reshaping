@@ -307,7 +307,7 @@ names(NS)<-c("ACE_Inhibitors_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$ACE_Inhibitors_CAT<-ifelse(is.na(crea.rep$ACE_Inhibitors_CAT),0,crea.rep$ACE_Inhibitors_CAT)
 ###########################################################################
-NEP<-meddata[meddata$FAMILY=="Nephrotoxin",]
+NEP<-meddata[meddata$FAMILY=="Other nephrotoxins",]
 NEP$EntryDate<-as.Date(NEP$EntryDate,format="%d/%m/%Y")
 NEP$END_DATE<-as.Date(NEP$END_DATE,format="%d/%m/%Y")
 NEP$check<-paste(NEP$TYPE,NEP$DAILY_DOSE,sep="")
@@ -340,8 +340,9 @@ colnames(NS) <- c("PatientID","NEPdesc","event.date")
 NS2<-read.csv("NEPlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Other_Nephrotoxins","PatientID","event.date")]
+names(NS)<-c("Other_Nephrotoxins_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Other_Nephrotoxins<-ifelse(is.na(crea.rep$Other_Nephrotoxins),0,crea.rep$Other_Nephrotoxins)
+crea.rep$Other_Nephrotoxins_CAT<-ifelse(is.na(crea.rep$Other_Nephrotoxins_CAT),0,crea.rep$Other_Nephrotoxins_CAT)
 ########################################################################
 ANT<-meddata[meddata$FAMILY=="Antimicrobial",]
 ANT$EntryDate<-as.Date(ANT$EntryDate,format="%d/%m/%Y")
@@ -377,8 +378,9 @@ colnames(NS) <- c("PatientID","ANTdesc","event.date")
 NS2<-read.csv("ANTlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Antimicrobials","PatientID","event.date")]
+names(NS)<-c("Antimicrobials_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Antimicrobials<-ifelse(is.na(crea.rep$Antimicrobials),0,crea.rep$Antimicrobials)
+crea.rep$Antimicrobials_CAT<-ifelse(is.na(crea.rep$Antimicrobials_CAT),0,crea.rep$Antimicrobials_CAT)
 
 #CHECK FOR ANY REPEATED ROWS (should be one per patient per date):
 crea.rep[(duplicated(crea.rep[c("PatientID","event.date")]) | duplicated(crea.rep[c("PatientID","event.date")], fromLast = TRUE)), ]
