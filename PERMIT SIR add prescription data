@@ -194,7 +194,7 @@ crea.rep<-merge(crea.rep,NS,all.x=TRUE)
 crea.rep$Thiazide_Diuretics_CAT<-ifelse(is.na(crea.rep$Thiazide_Diuretics_CAT),0,crea.rep$Thiazide_Diuretics_CAT)
 
 ################################################################################### CHECKED
-LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
+LOOP<-meddata[meddata$FAMILY=="Loop Diuretics",]
 LOOP$EntryDate<-as.Date(LOOP$EntryDate,format="%d/%m/%Y")
 LOOP$END_DATE<-as.Date(LOOP$END_DATE,format="%d/%m/%Y")
 LOOP$check<-paste(LOOP$TYPE,LOOP$DAILY_DOSE,sep="")
@@ -214,9 +214,9 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="LOOPd.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="LOOP.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("LOOPd.txt",header=FALSE,sep=",")
+NS<-read.table("LOOP.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","LOOPdesc","event.date")
 
@@ -227,9 +227,10 @@ colnames(NS) <- c("PatientID","LOOPdesc","event.date")
 
 NS2<-read.csv("LOOPlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
-NS<-NS[,c("Loop_Diuretics","PatientID","event.date")]
+NS<-NS[,c("Loop_Diuretics","PatientID","event.date"]
+names(NS)<-c("Loop_Diuretics_CAT","PatientID","event.date")
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Loop_Diuretics<-ifelse(is.na(crea.rep$Loop_Diuretics),0,crea.rep$Loop_Diuretics)
+crea.rep$Loop_Diuretics_CAT<-ifelse(is.na(crea.rep$Loop_Diuretics_CAT),0,crea.rep$Loop_Diuretics_CAT)
 ################################################################################### CHECKED
 IMM<-meddata[meddata$FAMILY=="Immunosuppressant",]
 IMM$EntryDate<-as.Date(IMM$EntryDate,format="%d/%m/%Y")
