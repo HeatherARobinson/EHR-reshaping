@@ -18,7 +18,11 @@ load("PERMITmeddata28.rda")
 meddata<-unique(meddata)
 meddata$DAILY_DOSE<-signif(meddata$DAILY_DOSE,digits=2)
 meddata$FAMILY<-ifelse(meddata$TYPE=="Doxycycline",paste("Antimicrobial"),paste(meddata$FAMILY))
-meddata$FAMILY<-ifelse(meddata$TYPE=="Chloretracycline",paste("Chlortetracycline"),paste(meddata$FAMILY))
+meddata$TYPE<-ifelse(meddata$TYPE=="Aliskiren hemifumarate",paste("Aliskiren"),paste(meddata$TYPE))
+meddata$TYPE<-ifelse(meddata$TYPE=="Amiloride hydrochloride",paste("Amiloride"),paste(meddata$TYPE))
+meddata$TYPE<-ifelse(meddata$TYPE=="Hydrochlorothiazide",paste("Hydrochlorthiazide"),paste(meddata$TYPE))
+meddata$TYPE<-ifelse(meddata$TYPE=="Trandopril",paste("Trandolapril"),paste(meddata$TYPE))
+
 ################################################################################################
 
 #MAKE A MINIMAL LIST OF CREATININE MEASUREMENT DATES PER PATIENT (smalltab)
