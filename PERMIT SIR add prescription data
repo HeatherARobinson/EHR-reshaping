@@ -54,8 +54,6 @@ NS<-read.table("NSAIDSd.txt",header=FALSE,sep=",")
 NS<-unique(NS)
 colnames(NS) <- c("PatientID","NSAIDdesc","event.date")
 NSAIDlist<-NS[!duplicated(NS$NSAIDdesc),c("NSAIDdesc")]
-old<-read.csv("NSAIDlistOLD.csv")
-NSAIDlist[!NSAIDlist %in% old$NSAIDdesc]
 
 #write.csv(NSAIDlist,file="NSAIDlist0603.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
@@ -177,23 +175,23 @@ summarise(outs=paste(na.omit(check),collapse="")) %>%
 data.frame()
 P$event.date<-smalltab$event.date[i]
 P<-P[order(P$PatientID,P$event.date) , ]
-write.table(P,file="THID.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
+write.table(P,file="THI.txt",append=TRUE,row.names=FALSE,col.names=FALSE,sep=",") }
 
-NS<-read.table("THID.txt",header=FALSE,sep=",")
+NS<-read.table("THI.txt",header=FALSE,sep=",")
 NS<-unique(NS)
-NS<-na.omit(NS)
 colnames(NS) <- c("PatientID","THIdesc","event.date")
 THIlist<-NS[!duplicated(NS$THIdesc),c("THIdesc")]
 #write.csv(THIlist,file="THIlist.csv",row.names=FALSE) 
 #ADDED NEW CODE NOTATION MANUALLY
 #
-median(meddata$DAILY_DOSE[meddata$TYPE=="Bendroflumethiazide"],na.rm=TRUE)
 
 NS2<-read.csv("THIlist.csv")
 NS<-merge(NS,NS2,all.x=TRUE)
 NS<-NS[,c("Thiazide_Diuretics","PatientID","event.date")]
+names(NS)<-c("Thiazide_Diuretics_CAT","PatientID","event.date")
+NS$PatientID<-as.factor(NS$PatientID)
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Thiazide_Diuretics<-ifelse(is.na(crea.rep$Thiazide_Diuretics),0,crea.rep$Thiazide_Diuretics)
+crea.rep$Thiazide_Diuretics_CAT<-ifelse(is.na(crea.rep$Thiazide_Diuretics_CAT),0,crea.rep$Thiazide_Diuretics)
 
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
