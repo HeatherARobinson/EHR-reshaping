@@ -43,34 +43,3 @@ Selects all unique columns from both tables where the read code excludes those p
 Use Wizard to export results.
 
  
-R code: Prepare SQL extracted SIR data for STATA
-#Only If it is not possible to merge the two SIR files in SQL:
-Table1<-read.table("Table1.csv",header=TRUE, sep=",")
-Table2<-read.table("Table2.csv",header=TRUE, sep=",")
-#Table2 needs to draw in sex and age
-mergedtable<-merge(Table1,Table2,all=TRUE, by=c(‘PatID’))
-#Otherwise:
-#Expected names from SIR SQL query:  PatID, EntryDate, Rubric, ReadCode, CodeValue, CodeUnits, SourceID, #YearOfBirth, LSOA
-#Calculate age at test from EntryDate and YearOfBirth
-require(lubridate)
-EntryDateOnly<-gsub(x= mergedtable$EntryDate, pattern=” 0:00:00”, replacement=””,fixed=T)
-mergedtable$Age<-year(strptime(EntryDateOnly, format="%Y-%m-%d"),-
-Year(strptime(mergedtable$YearOfBirth, format="%Y))
-mergedtable$location<- ifelse(mergedtable$SourceID==”2”, c(“Hospital”),(“GP”))
-
-#Remove any non-Creatinine and non eGFR records with numerical results that should not have been selected
-Levels(Rubric)
-not<-subset(mergedtable,Rubric != "……")
-mergedtable<-merdgedtable(droplevels(not)$Rubric)
-
-
-#Check which units have been used to measure Creatinine and convert to umol/L
-Levels(CodeUnits)
-mergedtable$stcreat<- ifelse(mergedtable$CodeUnits==”umol/L”, c(CodeValue),(CodeValue* 0.01131222)) 
-#This example assumes Creatinine values are all in either umol/L or mg/dL, so adjust accordingly.
-#Write an input file for STATA with headings complementary to those used in the Aberdeen algorithm 
-SIRinput<-file(paste("SIRinput.csv"), open="w")
-cat("studyid","dos","Rubric","ReadCode","CodeValue"," CodeUnits","location_code","age","sex","\n", sep=",",file="SIRinput.csv",append=TRUE)
-for (n in 1:30000){ 
-#Change the loop number to the number of records in the dataset
-cat((paste(mergedtable$PatID[n])),(paste(mergedtable$EntryDate[n])),(paste(mergedtable$Rubric[n])), (paste(mergedtable$ReadCode[n])),(paste(mergedtable$CodeValue[n])),(paste(mergedtable$CodeUnits[n])), (paste(mergedtable$location[n])),(paste(mergedtable$age[n])), (paste(mergedtable$sex[n])), "\n", file="SIRinput.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
