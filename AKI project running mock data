@@ -1,0 +1,94 @@
+
+#The following allows some pre-processing in R before outputting a file for STATA entry
+
+library(haven) #Haven allows dta opening in R
+Over = read_dta("mockdataset.dta")
+
+Over[Over$mdrd==".",]
+#Missing mdrd values do not match any creatinine values, so these do not 
+#need to be inferred
+
+levels(as.factor(Over$dateofrrt))
+#SELECT RRT START DATE RECORDS
+m<-Over[Over$dateofrrt=="01jun2010"|Over$dateofrrt=="05mar2009",]
+#FIND ALL RECORDS FOR RRT INDIVIDUALS
+o<-Over[Over$studyid %in% m$studyid,]
+SIRo<-file(paste("SIRo.csv"), open="w")
+cat("studyid","dos","stcreat","mdrd","dateofrrt","\n", sep=",",file="SIRo.csv",append=TRUE)
+for (n in 1:71){ #Change loop number to number of records in dataset
+cat((paste(o$studyid[n])),(paste(o$dos[n])), (paste(o$stcreat[n])),(paste(o$mdrd[n])), (paste(o$dateofrrt[n])), "\n", file="SIRo.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
+#ALL ARE AFTER RRT AND IN THE INDEX YEAR-71 DROPPED
+
+Over<-Over[!Over$studyid %in% m$studyid,]
+
+levels(as.factor(Over$stcreat))
+Over<-Over[!(Over$stcreat=="sample error"),]
+Over<-Over[!(Over$stcreat=="."),]
+table(Over$stcreat)
+attach(Over)
+
+index<-subset(Over,Over$dos>=18993&Over$dos<=19358)
+levels(as.factor(index$studyid))
+length(index$stcreat)
+#793 index year records
+which(Over$studyid %in% index$studyid)
+
+#All individuals have measurements in the index year
+Over$stcreat<-as.numeric(Over$stcreat)
+which(Over$mdrd=="")
+Over$age<-as.numeric(Over$age)
+Over$mdrd<-ifelse(Over$mdrd=="",175*(Over$stcreat/88.4)^-1.154)*((Over$age)^-0.203,paste(Over$mdrd))
+
+
+#37 patients
+
+SIRinput<-file(paste("test_Rinput2.csv"), open="w")
+cat("studyid","dos","stcreat","mdrd","age","sex","\n", sep=",",file="test_Rinput2.csv",append=TRUE)
+for (n in 1:803){ #Change loop number to number of records in dataset
+cat((paste(Over$studyid[n])),(paste(Over$dos[n])), (paste(Over$stcreat[n])),(paste(Over$mdrd[n])), (paste(Over$age[n])),(paste(Over$sex[n])), "\n", file="test_Rinput2.csv", sep=",", fill=FALSE, labels=NULL, append=TRUE)}
+
+
+#optional:
+#Divide and merge data by ID if files too large for R
+TEMP1<-subset(temp,as.numeric(temp$PatID)<=100000,)
+SUBS1<-subset(Over[,c(1,22)],as.numeric(Over$PatID)<=100000,)
+TEMP2<-subset(temp,as.numeric(temp$PatID)<=200000&as.numeric(temp$PatID)>100000,)
+SUBS2<-subset(Over[,c(1,22)],as.numeric(Over$PatID)<=200000&as.numeric(Over$PatID)>100000,)
+TEMP3<-subset(temp,as.numeric(temp$PatID)<=300000&as.numeric(temp$PatID)>200000,)
+SUBS3<-subset(Over[,c(1,22)],as.numeric(Over$ PatID)<=300000&as.numeric(Over$PatID)>200000,)
+TEMP4<-subset(temp,as.numeric(temp$PatID)>300000,)
+SUBS4<-subset(Over[,c(1,22)],as.numeric(Over$PatID)>300000,)
+STATA1<- merge(TEMP1, SUBS1,all=TRUE, by='PatID')
+STATA2<- merge(TEMP2, SUBS2,all=TRUE, by='PatID')
+STATA3<- merge(TEMP3, SUBS3,all=TRUE, by='PatID')
+STATA4<- merge(TEMP4, SUBS4,all=TRUE, by='PatID')
+
+#Assign death cutoff/code
+Over4$endpoint<-ifelse(Over4$Dead=="1", paste(Over4$Month_of_Death,"/ ",Over$Year_of_Death),Over$endpoint,)
+gsub(" ", "", Over4$endpoint, fixed = TRUE)
+Over$endcause<-ifelse(Over$Dead=="1", "Dead",Over$endcause)
+attach(Over)
+
+
+#There are 71 records for 2, rrt patients, all of which need to be excluded.
+#There are 5 missing creatinine values that I excluded
+#All patients had creatinine records in the index year
+#None of the mdrd values were over 250
+#38 patients had 793 creatinine tests between STATA dates 18993 and 19358 (in #2012), not including the 2 RRT patients (this qualifier needs to be added to the #table). 
+#88 of these were duplicates (tab dupyn if yr12==1), although there were 90 #duplicate records across all years
+#x individuals had AKIs in the index year (from tabstat studyid if firstAKI==1, by #(sex) stat(n)), x were female.
+
+#I am using STATA dates to define the index year and post 2009, assuming standard #STATA day 0=1/1/1960:
+gen post2009=1 if dos>=17899
+gen yr12=1 if dos>=18994
+
+#Confusing which baseline reference table is which- define in the STATA notes
+
+#To find the first eGFR value for the index year (table 1) I have used
+
+gen yr12=1 if dos>=18993
+label var yr12 "sample from 2012"
+bysort studyid yr12(dos): gen protagonistind=_n if yr12==1
+egen refGFRind=cut(mdrd), at(0, 30, 45, 60, 90, 999) label
+label var refGFRind "reference MDRD index yr GFR group 0-30-45-60-90-high"
+tab refGFRind if protagonistind==1
