@@ -191,7 +191,7 @@ NS<-NS[,c("Thiazide_Diuretics","PatientID","event.date")]
 names(NS)<-c("Thiazide_Diuretics_CAT","PatientID","event.date")
 NS$PatientID<-as.factor(NS$PatientID)
 crea.rep<-merge(crea.rep,NS,all.x=TRUE)
-crea.rep$Thiazide_Diuretics_CAT<-ifelse(is.na(crea.rep$Thiazide_Diuretics_CAT),0,crea.rep$Thiazide_Diuretics)
+crea.rep$Thiazide_Diuretics_CAT<-ifelse(is.na(crea.rep$Thiazide_Diuretics_CAT),0,crea.rep$Thiazide_Diuretics_CAT)
 
 ################################################################################### CHECKED
 LOOP<-meddata[meddata$FAMILY=="DIUR_LOOP",]
