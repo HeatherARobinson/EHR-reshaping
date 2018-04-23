@@ -1,0 +1,23 @@
+#For full query codes (R wrapper) which replaced these in final extraction contact Paolo Fraccaro
+
+/*table1 in this code needs changing to the name of the table which includes PatID, YearOfBirth, Gender etc*/
+/*Number of under 15s in SIR)- please write down for me */
+SELECT (DISTINCT PatID) FROM table1 WHERE YearOfBirth <= YEAR(EntryDate)-15
+/*Or if DOB is given instead of YearOfBirth…*/
+SELECT (DISTINCT PatID) FROM table1 WHERE YEAR(DateOfBirth) <= YEAR(EntryDate)-15 
+
+
+/*Determine how many transient patients (those from GP practises with fewer than 100 patients registered)- please write down for me*/
+SELECT PatID from SIR_All_Records WHERE SourceID IN (SELECT SourceID FROM SIR_All_Records WHERE Pat_ID<100)
+
+
+
+/*Make record selection for extract*/
+SELECT * FROM table1 INNER JOIN SIR_All_Records ON table1.PatID=SIR_All_Records.PatID INNER JOIN CoreV2 ON tableA.ReadCode
+ON tableA.ReadCode LIKE 'CoreV2.ReadCode + '%'     OR 
+CoreV2.ReadCode LIKE tableA.ReadCode + '%'
+WHERE Present=1 AND
+WHERE (YEAR(DateOfBirth)+15 <=YEAR(EntryDate)) AND  
+WHERE (YEAR(EntryDate)>=2009) AND  
+WHERE NOT SourceID is IN (SELECT SourceID FROM SIR_All_Records WHERE Pat_ID<100) 
+/*Should select all records of interest from 2009 onwards from patients over 15 as specified in CoreV2.text, excluding transient hospital patients from practises outside of Salford.*/
