@@ -37,9 +37,6 @@ lapply(unique(crea.t$PatientID), function(x)
     }
   }
 })
-print("crea function done")
-date()
-
 
 ####///// RRD based on CKDEPI eGFR
 
