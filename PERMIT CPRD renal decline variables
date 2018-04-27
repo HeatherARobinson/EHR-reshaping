@@ -3,7 +3,7 @@ library(dplyr)
 #This script requires MDRD and/or CKD-EPI eGFR to have been previously added via codes within the simple formula variables scipt
 
 ## create working data frame for calculations
-crea.t <- crea.rep
+crea.t <- crea.rep[,c("PatientID","event.date","Creatinine","Age","CKDEPIeGFR","MDRDeGFR")]
 setDT(crea.t)
 setorder(crea.t, PatientID, -event.date)
 crea.t[,event.date := as.Date.character(event.date)]
@@ -102,4 +102,6 @@ lapply(unique(crea.t$PatientID), function(x)
 })
 
 crea.t<-unique(crea.t)#DO SOME CHECKS HERE
+save(crea.t,file="crea.t.rda")
+
 crea.rep<-merge(crea.rep,creat,all.x=TRUE)
