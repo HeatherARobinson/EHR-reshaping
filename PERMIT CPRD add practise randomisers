@@ -1,0 +1,25 @@
+#CPRD patient IDs feature practise codes in the last 3 digits
+
+library(stringr)
+load("crea.rep.rda") #Primary table, 1 row per patient per date, summarising max creatinine per day
+crea.rep$pracid<-str_sub(crea.rep$PatientID, start= -3)
+a<-unique(crea.rep$pracid)
+
+prac<-read.csv("Practice.csv")
+prac<-prac[prac$pracid %in% a,]
+length(unique(pats3$praccode))
+prac<-prac[prac$region==2,]
+length(unique(pats3$praccode))
+save(prac,file="NWpractices.rda")
+
+crea.rep<-crea.rep[!crea.rep$pracid %in% prac$pracid,])
+length(crea.rep$PatientID)
+
+#Add a random practise ID for splitting the data
+Source<-unique(crea.rep$Spracid)
+s1<-as.data.frame(Source)
+set.seed(111)
+randompracID<-sample(1:length(Source),length(Source))
+s2<-as.data.frame(randompracID)
+s3<-cbind(s1,s2)
+crea.rep<-merge(crea.rep,s3,all.x=TRUE)
