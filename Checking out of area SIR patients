@@ -1,0 +1,15 @@
+load("sir.datahfonly.rda")
+allhf<-read.csv("HeartFailure1.csv")
+hohf<-read.csv("HOHeartFailure1.csv")
+hfpats<-sir.data[sir.data$ReadCode %in% allhf$ReadCode,]
+hfpats<- hfpats[order(hfpats$EntryDate),] 
+
+#Out of area HF patients coming for RRT are likely to have h/o heart failure codes before any others.
+
+length(hfpats$PatientID) #22835
+length(unique(hfpats$PatientID)) #7207 individuals
+hfpats2<-hfpats[!duplicated(hfpats$PatientID),]
+hfpats2<-hfpats2[hfpats2$ReadCode %in% hohf$ReadCode,]
+length(hfpats2$PatientID) #25
+
+save(hfpats2,file="HOHFpats.rda")
