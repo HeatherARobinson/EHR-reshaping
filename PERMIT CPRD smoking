@@ -1,0 +1,21 @@
+CPRD<-load("hf_cases_clinical.rda")
+CPRD<-CRPD[CPRD$enttype=="4",]
+#data5=start,#data6=stop
+CPRDA<-CPRD[!is.na(CPRD$data5)|!is.na(CPRD$data6),]
+CPRDB<-CPRD[is.na(CPRD$data5)&is.na(CPRD$data6),]
+
+CPRDB$data5<-ifelse(CPRDB$data1==,,NA)
+CPRDB$data6<-ifelse(CPRDB$data1==,,NA)
+CPRDB<-CPRD[!is.na(CPRD$data5)|!is.na(CPRD$data6),]
+Smoke<-rbind(CPRDA,CPRDB)
+
+adjSmok<-crea.rep[,c("PatientID","event.date")]
+
+#MEAN DAILY HEART RATE #30 DAYS
+indx1 <-neardate(adjSmok$PatientID, Smoke$PatientID, adjSmok$Event.date, Smoke$EntryDate, 
+                   best="prior")
+crea.rep$SmokeDate<-Smoke[indx1, "data5"]
+crea.rep$StopDate<-Smoke[indx1, "data6"]
+crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$SmokDate))>=0, 1, NA)
+crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
+crea.rep$Smoker<-unlist(crea.rep$Smoker)
