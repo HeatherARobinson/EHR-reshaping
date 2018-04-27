@@ -1,0 +1,108 @@
+library(data.table)
+library(dplyr)
+#This script requires MDRD and/or CKD-EPI eGFR to have been previously added via codes within the simple formula variables scipt
+
+## create working data frame for calculations
+crea.t <- crea.rep
+setDT(crea.t)
+setorder(crea.t, PatientID, -event.date)
+crea.t[,event.date := as.Date.character(event.date)]
+
+####/// RRD based on Creatinine
+crea.t[,RRD_crea:=as.numeric(NA)]
+crea.t[,AnnualPerc_crea:=as.numeric(NA)]
+crea.t[,eventYear:=substr(event.date,1,4)]
+
+lapply(unique(crea.t$PatientID), function(x)
+{
+  rows <- which(crea.t$PatientID %in% x)
+  data.x <- crea.t[PatientID == x]
+  
+  for(i in 1:nrow(data.x))
+  {
+    theDate <- data.x[,event.date][i]
+    if(theDate >= "2011-12-31")  ##dates before 31.12.2011 will not have 4 years of data
+    {
+      d <- as.Date(theDate) - 1460
+      idata <- data.x[data.x$event.date <= theDate & data.x$event.date>= d,]
+      creaRow <- rows[i]
+
+      if(uniqueN(idata$eventYear) >= 5) # if uniqueN < 5 that means that we only have data in 3, e.g. the year we are looking at (2016) and the 4 years before (2012), but no data from years between (2013,2014, 2015)
+      {
+        coef <- round(as.numeric(coef(lm(Creatinine ~  Age, data=idata))[2]), digits = 3) #regress 4 full years of creatinine data on Age (age of the patient at the time of creatinine measurement); take the slope
+        crea.t[creaRow, RRD_crea:=coef]
+        perc <- round(coef/idata[which.min(event.date), Creatinine], digits = 3) # this is for annual percentage change. the slope is divided by the lowest value in the particular 4 year period
+        crea.t[creaRow, AnnualPerc_crea := perc]
+      }
+    }
+  }
+})
+print("crea function done")
+date()
+
+
+####///// RRD based on CKDEPI eGFR
+
+crea.t[,RRD_CKDEPI:=as.numeric(NA)]
+crea.t[,AnnualPerc_CKDEPI:=as.numeric(NA)]
+print("lapply started RRD CKD EPI")
+
+lapply(unique(crea.t$PatientID), function(x)
+{
+  rows <- which(crea.t$PatientID %in% x)
+  data.x <- crea.t[PatientID == x]
+
+  for(i in 1:nrow(data.x))
+  {
+    theDate <- data.x[,event.date][i]
+    if(theDate >= "2011-12-31")  ##dates before 31.12.2011 will not have 4 years of data
+    {
+      d <- as.Date(theDate) - 1460
+      idata <- data.x[data.x$event.date <= theDate & data.x$event.date>= d,]
+      creaRow <- rows[i]
+
+      if(uniqueN(idata$eventYear) >= 5) # if uniqueN < 5 that means that we only have data in 3, e.g. the year we are looking at (2016) and the 4 years before (2012), but no data from years between (2013,2014, 2015)
+      {
+        coef <- round(as.numeric(coef(lm(CKDEPIeGFR ~  Age, data=idata))[2]), digits = 3)
+        crea.t[creaRow, RRD_CKDEPI:=coef]
+        perc <- round(coef/idata[which.min(event.date), CKDEPIeGFR], digits = 3)
+        crea.t[creaRow, AnnualPerc_CKDEPI := perc]
+      }
+    }
+  }
+})
+
+
+####///// RRD based on MDRD eGFR
+crea.t[,RRD_MDRD:=as.numeric(NA)]
+crea.t[,AnnualPerc_MDRD:=as.numeric(NA)]
+
+print("lapply started RRD MDRD")
+
+lapply(unique(crea.t$PatientID), function(x)
+{
+  rows <- which(crea.t$PatientID %in% x)
+  data.x <- crea.t[PatientID == x]
+
+  for(i in 1:nrow(data.x))
+  {
+    theDate <- data.x[,event.date][i]
+    if(theDate >= "2011-12-31")  ##dates before 31.12.2011 will not have 4 years of data
+    {
+      d <- as.Date(theDate) - 1460
+      idata <- data.x[data.x$event.date <= theDate & data.x$event.date>= d,]
+      creaRow <- rows[i]
+
+      if(uniqueN(idata$eventYear) >= 5) # if uniqueN < 5 that means that we only have data in 3, e.g. the year we are looking at (2016) and the 4 years before (2012), but no data from years between (2013,2014, 2015)
+      {
+        coef <- round(as.numeric(coef(lm(MDRDeGFR ~  Age, data=idata))[2]), digits = 3)
+        crea.t[creaRow, RRD_MDRD:=coef]
+        perc <- round(coef/idata[which.min(event.date), MDRDeGFR], digits = 3)
+        crea.t[creaRow, AnnualPerc_MDRD := perc]
+      }
+    }
+  }
+})
+
+crea.t<-unique(crea.t)#DO SOME CHECKS HERE
+crea.rep<-merge(crea.rep,creat,all.x=TRUE)
