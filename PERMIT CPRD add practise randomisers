@@ -13,12 +13,13 @@ prac<-prac[prac$region==2,]
 
 length(unique(prac$pracid)) #56 northwest practises
 save(prac,file="NWpractices.rda")
-
-crea.rep<-crea.rep[!crea.rep$pracid %in% prac$pracid,])
-length(crea.rep$PatientID)
+length(crea.rep$PatientID) #5609602
+crea.rep<-crea.rep[!crea.rep$pracid %in% prac$pracid,]
+length(crea.rep$PatientID) #5271263
 
 #Add a random practise ID for splitting the data
-Source<-unique(crea.rep$Spracid)
+
+Source<-unique(crea.rep$pracid)
 s1<-as.data.frame(Source)
 set.seed(111)
 randompracID<-sample(1:length(Source),length(Source))
