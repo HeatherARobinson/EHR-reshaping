@@ -4,12 +4,14 @@ library(stringr)
 load("crea.rep.rda") #Primary table, 1 row per patient per date, summarising max creatinine per day
 crea.rep$pracid<-str_sub(crea.rep$PatientID, start= -3)
 a<-unique(crea.rep$pracid)
+length(a) #403 practises total for cohort
 
-prac<-read.csv("Practice.csv")
+prac<-read_dta("practice.dta")
 prac<-prac[prac$pracid %in% a,]
 length(unique(pats3$praccode))
 prac<-prac[prac$region==2,]
-length(unique(pats3$praccode))
+
+length(unique(prac$pracid)) #56 northwest practises
 save(prac,file="NWpractices.rda")
 
 crea.rep<-crea.rep[!crea.rep$pracid %in% prac$pracid,])
