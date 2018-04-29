@@ -106,14 +106,8 @@ RV2<-0
 protagonistdos<-0
 protagonistvalue<-0
 
-
- if(Gender[i]=="M"){    
-    ref.low=62
-    ref.up=115
-    } else {    
-    ref.low=44
-    ref.up=97}
-   
+a$ref.low<-ifelse(a$Gender=="M",62,44)
+a$ref.up<-ifelse(a$Gender=="M",115,97)
 a <-a[order(PatientID, event.date),] 
 attach(a)
 
@@ -148,7 +142,7 @@ D<-NA
 D[i]<-ifelse(as.numeric(Dmarker[i])>0,abs(Creatinine[i]-Dvalue[i]),D[i])
 RV1[i]<-mightyvalue[i]/weekmin[PatientID==PatientID]
 RV2[i]<-mightyvalue[i]/yearmedian[PatientID==PatientID]
-RV_ratio[i]<-ifelse(is.na(RV1[i]),RV2[i],RV1[i])
+RV_ratio<-ifelse(is.na(RV1),RV2,RV1)
 ##########################################################################################################CHECKED
 
 AKIyear[i]<-ifelse((mightyvalue[i]/yearmedian[i])>=1.5 & !is.na(yearmedian[i]) & (mightyvalue[i]>(3*RV_ratio[i])|RV_ratio[i]>=1.5),1,0)
@@ -223,4 +217,4 @@ head(second)
 crea.rep<-merge(crea.rep,second,all.x=TRUE)
 crea.rep$NoAKIepisodes<-ifelse(crea.rep$NoAKIepisodes>crea.rep$PreCKDAKIs,crea.rep$PreCKDAKIs,crea.rep$NoAKIepisodes)
 
-
+save(crea.rep,file="crea.notnw.rda")
