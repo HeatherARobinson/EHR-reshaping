@@ -104,4 +104,4 @@ lapply(unique(crea.t$PatientID), function(x)
 crea.t<-unique(crea.t)#DO SOME CHECKS HERE
 save(crea.t,file="crea.t.rda")
 
-crea.rep<-merge(crea.rep,creat,all.x=TRUE)
+crea.rep<-merge(crea.rep,crea.t,all.x=TRUE)
