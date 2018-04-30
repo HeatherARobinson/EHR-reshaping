@@ -19,7 +19,6 @@ CPRDB$eventdate3<-format(CPRDB$eventdate2, "%Y%m%d")
 
 CPRDB$data5<-ifelse(CPRDB$data1 %in% Smokcodes2$MedCode,CPRDB$eventdate3,NA)
 CPRDB$data6<-ifelse(CPRDB$data1 %in% Smokcodes1$MedCode,CPRDB$eventdate3,NA)
-CPRDB$data5<-ifelse(CPRDB$data1 %in% Smokcodes1$MedCode,CPRDB$eventdate3,NA)
 
 CPRDB<-CPRD[!is.na(CPRD$data5)|!is.na(CPRD$data6),]
 Smoke<-rbind(CPRDA,CPRDB)
@@ -30,14 +29,17 @@ Smoke$data6 <- strptime(as.character(Smoke$data6), "%Y%m%d")
 Smoke$data6<-format(Smoke$data6, "%Y-%m-%d")
 Smoke$data6<-as.Date(Smoke$data6, "%Y-%m-%d")
 
+Smoke<-Smoke[!is.na(Smoke$data5),]
+Smoke$patid<-as.character(Smoke$patid)
 
-adjSmok<-crea.rep[,c("PatientID","event.date")]
+Smoke<-Smoke[Smoke$patid %in% crea.rep$PatientID,]
 
-indx1 <-neardate(adjSmok$PatientID, Smoke$PatientID, adjSmok$event.date, Smoke$data5,best="prior")
+indx1 <-neardate(crea.rep$PatientID, Smoke$patid, crea.rep$event.date, Smoke$data5,best="prior")
 
-adjSmok$SmokeDate<-Smoke[indx1, "data5"]
-adjSmok$StopDate<-Smoke[indx1, "data6"]
-adjSmok$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$SmokDate))>=0, 1, NA)
-adjSmok$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
-adjSmok$Smoker<-unlist(crea.rep$Smoker)
+crea.rep$SmokeDate<-Smoke[indx1, "data5"]
+crea.rep$StopDate<-Smoke[indx1, "data6"]
+crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$event.date - crea.rep$SmokeDate))>=0, 1, 0)
+crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$event.date - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
+crea.rep$Smoker<-unlist(crea.rep$Smoker)
+
 save(adjSmok,file="Smokingdata.rda")
