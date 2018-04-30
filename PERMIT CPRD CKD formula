@@ -18,6 +18,8 @@ CKpot$EntryDate2<-as.Date(as.character(CKpot$event.date),format="%Y-%m-%d")
 CKpot$EntryDate1<-as.Date(as.character(CKpot$event.date),format="%Y-%m-%d")-90
 CKpot<-CKpot[,c("PatientID","event.date","KDmark","EntryDate1","EntryDate2","CKDEPIeGFR")] 
 
+save(CKpot,file="CKpot.rda")
+
 ############################################################################################## CHECKED
 #Diagnose CKD
 #If eGFR under 60 is not sustained for 90 days, recode KDmark as 0
@@ -29,6 +31,7 @@ crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[
 CKpot$MinCKD[i]<-min(crea.rep$CKDEPIeGFR[crea.rep$PatientID==CKpot$PatientID[i] &
 crea.rep$event.date>CKpot$EntryDate1[i] & crea.rep$event.date<=CKpot$EntryDate2[i]])
 }
+save(CKpot,file="CKpot.rda")
 #CKD is 1 if the test qualifies and there is no normal test within 3 months prior
 #At this stage some are temporarily falsely positively identified that have no lookback test
 
@@ -41,6 +44,8 @@ CKpot$CKDGStage<-ifelse(CKpot$Lookback<=CKpot$EntryDate1 & CKpot$CKDE==1,1,0)
 CKpot<-CKpot[CKpot$CKDGStage==1,]
 #CKpot is a subset table of CKD qualifying tests and their markers to be merged onto crea.rep
 CKpot<-unique(CKpot)
+save(CKpot,file="CKpot.rda")
+
 crea.rep<-merge(crea.rep,CKpot[,c(1,2,8:10)],all.x=TRUE)
 crea.rep$CKDGStage<-ifelse(!is.na(crea.rep$CKDGStage),2,0)
 #Stage 1 is skipped here as it cannot be identified from creatinine only, start by coding all as stage 2
