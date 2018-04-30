@@ -1,21 +1,43 @@
-CPRD<-load("hf_cases_clinical.rda")
-CPRD<-CRPD[CPRD$enttype=="4",]
+CPRD<-read_dta("hf_cases_clinical.dta")
+CPRD<-CPRD[CPRD$enttype=="4",]
+
+CPRD2<-read_dta("hf_cases_additional.dta")
+CPRD<-merge(CPRD,CPRD2,all.x=TRUE)
+
 #data5=start,#data6=stop
 CPRDA<-CPRD[!is.na(CPRD$data5)|!is.na(CPRD$data6),]
 CPRDB<-CPRD[is.na(CPRD$data5)&is.na(CPRD$data6),]
 
-CPRDB$data5<-ifelse(CPRDB$data1==,,NA)
-CPRDB$data6<-ifelse(CPRDB$data1==,,NA)
+Smokcodes<-read.csv("CPRDsmoking.csv")
+Smokcodes1<-Smokcodes[Smokcodes$cessation==1,]
+Smokcodes2<-Smokcodes[Smokcodes$Smoking==1,]
+
+Smokcodes<-read.csv("CPRDsmoking.csv")
+
+CPRDB$eventdate2 <- strptime(as.character(CPRDB$eventdate), "%Y-%m-%d")
+CPRDB$eventdate3<-format(CPRDB$eventdate2, "%Y%m%d")
+
+CPRDB$data5<-ifelse(CPRDB$data1 %in% Smokcodes2$MedCode,CPRDB$eventdate3,NA)
+CPRDB$data6<-ifelse(CPRDB$data1 %in% Smokcodes1$MedCode,CPRDB$eventdate3,NA)
+CPRDB$data5<-ifelse(CPRDB$data1 %in% Smokcodes1$MedCode,CPRDB$eventdate3,NA)
+
 CPRDB<-CPRD[!is.na(CPRD$data5)|!is.na(CPRD$data6),]
 Smoke<-rbind(CPRDA,CPRDB)
+Smoke$data5 <- strptime(as.character(Smoke$data5), "%Y%m%d")
+Smoke$data5<-format(Smoke$data5, "%Y-%m-%d")
+Smoke$data5<-as.Date(Smoke$data5, "%Y-%m-%d")
+Smoke$data6 <- strptime(as.character(Smoke$data6), "%Y%m%d")
+Smoke$data6<-format(Smoke$data6, "%Y-%m-%d")
+Smoke$data6<-as.Date(Smoke$data6, "%Y-%m-%d")
+
 
 adjSmok<-crea.rep[,c("PatientID","event.date")]
 
-#MEAN DAILY HEART RATE #30 DAYS
-indx1 <-neardate(adjSmok$PatientID, Smoke$PatientID, adjSmok$Event.date, Smoke$EntryDate, 
-                   best="prior")
-crea.rep$SmokeDate<-Smoke[indx1, "data5"]
-crea.rep$StopDate<-Smoke[indx1, "data6"]
-crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$SmokDate))>=0, 1, NA)
-crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
-crea.rep$Smoker<-unlist(crea.rep$Smoker)
+indx1 <-neardate(adjSmok$PatientID, Smoke$PatientID, adjSmok$event.date, Smoke$data5,best="prior")
+
+adjSmok$SmokeDate<-Smoke[indx1, "data5"]
+adjSmok$StopDate<-Smoke[indx1, "data6"]
+adjSmok$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$SmokDate))>=0, 1, NA)
+adjSmok$Smoker<- ifelse(as.numeric(abs(crea.rep$EntryDate - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
+adjSmok$Smoker<-unlist(crea.rep$Smoker)
+save(adjSmok,file="Smokingdata.rda")
