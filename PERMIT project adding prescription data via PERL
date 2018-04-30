@@ -7,4 +7,4 @@ node index.js -a resources\perl_input3011.txt && sort resources\perl_input3011.t
 #PERL NOT USED IN THIS INSTANCE DUE TO THE COMPLEXITY OF THE INSTRUCTIONS
 ##################################################################################################################################
 npm run -s sort resources\perl_input3011.txt.done > resources\perl_input3011.txt.done.sorted
-perl parse_drug_file.pl resources\perl_input3011.sorted
+perl parse_drug_file.pl resources\perl_input3011.txt.done.sorted
