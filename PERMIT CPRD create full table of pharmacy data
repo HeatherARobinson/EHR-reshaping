@@ -1,4 +1,6 @@
+
 inst<-read.csv("productedited803.csv")
+CPRD<-read_dta("hf_cases_therapy.dta")
 subs<-CPRD[CPRD$prodcode %in% inst$CODE1,]
 dos<-read.table("common_dosages.txt",header=TRUE)
 inst<-inst[,c(1,4:8)]
