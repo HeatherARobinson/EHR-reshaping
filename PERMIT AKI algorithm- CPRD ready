@@ -181,40 +181,14 @@ a$AKIcounter[x-1]+a$add[x],1)}
 summary(a$AKIcounter)
 names(a)
 a<-a[,c("PatientID","event.date","AKIcounter")]
+save(a,file="AKIrecords.rda")
 ############################################################################################CHECKED
 ###############################################ATTACH AKI COUNTER TO CREA.REP TABLE
 load("crea.rep.rda")
+load("AKIrecords.rda")
 indx1 <-neardate(crea.rep$PatientID, a$PatientID, crea.rep$event.date, a$event.date, 
                    best="prior")
 crea.rep$NoAKIepisodes<-a[indx1, "AKIcounter"]
 crea.rep$NoAKIepisodes<-unlist(crea.rep$NoAKIepisodes)
 crea.rep$NoAKIepisodes<-ifelse(is.na(crea.rep$NoAKIepisodes),0,crea.rep$NoAKIepisodes)
-
-#DON'T COUNT AKI IF IT PROGRESSES TO CKD
-
-a<-crea.rep[crea.rep$MaxPriorCKD>0,]
-#The dataset is cleaned again at the end to make sure that CKD patients are not classed as having an AKI
-na.omit(a)
-
-a$CKDate<-ifelse(a$CKDStage>0,a$EntryDate,NA) 
-smalltab<-a[!is.na(a$CKDate),c("PatientID","CKDate")]
-first<-smalltab %>%
-   group_by(PatientID) %>%  
-   arrange(CKDate) %>% 
-   slice(which.min(as.numeric(CKDate))) %>%
-as.data.frame    
-head(first)
-  
-b<-merge(as.data.frame(first),crea.rep,all.x=TRUE,all.y=FALSE)
-b<-b[b$CKDate>b$event.date,]
-b<-b[,c("PatientID","NoAKIepisodes")]
-colnames(b)<-c("PatientID","PreCKDAKIs")
-second<-b %>%
-   group_by(PatientID) %>%  
-      slice(which.max(PreCKDAKIs)) %>%
-as.data.frame    
-head(second)
-crea.rep<-merge(crea.rep,second,all.x=TRUE)
-crea.rep$NoAKIepisodes<-ifelse(crea.rep$NoAKIepisodes>crea.rep$PreCKDAKIs,crea.rep$PreCKDAKIs,crea.rep$NoAKIepisodes)
-
-save(crea.rep,file="crea.notnw.rda")
+save(crea.rep,file="crea.rep.rda")
