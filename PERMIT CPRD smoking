@@ -47,16 +47,15 @@ Smoke$data6<-as.Date(Smoke$data6, "%Y-%m-%d")
 Smoke<-Smoke[!is.na(Smoke$data5),]
 Smoke$patid<-as.character(Smoke$patid)
 
-length(unique(crea.rep$PatientID %in% Smoke$patid))
+length(unique(crea.rep$PatientID[crea.rep$patid %in% Smoke$patid]))
 #Only 2 patients in our dataset have smoking information
 indx1 <-neardate(crea.rep$PatientID, Smoke$patid, crea.rep$event.date, Smoke$eventdate,best="prior")
 
 crea.rep$SmokeDate<-Smoke[indx1, "data5"]
 crea.rep$StopDate<-Smoke[indx1, "data6"]
 crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$event.date - crea.rep$SmokeDate))>=0, 1, 0)
-crea.rep$Smoker<- ifelse(as.numeric(abs(crea.rep$event.date - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
+crea.rep$Smoker<- ifelse(!is.na(crea.rep$StopDate)&as.numeric(abs(crea.rep$event.date - crea.rep$StopDate))>=0, 0, crea.rep$Smoker)
 crea.rep$Smoker<-unlist(crea.rep$Smoker)
 #Remove working columns:
-#crea.rep<-crea.rep[,c(1:105,108)]
+#crea.rep<-crea.rep[,c(1:106)]
 
-#Smoking is not adequately coded.
