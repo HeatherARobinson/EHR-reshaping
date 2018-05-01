@@ -1,3 +1,4 @@
+library(survival)
 CPRD<-read_dta("hf_cases_clinical.dta")
 CPRD<-CPRD[CPRD$enttype=="4",]
 
