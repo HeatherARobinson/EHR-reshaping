@@ -35,6 +35,11 @@ save(CKpot,file="CKpot.rda")
 #CKD is 1 if the test qualifies and there is no normal test within 3 months prior
 #At this stage some are temporarily falsely positively identified that have no lookback test
 
+
+###########################################################################################
+#CURRENT INCLINE CHECKPOINT
+############################################################################################
+
 #Near date match EntryDate1 (90 days prior date)- to entries from the full dataset
 #neardate preferably matches to a prior entry if one is available
 #if the closest match is before EntryDate1 (data from more than 90 days prior available), retain row.
