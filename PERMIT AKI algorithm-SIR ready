@@ -1,8 +1,8 @@
-ssh mqbpjhr4@incline256.itservices.manchester.ac.uk
+ssh username@incline256.itservices.manchester.ac.uk
 module load apps/gcc/R/3.3.3
 R
 
-load("crea.rep201117.rda")
+load("crea.rep.rda")
 load("sir.datahfonly.Rdata")
 
 library (taRifx)
